@@ -51,6 +51,11 @@ def run_chat_core():
         with open(CHAT_LOG_PATH, "w") as f:
             json.dump(chat_log, f, indent=2)
 
+        from superstructures.ss5_summonengine.summon_engine import run_summon_engine
+
+        # Add after user_input is saved:
+        run_summon_engine(chat_log, user_input, st.session_state["role"], st.session_state["thread_id"])
+
         # Defensive session sync before rerun
         st.session_state["chat_log"] = chat_log
         st.session_state["last_user_message"] = user_input.strip()
