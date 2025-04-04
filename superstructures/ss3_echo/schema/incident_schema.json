@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "properties": {
+    "id": {"type": "string"},
+    "full_chat": {"type": "array"},
+    "summary": {"type": "string"},
+    "keywords": {"type": "array"},
+    "persona": {"type": "string"},
+    "priority": {"type": "string"},
+    "timestamp": {"type": "string"}
+  },
+  "required": ["id", "full_chat", "summary", "persona", "priority", "timestamp"]
+}
