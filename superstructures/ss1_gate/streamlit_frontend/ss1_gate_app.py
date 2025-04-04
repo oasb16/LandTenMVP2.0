@@ -12,8 +12,8 @@ from superstructures.ss1_gate.shared.dynamodb import write_user_profile
 # ------------------------------
 # Configuration
 # ------------------------------
-COGNITO_DOMAIN = "https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com"
-REDIRECT_URI = "https://landtenmvpmainapp.streamlit.app/"
+COGNITO_DOMAIN = st.secrets.get("COGNITO_DOMAIN")
+REDIRECT_URI = st.secrets.get("REDIRECT_URI")
 CLIENT_ID = st.secrets.get("COGNITO_CLIENT_ID")
 CLIENT_SECRET = st.secrets.get("COGNITO_CLIENT_SECRET")
 TOKEN_ENDPOINT = f"{COGNITO_DOMAIN}/oauth2/token"
