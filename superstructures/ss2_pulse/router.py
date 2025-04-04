@@ -30,7 +30,10 @@ def route_user(persona: str):
             # 🔮 Call summon engine with full context
             run_summon_engine(chat_history, user_input, persona, thread_id)
             # 🛡️ Run ActionRelay with full symbolic state
-            run_action_relay(chat_history, persona, thread_id)
+            # 🔁 Loop over all messages and inject action buttons if eligible
+            for message in chat_history:
+                msg_id = message.get("id", "unknown-msg")
+                run_action_relay(message, msg_id)
         except Exception as e:
             st.error(f"Summon Engine Error: {type(e).__name__} – {e}")
 
