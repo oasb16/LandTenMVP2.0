@@ -47,7 +47,7 @@ def run_chat_core():
         with open(CHAT_LOG_PATH, "w") as f:
             json.dump(chat_log, f, indent=2)
 
-        # Sync state for downstream agents
+        # Defensive session sync before rerun
         st.session_state["chat_log"] = chat_log
         st.session_state["last_user_message"] = user_input.strip()
 
