@@ -1,78 +1,62 @@
 import streamlit as st
-import json
-import os
-from datetime import datetime
-from uuid import uuid4
 
-from superstructures.ss5_summonengine.summon_engine import run_summon_engine
+EXAMPLE_CHAT = [
+    {"role": "Tenant", "message": "Cat on wall singing"},
+    {"role": "GPT", "message": "Perhaps it's signaling distress or claiming territory."},
+    {"role": "Tenant", "message": "Should I be worried?"},
+    {"role": "GPT", "message": "Only if it’s frequent or aggressive."},
+]
 
-CHAT_LOG_PATH = "logs/chat_thread_main.json"
-
-def run_chat_core():
-    st.title("Tenant Chat Interface")
-    st.subheader("TriChat – Unified Chat Interface")
-
-    if "persona" not in st.session_state or "thread_id" not in st.session_state:
-        st.warning("⚠️ No role selected. Please log in via PersonaGate.")
-        return
-
-    persona = st.session_state["persona"]
-    thread_id = st.session_state["thread_id"]
-
-    if not os.path.exists("logs"):
-        os.makedirs("logs")
-
-    # Load existing chat
-    try:
-        with open(CHAT_LOG_PATH, "r") as f:
-            chat_log = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        chat_log = []
-
-    # Chat display box
+def chat_box(title, style_func):
+    st.subheader(title)
     with st.container():
-        st.markdown(
-            """
-            <div style='height: 400px; overflow-y: auto; border: 1px solid #444; padding: 10px; background-color: #111;'>
-            """,
-            unsafe_allow_html=True
-        )
-        for msg in chat_log:
-            role = msg.get("role", "").capitalize()
-            content = msg.get("message", "")
-            st.markdown(f"<p style='margin: 0;'><strong>{role}:</strong> {content}</p>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        chat_area = st.container()
+        with chat_area:
+            for msg in EXAMPLE_CHAT:
+                style_func(msg["role"], msg["message"])
 
-    # Chat input form
-    with st.form("chat_form", clear_on_submit=True):
-        user_input = st.text_input("Type a message...", key="chat_input")
-        submitted = st.form_submit_button("Send")
+def style_plain(role, msg):
+    st.markdown(f"**{role}:** {msg}")
 
-    if submitted and user_input.strip():
-        # Save user input
-        new_msg = {
-            "id": str(uuid4()),
-            "timestamp": datetime.utcnow().isoformat(),
-            "role": persona,
-            "message": user_input.strip()
-        }
-        chat_log.append(new_msg)
+def style_bubble(role, msg):
+    bg = "#222" if role == "Tenant" else "#444"
+    color = "#fff"
+    st.markdown(
+        f"""
+        <div style='background-color:{bg}; color:{color}; padding:10px; border-radius:10px; margin-bottom:5px'>
+        <b>{role}:</b> {msg}
+        </div>
+        """, unsafe_allow_html=True
+    )
 
-        # GPT response
-        try:
-            agent_reply = run_summon_engine(chat_log, user_input.strip(), persona, thread_id)
-        except Exception as e:
-            agent_reply = f"[GPT error: {str(e)}]"
+def style_emojis(role, msg):
+    icon = "🧑‍💼" if role == "Tenant" else "🤖"
+    st.markdown(f"{icon} **{role}:** {msg}")
 
-        if agent_reply:
-            chat_log.append({
-                "id": str(uuid4()),
-                "timestamp": datetime.utcnow().isoformat(),
-                "role": "assistant",
-                "message": agent_reply
-            })
+def style_card(role, msg):
+    st.markdown(
+        f"""
+        <div style='border:1px solid #555; padding:10px; border-radius:6px; margin-bottom:6px'>
+        <b>{role}</b><br>{msg}
+        </div>
+        """, unsafe_allow_html=True
+    )
 
-        with open(CHAT_LOG_PATH, "w") as f:
-            json.dump(chat_log, f, indent=2)
+# Layout: 4 chat design boxes
+st.set_page_config(layout="wide")
+st.title("🎛️ Chat UI Style Showcase")
 
-        st.rerun()
+col1, col2 = st.columns(2)
+col3, col4 = st.columns(2)
+
+with col1:
+    chat_box("🔹 Plain Text", style_plain)
+
+with col2:
+    chat_box("🔸 Bubble Style", style_bubble)
+
+with col3:
+    chat_box("🤖 Emojis + Role", style_emojis)
+
+with col4:
+    chat_box("📦 Card Design", style_card)
