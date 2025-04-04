@@ -1,11 +1,10 @@
-import openai
-import os
 
-def call_gpt(messages, temperature=0.5):
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+import openai
+
+def call_gpt(messages):
     response = openai.ChatCompletion.create(
         model="gpt-4",
         messages=messages,
-        temperature=temperature,
+        temperature=0.7
     )
     return response.choices[0].message["content"]
