@@ -92,17 +92,21 @@ def run_login():
 
     # Step 4: Show login button if not authenticated
     else:
+        from urllib.parse import quote
+        import json
+
         persona = st.session_state.get("persona", "tenant")
-        state_payload = {"persona": persona}
-        encoded_state = quote(json.dumps(state_payload))
+        state_json = json.dumps({"persona": persona})
+        encoded_state = quote(state_json)
 
         login_url = (
-            f"{COGNITO_DOMAIN}/login?"
-            f"client_id={CLIENT_ID}&"
-            f"response_type=code&"
-            f"scope=email+openid+phone&"
-            f"redirect_uri={REDIRECT_URI}&"
-            f"state={encoded_state}"
+            "https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com/oauth2/authorize"
+            f"?identity_provider=Google"
+            f"&redirect_uri=https://landtenmvp20.streamlit.app/"
+            f"&response_type=CODE"
+            f"&client_id=2u127f11v2mjq1sq08j4i9pq4l"
+            f"&state={encoded_state}"
+            f"&scope=email+openid+phone"
         )
 
         st.markdown(f"[🔐 Login with Google SSO]({login_url})")
