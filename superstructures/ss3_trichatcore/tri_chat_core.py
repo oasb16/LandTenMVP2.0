@@ -23,18 +23,18 @@ def run_chat_core():
     except (FileNotFoundError, json.JSONDecodeError):
         chat_log = []
 
-    # Show chat messages
+    # Display messages
     for msg in chat_log:
         role = msg.get("role", "unknown")
         content = msg.get("message", "")
         st.markdown(f"**{role.capitalize()}**: {content}")
 
     # Chat input
-    with st.form("chat_form"):
+    with st.form("chat_form", clear_on_submit=True):
         user_input = st.text_input("Type a message:", key="chat_input")
         submitted = st.form_submit_button("Send")
 
-    # Process message
+    # On message submit
     if submitted and user_input.strip():
         new_message = {
             "id": str(uuid4()),
@@ -43,9 +43,12 @@ def run_chat_core():
             "message": user_input.strip()
         }
         chat_log.append(new_message)
+
         with open(CHAT_LOG_PATH, "w") as f:
             json.dump(chat_log, f, indent=2)
 
-        # Clear the input manually
-        st.session_state["chat_input"] = ""
-        st.experimental_rerun()  # <- OPTIONAL here if you want instant re-display
+        # Sync state for downstream agents
+        st.session_state["chat_log"] = chat_log
+        st.session_state["last_user_message"] = user_input.strip()
+
+        st.experimental_rerun()
