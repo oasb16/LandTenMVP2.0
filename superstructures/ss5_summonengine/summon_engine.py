@@ -1,43 +1,32 @@
 
-import uuid
+import streamlit as st
 import json
+import os
 from datetime import datetime
+from uuid import uuid4
 from utils.gpt_call import call_gpt_agent
 
-def run_summon_engine(chat_history, user_input, persona, thread_id):
-    if "@agent" not in user_input.lower():
-        return {"message": "No GPT agent triggered.", "actions": None}
+def run_summon_engine(chat_log, user_input, persona, thread_id):
+    if not st.session_state.get("agent_active", False):
+        return
 
-    prompt = build_prompt(chat_history, user_input, persona)
-    gpt_response = call_gpt_agent(prompt)
+    st.info("🤖 Agent analyzing...")
 
-    response = {
-        "message": gpt_response,
-        "actions": build_actions(persona)
-    }
+    # Get GPT reply
+    reply = call_gpt_agent(chat_log)
 
-    log_path = f"logs/agent_responses_{thread_id}.json"
-    with open(log_path, "a") as f:
-        f.write(json.dumps({
-            "timestamp": datetime.utcnow().isoformat(),
-            "input": user_input,
-            "persona": persona,
-            "response": response
-        }) + "\n")
+    # Append reply to log
+    chat_log.append({
+        "id": str(uuid4()),
+        "timestamp": datetime.utcnow().isoformat(),
+        "role": "agent",
+        "message": reply
+    })
 
-    return response
+    # Persist log
+    if not os.path.exists("logs"):
+        os.makedirs("logs")
+    with open("logs/chat_thread_main.json", "w") as f:
+        json.dump(chat_log, f, indent=2)
 
-def build_prompt(chat_history, user_input, persona):
-    return [
-        {"role": "system", "content": f"You are an assistant helping the {persona} on a rental coordination platform."},
-        *[{"role": "user", "content": msg} for msg in chat_history],
-        {"role": "user", "content": user_input}
-    ]
-
-def build_actions(persona):
-    action_map = {
-        "tenant": [{"label": "Create Incident", "visible_to": "tenant"}],
-        "landlord": [{"label": "Approve", "visible_to": "landlord"}],
-        "contractor": [{"label": "Mark Complete", "visible_to": "contractor"}]
-    }
-    return action_map.get(persona, None)
+    st.success("💡 Agent replied.")
