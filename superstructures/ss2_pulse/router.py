@@ -21,7 +21,11 @@ def route_user(persona: str):
         st.title("Tenant Chat Interface")
         run_chat_core()
         run_agent_toggle()
-        run_summon_engine()
+        try:
+            run_summon_engine()
+        except Exception as e:
+            st.error(f"Summon Engine Error: {type(e).__name__} – {e}")
+
         run_action_relay()
 
     elif persona == "landlord":
