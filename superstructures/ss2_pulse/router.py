@@ -1,18 +1,30 @@
 import streamlit as st
-from superstructures.ss3_echo import run_tenant_view, run_echo
-# from superstructures.ss4_root.landlord_view import run_landlord_view
-# from superstructures.ss4_root.contractor_view import run_contractor_view
+
+# Chat-first architecture modules (TriChatLite)
+from superstructures.ss3_trichatcore.tri_chat_core import run_chat_core
+from superstructures.ss4_agenttoggle.agent_toggle_ui import run_agent_toggle
+from superstructures.ss5_summonengine.summon_engine import run_summon_engine
+from superstructures.ss6_actionrelay.actionrelay import run_action_relay
+
+# Optional: admin view
 from superstructures.tracker import show_tracker
+
 
 def route_user(persona: str):
     if persona == "tenant":
-        run_tenant_view()
-        run_echo()
+        st.title("Tenant Chat Interface")
+        run_chat_core()
+        run_agent_toggle()
+        run_summon_engine()
+        run_action_relay()
+
     elif persona == "landlord":
-        run_tenant_view()
+        st.title("Landlord Dashboard")
+        st.info("🚧 Landlord view is under construction.")
+
     elif persona == "contractor":
-        run_tenant_view()
+        st.title("Contractor Dashboard")
+        st.info("🚧 Contractor view is under construction.")
+
     elif persona == "admin":
-        show_tracker()
-    else:
-        st.error("Invalid persona.")
+        show_tracker_
