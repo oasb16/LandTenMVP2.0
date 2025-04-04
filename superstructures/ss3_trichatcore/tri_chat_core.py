@@ -22,34 +22,34 @@ def run_chat_core():
     if not os.path.exists("logs"):
         os.makedirs("logs")
 
-    # Load chat history
+    # Load existing chat
     try:
         with open(CHAT_LOG_PATH, "r") as f:
             chat_log = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         chat_log = []
 
-    # Display chat history
-    role_emoji = {
-        "tenant": "🧑 Tenant",
-        "assistant": "🤖 GPT",
-        "landlord": "🧑‍💼 Landlord",
-        "contractor": "🛠️ Contractor"
-    }
+    # Chat display box
+    with st.container():
+        st.markdown(
+            """
+            <div style='height: 400px; overflow-y: auto; border: 1px solid #444; padding: 10px; background-color: #111;'>
+            """,
+            unsafe_allow_html=True
+        )
+        for msg in chat_log:
+            role = msg.get("role", "").capitalize()
+            content = msg.get("message", "")
+            st.markdown(f"<p style='margin: 0;'><strong>{role}:</strong> {content}</p>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    for msg in chat_log:
-        role = msg.get("role", "")
-        content = msg.get("message", "")
-        emoji = role_emoji.get(role, "❓")
-        st.markdown(f"**{emoji}:** {content}")
-
-    # Chat input
+    # Chat input form
     with st.form("chat_form", clear_on_submit=True):
         user_input = st.text_input("Type a message...", key="chat_input")
         submitted = st.form_submit_button("Send")
 
     if submitted and user_input.strip():
-        # Save user message
+        # Save user input
         new_msg = {
             "id": str(uuid4()),
             "timestamp": datetime.utcnow().isoformat(),
@@ -62,7 +62,7 @@ def run_chat_core():
         try:
             agent_reply = run_summon_engine(chat_log, user_input.strip(), persona, thread_id)
         except Exception as e:
-            agent_reply = f"[⚠️ GPT error: {e}]"
+            agent_reply = f"[GPT error: {str(e)}]"
 
         if agent_reply:
             chat_log.append({
