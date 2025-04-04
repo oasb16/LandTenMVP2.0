@@ -51,4 +51,6 @@ def run_chat_core():
         st.session_state["chat_log"] = chat_log
         st.session_state["last_user_message"] = user_input.strip()
 
-        st.experimental_rerun()
+        st.success("✅ Message sent. Please click below to refresh.")
+        if st.button("🔄 Refresh now"):
+            st.experimental_rerun()
