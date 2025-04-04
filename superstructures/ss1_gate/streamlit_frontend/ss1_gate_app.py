@@ -92,7 +92,10 @@ def run_login():
 
     # Step 4: Show login button if not authenticated
     else:
-        encoded_state = quote(json.dumps({"persona": st.session_state["persona"]}))
+        persona = st.session_state.get("persona", "tenant")
+        state_payload = {"persona": persona}
+        encoded_state = quote(json.dumps(state_payload))
+
         login_url = (
             f"{COGNITO_DOMAIN}/login?"
             f"client_id={CLIENT_ID}&"
@@ -101,4 +104,5 @@ def run_login():
             f"redirect_uri={REDIRECT_URI}&"
             f"state={encoded_state}"
         )
+
         st.markdown(f"[🔐 Login with Google SSO]({login_url})")
