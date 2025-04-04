@@ -2,14 +2,14 @@
 import uuid
 import json
 from datetime import datetime
-from utils.gpt_call import call_gpt
+from utils.gpt_call import call_gpt_agent
 
 def run_summon_engine(chat_history, user_input, persona, thread_id):
     if "@agent" not in user_input.lower():
         return {"message": "No GPT agent triggered.", "actions": None}
 
     prompt = build_prompt(chat_history, user_input, persona)
-    gpt_response = call_gpt(prompt)
+    gpt_response = call_gpt_agent(prompt)
 
     response = {
         "message": gpt_response,
