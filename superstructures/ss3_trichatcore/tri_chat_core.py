@@ -55,12 +55,17 @@ def run_chat_core():
         with open(CHAT_LOG_PATH, "w") as f:
             json.dump(chat_log, f, indent=2)
 
-        # Defensive session sync before GPT + rerun
+        # Defensive session sync
         st.session_state["chat_log"] = chat_log
         st.session_state["last_user_message"] = user_input.strip()
 
-        # 🔮 GPT Agent Call
-        run_summon_engine(chat_log, user_input.strip(), st.session_state["role"], st.session_state["thread_id"])
+        # Safe session fallback
+        role = st.session_state.get("role", "tenant")
+        thread_id = st.session_state.get("thread_id", str(uuid4()))
+
+        # 🔮 Call GPT
+        run_summon_engine(chat_log, user_input.strip(), role, thread_id)
+
 
         st.success("✅ Message sent. Please click below to refresh.")
         if st.button("🔄 Refresh now"):
