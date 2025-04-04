@@ -27,4 +27,7 @@ def route_user(persona: str):
         st.info("🚧 Contractor view is under construction.")
 
     elif persona == "admin":
-        show_tracker_
+        show_tracker()
+
+    else:
+        st.error("❌ Invalid persona.")
