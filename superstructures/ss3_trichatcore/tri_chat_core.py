@@ -25,9 +25,13 @@ def run_chat_core():
 
     # Display messages
     for msg in chat_log:
-        role = msg.get("role", "unknown")
-        content = msg.get("message", "")
-        st.markdown(f"**{role.capitalize()}**: {content}")
+        raw_content = msg.get("message", "")
+        if "role" in msg and msg["role"]:
+            role_prefix = f"**{msg['role'].capitalize()}**"
+            st.markdown(f"{role_prefix}: {raw_content}")
+        else:
+            st.markdown(raw_content)
+
 
     # Chat input
     with st.form("chat_form", clear_on_submit=True):
