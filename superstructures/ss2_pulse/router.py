@@ -11,6 +11,12 @@ from superstructures.tracker import show_tracker
 
 
 def route_user(persona: str):
+
+    # 🔁 Ensure TriChatLite compatibility (legacy modules use "role", not "persona")
+    if "persona" in st.session_state and "role" not in st.session_state:
+        st.session_state["role"] = st.session_state["persona"]
+
+
     if persona == "tenant":
         st.title("Tenant Chat Interface")
         run_chat_core()
