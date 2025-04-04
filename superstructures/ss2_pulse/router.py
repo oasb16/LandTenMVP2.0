@@ -1,5 +1,5 @@
 import streamlit as st
-from superstructures.ss3_echo import run_tenant_view
+from superstructures.ss3_echo import run_tenant_view, run_echo()
 # from superstructures.ss4_root.landlord_view import run_landlord_view
 # from superstructures.ss4_root.contractor_view import run_contractor_view
 from superstructures.tracker import show_tracker
