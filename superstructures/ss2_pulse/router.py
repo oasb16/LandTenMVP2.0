@@ -27,13 +27,13 @@ def route_user(persona: str):
             user_input = st.session_state.get("last_user_message", "")
             persona = st.session_state.get("role", "tenant")
             thread_id = st.session_state.get("thread_id", "undefined-thread")
-
             # 🔮 Call summon engine with full context
             run_summon_engine(chat_history, user_input, persona, thread_id)
+            # 🛡️ Run ActionRelay with full symbolic state
+            run_action_relay(chat_history, persona, thread_id)
         except Exception as e:
             st.error(f"Summon Engine Error: {type(e).__name__} – {e}")
 
-        run_action_relay()
 
     elif persona == "landlord":
         st.title("Landlord Dashboard")
