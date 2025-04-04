@@ -96,7 +96,7 @@ def run_login():
         login_url = (
             f"{COGNITO_DOMAIN}/login?"
             f"client_id={CLIENT_ID}&"
-            f"?identity_provider=Google"
+            f"identity_provider=Google&"
             f"response_type=code&"
             f"scope=email+openid+phone&"
             f"redirect_uri={REDIRECT_URI}&"
