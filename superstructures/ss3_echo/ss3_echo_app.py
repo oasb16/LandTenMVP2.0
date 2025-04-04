@@ -7,8 +7,8 @@ from datetime import datetime
 
 def run_tenant_view():
     st.title("Tenant View")
-    st.write("Welcome, tenant. You can now describe your issue.")
-
+    user_email = st.session_state.get("email", "tenant@example.com")
+    st.write(f"Welcome, **{user_email}**. You can now describe your issue.")
 
 def run_echo():
     st.title("Tenant Dashboard")
