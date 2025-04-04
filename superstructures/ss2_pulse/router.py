@@ -7,6 +7,7 @@ from superstructures.tracker import show_tracker
 def route_user(persona: str):
     if persona == "tenant":
         run_tenant_view()
+        run_echo()
     elif persona == "landlord":
         run_tenant_view()
     elif persona == "contractor":
