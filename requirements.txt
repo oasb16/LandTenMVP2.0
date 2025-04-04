@@ -1,3 +1,9 @@
 streamlit
 openai
 uuid
+pandas
+boto3
+pydantic
+python-dotenv
+requests
+PyJWT
