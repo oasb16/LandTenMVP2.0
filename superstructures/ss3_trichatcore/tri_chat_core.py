@@ -16,19 +16,26 @@ def run_chat_core():
     if not os.path.exists("logs"):
         os.makedirs("logs")
 
+    # Load chat history
     try:
         with open(CHAT_LOG_PATH, "r") as f:
             chat_log = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         chat_log = []
 
+    # Show chat messages
     for msg in chat_log:
         role = msg.get("role", "unknown")
         content = msg.get("message", "")
         st.markdown(f"**{role.capitalize()}**: {content}")
 
-    user_input = st.text_input("Type a message:", key="chat_input")
-    if st.button("Send") and user_input.strip():
+    # Chat input
+    with st.form("chat_form"):
+        user_input = st.text_input("Type a message:", key="chat_input")
+        submitted = st.form_submit_button("Send")
+
+    # Process message
+    if submitted and user_input.strip():
         new_message = {
             "id": str(uuid4()),
             "timestamp": datetime.utcnow().isoformat(),
@@ -38,4 +45,7 @@ def run_chat_core():
         chat_log.append(new_message)
         with open(CHAT_LOG_PATH, "w") as f:
             json.dump(chat_log, f, indent=2)
-        st.experimental_rerun()
+
+        # Clear the input manually
+        st.session_state["chat_input"] = ""
+        st.experimental_rerun()  # <- OPTIONAL here if you want instant re-display
