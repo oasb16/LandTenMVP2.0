@@ -1,18 +1,10 @@
 import streamlit as st
-from superstructures.ss1_personagate.personagate import run_personagate
-from superstructures.ss2_sessionrouter.session_router import run_session_router
-from superstructures.ss3_trichatcore.tri_chat_core import run_chat_core
-from superstructures.ss4_agenttoggle.agent_toggle_ui import run_agent_toggle
-from superstructures.ss5_summonengine.summon_engine import run_summon_engine
-from superstructures.ss6_actionrelay.actionrelay import run_action_relay
+from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
+from superstructures.ss2_pulse.ss2_pulse_app import run_router
 
 st.set_page_config(page_title="TriChatLite", layout="wide")
 
-if "role" not in st.session_state:
-    run_personagate()
+if "logged_in" not in st.session_state:
+    run_login()       # handles: redirect, token, persona, DB write
 else:
-    run_session_router()
-    run_chat_core()
-    run_agent_toggle()
-    run_summon_engine()
-    run_action_relay()
+    run_router()      # routes to echo, landlord, or contractor based on persona
