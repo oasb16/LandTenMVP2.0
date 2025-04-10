@@ -9,7 +9,8 @@ load_dotenv()
 
 AWS_ACCESS_KEY_ID = st.secrets["AWS_ACCESS_KEY"]
 AWS_SECRET_ACCESS_KEY = st.secrets["AWS_SECRET_ACCESS_KEY"]
-AWS_S3_BUCKET = st.secrets["S3_BUCKET"]
+# AWS_S3_BUCKET = st.secrets["S3_BUCKET"]
+AWS_S3_BUCKET = "landtena"
 s3 = boto3.client("s3", aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 
 
