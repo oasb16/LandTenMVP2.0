@@ -3,6 +3,13 @@ import json
 import os
 from datetime import datetime
 
+
+def render_actions(actions):
+    for action in actions:
+        if action['visible_to'] == st.session_state["role"]:
+            if st.button(action['label']):
+                action['callback']()
+
 def run_action_relay(message_block: dict, message_id: str):
     role = st.session_state.get("role", "tenant")
     session_id = st.session_state.get("session_uuid", "unknown-session")

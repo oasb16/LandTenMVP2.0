@@ -5,8 +5,26 @@ from datetime import datetime
 from uuid import uuid4
 
 from superstructures.ss5_summonengine.summon_engine import run_summon_engine
+from superstructures.ss7_mediastream import media_stream
+from superstructures.ss8_canvascard import create_canvas_card
 
 CHAT_LOG_PATH = "logs/chat_thread_main.json"
+
+
+def chat_interface():
+    st.title("LandTen Chat Interface")
+    media_stream()
+    # Example usage of create_canvas_card
+    create_canvas_card(
+        title="Incident #123",
+        content="Leaking pipe in the kitchen.",
+        actions=[
+            {"label": "Approve", "callback": lambda: st.write("Approved!")},
+            {"label": "Request Info", "callback": lambda: st.write("Info Requested.")}
+        ]
+    )
+    # Chat messages and other UI components go here
+
 
 def run_chat_core():
     st.title("Tenant Chat Interface")
