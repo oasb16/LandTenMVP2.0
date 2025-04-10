@@ -6,8 +6,8 @@ from datetime import datetime
 from uuid import uuid4
 
 from superstructures.ss5_summonengine.summon_engine import run_summon_engine
-from superstructures.ss7_mediastream import media_stream
-from superstructures.ss8_canvascard import create_canvas_card
+from superstructures.ss7_mediastream.mediastream import media_stream
+from superstructures.ss8_canvascard.canvascard import create_canvas_card
 
 CHAT_LOG_PATH = "logs/chat_thread_main.json"
 
@@ -24,24 +24,23 @@ def run_chat_core():
     persona = st.session_state["persona"]
     thread_id = st.session_state["thread_id"]
 
-    # --- Ensure logs dir ---
+    # --- Ensure logs dir exists ---
     if not os.path.exists("logs"):
         os.makedirs("logs")
 
-    # --- Load chat history ---
+    # --- Load existing chat ---
     try:
         with open(CHAT_LOG_PATH, "r") as f:
             chat_log = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         chat_log = []
 
-    # --- Render media stream (camera or photo) ---
+    # --- Render media stream (photo or camera) ---
     with st.expander("📸 Upload or Capture Media"):
         media_stream()
 
-    # --- Render expandable GPT card (Canvas style) ---
+    # --- GPT card canvas UI (SS8 mock logic) ---
     st.markdown("#### 🧠 Suggested Smart Summary:")
-
     with elements("canvas"):
         create_canvas_card(
             title="Incident #123 – Leaking Pipe",
@@ -52,10 +51,8 @@ def run_chat_core():
             ]
         )
 
-
+    # --- Scrollable chat window ---
     st.markdown("---")
-
-    # --- Scrollable chat box ---
     with st.container():
         st.markdown(
             """
@@ -69,7 +66,7 @@ def run_chat_core():
             st.markdown(f"<p style='margin-bottom: 6px;'><strong>{role}:</strong> {content}</p>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # --- Input box ---
+    # --- User input form ---
     with st.form("chat_form", clear_on_submit=True):
         user_input = st.text_input("Type a message...", key="chat_input")
         submitted = st.form_submit_button("Send")
@@ -85,13 +82,12 @@ def run_chat_core():
         }
         chat_log.append(user_msg)
 
-        # GPT agent reply
+        # Get GPT agent reply via Summon Engine
         try:
             agent_reply = run_summon_engine(chat_log, user_input.strip(), persona, thread_id)
         except Exception as e:
             agent_reply = f"[Agent error: {str(e)}]"
 
-        # Append agent response
         if agent_reply:
             agent_msg = {
                 "id": str(uuid4()),
@@ -101,7 +97,7 @@ def run_chat_core():
             }
             chat_log.append(agent_msg)
 
-        # Save updated log
+        # Save updated chat log
         with open(CHAT_LOG_PATH, "w") as f:
             json.dump(chat_log, f, indent=2)
 
