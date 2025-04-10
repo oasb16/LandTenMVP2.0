@@ -1,8 +1,6 @@
-# tri_chat_core.py
 import streamlit as st
 from streamlit_elements import elements
-import json
-import os
+import json, os
 from datetime import datetime
 from uuid import uuid4
 
@@ -11,7 +9,6 @@ from superstructures.ss7_mediastream import run_media_interface
 from superstructures.ss8_canvascard.canvascard import create_canvas_card
 
 CHAT_LOG_PATH = "logs/chat_thread_main.json"
-
 
 def run_chat_core():
     st.title("Tenant Chat Interface")
@@ -31,12 +28,11 @@ def run_chat_core():
     try:
         with open(CHAT_LOG_PATH, "r") as f:
             chat_log = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
+    except:
         chat_log = []
 
     st.markdown("---")
     st.markdown("### 💬 Conversation")
-
     with st.container():
         st.markdown("<div style='height: 400px; overflow-y: auto;'>", unsafe_allow_html=True)
         for msg in chat_log[-30:]:
@@ -63,9 +59,7 @@ def run_chat_core():
                 """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-
-
-    # Form + media buttons row
+    # Form + buttons
     col1, col2, col3, col4 = st.columns([5, 1, 1, 1])
     with col1:
         with st.form("chat_form", clear_on_submit=True):
@@ -80,8 +74,6 @@ def run_chat_core():
             st.session_state.show_upload = False
             st.session_state.show_capture = False
 
-
-    # Set flags on click
     if "show_upload" not in st.session_state:
         st.session_state.show_upload = False
     if "show_capture" not in st.session_state:
@@ -92,7 +84,6 @@ def run_chat_core():
     if capture_toggle:
         st.session_state.show_capture = not st.session_state.show_capture
 
-
     if st.session_state.show_upload:
         with st.expander("📎 Upload Media (Audio / Image)", expanded=True):
             run_media_interface(mode="upload")
@@ -100,8 +91,6 @@ def run_chat_core():
     if st.session_state.show_capture:
         with st.expander("🎥 Record Live Audio/Video", expanded=True):
             run_media_interface(mode="capture")
-
-
 
     if submitted and user_input.strip():
         user_msg = {

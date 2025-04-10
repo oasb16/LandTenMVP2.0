@@ -1,5 +1,3 @@
-# upload_pipeline.py
-
 import streamlit as st, boto3, os, json, base64
 from datetime import datetime
 from uuid import uuid4
@@ -86,7 +84,7 @@ def handle_uploaded_media():
             json.dump(chat_log, f, indent=2)
 
         st.success("✅ Chat updated with media + summary.")
-        st.session_state.show_upload = False  # Clear panel after success
+        st.session_state.show_upload = False  # Close panel post success
 
     except Exception as e:
         st.error(f"❌ Inference Error: {e}")
