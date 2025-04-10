@@ -1,7 +1,7 @@
 import streamlit as st
 import boto3
 import os
-from ss7_mediastream.webrtc_debug import upload_to_s3
+from superstructures.ss7_mediastream.webrtc_debug import upload_to_s3
 from utils.gpt_call import call_whisper, call_gpt_vision
 from utils.incident_writer import save_incident_from_media
 import json
