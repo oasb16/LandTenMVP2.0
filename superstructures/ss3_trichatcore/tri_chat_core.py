@@ -2,35 +2,37 @@ import streamlit as st
 from streamlit_elements import elements
 from datetime import datetime
 from uuid import uuid4
-import json
 
 from superstructures.ss5_summonengine.summon_engine import run_summon_engine
 from superstructures.ss7_mediastream import run_media_interface
 from superstructures.ss8_canvascard.canvascard import create_canvas_card
 from utils.chat_log_writer import load_chat_log, append_chat_log
 
+
 def run_chat_core():
     st.title("Tenant Chat Interface")
     st.subheader("TriChat – Unified Chat Interface")
 
+    # Init state
     if "persona" not in st.session_state:
         st.session_state["persona"] = "tenant"
     if "thread_id" not in st.session_state:
         st.session_state["thread_id"] = str(uuid4())
     if "chat_log" not in st.session_state:
         st.session_state.chat_log = load_chat_log(st.session_state.thread_id)
+    if "last_action" not in st.session_state:
+        st.session_state.last_action = ""
+    if "agent_engaged" not in st.session_state:
+        st.session_state.agent_engaged = False
     if "show_upload" not in st.session_state:
         st.session_state.show_upload = False
     if "show_capture" not in st.session_state:
         st.session_state.show_capture = False
-    if "last_action" not in st.session_state:
-        st.session_state.last_action = ""
 
-    thread_id = st.session_state.thread_id
+    persona = st.session_state["persona"]
+    thread_id = st.session_state["thread_id"]
     chat_log = st.session_state.chat_log
-    persona = st.session_state.persona
 
-    # 🔁 Live conversation viewer
     st.markdown("### 💬 Conversation")
     with st.container():
         st.markdown("<div style='height: 400px; overflow-y: auto;'>", unsafe_allow_html=True)
@@ -57,9 +59,9 @@ def run_chat_core():
                 """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # 🎛️ Sidebar controls
+    # Sidebar toggle buttons
     with st.sidebar:
-        st.markdown("### Media Controls")
+        st.markdown("### 🎛️ Media Panel Controls")
         if st.button("📁 Toggle Upload"):
             st.session_state.show_upload = not st.session_state.show_upload
         if st.button("📷 Toggle Capture"):
@@ -68,17 +70,17 @@ def run_chat_core():
             st.session_state.show_upload = False
             st.session_state.show_capture = False
 
-    # 📎 Upload block
+    # Upload panel
     if st.session_state.show_upload:
         with st.expander("📎 Upload Media (Audio / Image)", expanded=True):
-            media_msg = run_media_interface(mode="upload")
+            media_msg = run_media_interface(mode="upload")  # returns a message dict
             if media_msg:
                 st.session_state.chat_log.append(media_msg)
                 append_chat_log(thread_id, media_msg)
                 st.session_state.last_action = "media_upload"
                 st.rerun()
 
-    # 🎥 Capture block
+    # Capture panel
     if st.session_state.show_capture:
         with st.expander("🎥 Record Live Audio/Video", expanded=True):
             media_msg = run_media_interface(mode="capture")
@@ -88,7 +90,7 @@ def run_chat_core():
                 st.session_state.last_action = "media_capture"
                 st.rerun()
 
-    # 💬 Text chat input
+    # Text input form
     with st.form("chat_form", clear_on_submit=True):
         user_input = st.text_input("Type a message...", key="chat_input")
         submitted = st.form_submit_button("Send")
@@ -102,29 +104,32 @@ def run_chat_core():
         }
         st.session_state.chat_log.append(user_msg)
         append_chat_log(thread_id, user_msg)
+
         st.session_state.last_action = "text_input"
         st.rerun()
 
-    # 🚫 Do NOT trigger agent if last action wasn't a fresh text input
+    # 🔒 ScarOS Lock: Agent reply only for text inputs
     if st.session_state.last_action != "text_input":
         return
+    if st.session_state.agent_engaged:
+        return
 
-    # ✅ Agent reply
+    st.session_state.agent_engaged = True
     try:
-        last_user_input = [msg["message"] for msg in chat_log if msg["role"] == persona][-1]
-        agent_reply = run_summon_engine(chat_log, last_user_input, persona, thread_id)
+        last_input = [msg["message"] for msg in chat_log if msg["role"] == persona][-1]
+        agent_reply = run_summon_engine(chat_log, last_input, persona, thread_id)
     except Exception as e:
         agent_reply = f"[Agent error: {str(e)}]"
 
-    if agent_reply:
-        agent_msg = {
-            "id": str(uuid4()),
-            "timestamp": datetime.utcnow().isoformat(),
-            "role": "agent",
-            "message": agent_reply
-        }
-        st.session_state.chat_log.append(agent_msg)
-        append_chat_log(thread_id, agent_msg)
+    agent_msg = {
+        "id": str(uuid4()),
+        "timestamp": datetime.utcnow().isoformat(),
+        "role": "agent",
+        "message": agent_reply
+    }
+    st.session_state.chat_log.append(agent_msg)
+    append_chat_log(thread_id, agent_msg)
 
     st.session_state.last_action = ""
+    st.session_state.agent_engaged = False
     st.rerun()

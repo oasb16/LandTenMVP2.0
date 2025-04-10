@@ -1,25 +1,36 @@
-import streamlit as st, boto3, os, json, base64
+import streamlit as st, boto3, base64, json
 from datetime import datetime
 from uuid import uuid4
 from utils.gpt_call import call_whisper, call_gpt_vision
 from utils.incident_writer import save_incident_from_media
 from dotenv import load_dotenv
+
 load_dotenv()
 
 AWS_ACCESS_KEY_ID = st.secrets["AWS_ACCESS_KEY"]
 AWS_SECRET_ACCESS_KEY = st.secrets["AWS_SECRET_ACCESS_KEY"]
 AWS_S3_BUCKET = "landtena"
-s3 = boto3.client("s3", aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+
+s3 = boto3.client("s3",
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+)
 
 def upload_file(file_bytes, filename, content_type):
     try:
-        s3.put_object(Bucket=AWS_S3_BUCKET, Key=filename, Body=file_bytes, ContentType=content_type)
+        s3.put_object(
+            Bucket=AWS_S3_BUCKET,
+            Key=filename,
+            Body=file_bytes,
+            ContentType=content_type
+        )
         return True
     except Exception as e:
-        st.error(f"❌ Upload failed: {e}")
+        st.error(f"❌ Upload to S3 failed: {e}")
         return False
 
 def handle_uploaded_media():
+    st.markdown("### 📤 Upload Recorded Audio/Video/Image")
     uploaded_file = st.file_uploader("Choose a file", type=["jpg", "jpeg", "png", "wav", "mp3", "mp4"])
     if uploaded_file is None:
         return None
@@ -32,26 +43,29 @@ def handle_uploaded_media():
     if not file_bytes:
         st.error("❌ Uploaded file is empty.")
         return None
+
     if not upload_file(file_bytes, filename, content_type):
         return None
 
     result, file_display = "", ""
-
     try:
         if "audio" in content_type:
             with st.spinner("🎧 Transcribing..."):
                 result = call_whisper(file_bytes)
                 b64_audio = base64.b64encode(file_bytes).decode("utf-8")
                 file_display = f"<audio controls><source src='data:{content_type};base64,{b64_audio}'></audio>"
+
         elif "image" in content_type:
-            with st.spinner("🖼️ Analyzing with GPT Vision..."):
+            with st.spinner("🖼️ Analyzing..."):
                 result = call_gpt_vision(file_bytes)
                 b64_img = base64.b64encode(file_bytes).decode("utf-8")
                 file_display = f"<img src='data:{content_type};base64,{b64_img}' width='300'/>"
+
         else:
-            st.warning("Unsupported media type for GPT inference.")
+            st.warning("Unsupported format for GPT inference.")
             return None
 
+        # Save incident
         save_incident_from_media(filename, result, content_type)
 
         return {
@@ -61,10 +75,13 @@ def handle_uploaded_media():
             "message": f"""
                 📎 <a href="{s3_url}" target="_blank">{uploaded_file.name}</a><br>
                 {file_display}<br><br>
-                <strong>🧠 Summary:</strong><br>{result}
+                <strong>🧠 Inference:</strong><br>{result}
             """
         }
 
     except Exception as e:
-        st.error(f"❌ Inference Error: {e}")
+        st.error(f"❌ Inference failed: {e}")
         return None
+
+def run_media_interface(mode="upload"):
+    return handle_uploaded_media()
