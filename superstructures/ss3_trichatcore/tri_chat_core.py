@@ -107,19 +107,34 @@ def run_chat_core():
         append_chat_log(thread_id, user_msg)
         st.session_state.last_action = "text_input"
 
+        # 👇 Only trigger agent if last action was a text input
         try:
-            agent_reply = run_summon_engine(st.session_state.chat_log, user_input.strip(), persona, thread_id)
-        except Exception as e:
-            agent_reply = f"[Agent error: {str(e)}]"
+            agent_reply = run_summon_engine(
+                st.session_state.chat_log, user_input.strip(), persona, thread_id
+            )
+            if agent_reply:
+                agent_msg = {
+                    "id": str(uuid4()),
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "role": "agent",
+                    "message": agent_reply
+                }
+                st.session_state.chat_log.append(agent_msg)
+                append_chat_log(thread_id, agent_msg)
 
-        if agent_reply:
+        except Exception as e:
             agent_msg = {
                 "id": str(uuid4()),
                 "timestamp": datetime.utcnow().isoformat(),
                 "role": "agent",
-                "message": agent_reply
+                "message": f"[Agent error: {str(e)}]"
             }
             st.session_state.chat_log.append(agent_msg)
             append_chat_log(thread_id, agent_msg)
 
         st.rerun()
+
+    # 👇 Prevent agent re-trigger on media reruns
+    elif st.session_state.get("last_action") != "text_input":
+        st.session_state.last_action = ""
+
