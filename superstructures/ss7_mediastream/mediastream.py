@@ -2,7 +2,7 @@ import streamlit as st
 from streamlit_webrtc import webrtc_streamer
 import boto3
 import av
-import os
+import os, io
 from dotenv import load_dotenv
 
 load_dotenv()
