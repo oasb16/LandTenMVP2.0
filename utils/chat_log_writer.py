@@ -1,14 +1,13 @@
+# chat_log_writer.py
 import os, json
 
-LOG_DIR = "logs"
-
-def get_chat_path(thread_id):
-    return os.path.join(LOG_DIR, f"chat_thread_{thread_id}.json")
+def get_chat_log_path(thread_id):
+    return f"logs/chat_thread_{thread_id}.json"
 
 def load_chat_log(thread_id):
-    path = get_chat_path(thread_id)
-    if not os.path.exists(LOG_DIR):
-        os.makedirs(LOG_DIR)
+    path = get_chat_log_path(thread_id)
+    if not os.path.exists("logs"):
+        os.makedirs("logs")
     if not os.path.exists(path):
         return []
     try:
@@ -17,9 +16,9 @@ def load_chat_log(thread_id):
     except:
         return []
 
-def append_chat_log(thread_id, msg):
-    path = get_chat_path(thread_id)
+def append_chat_log(thread_id, message):
+    path = get_chat_log_path(thread_id)
     log = load_chat_log(thread_id)
-    log.append(msg)
+    log.append(message)
     with open(path, "w") as f:
         json.dump(log, f, indent=2)
