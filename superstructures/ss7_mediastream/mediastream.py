@@ -46,7 +46,7 @@ def audio_frame_callback(frame):
 def media_stream():
     st.markdown("## 🛰️ Media Stream (Debug + Logging Enabled)")
 
-    st.info(f"🪣 S3 Bucket: `{AWS_S3_BUCKET}`")
+    st.info(f"🪣 S3 Bucket: `{AWS_BUCKET}`")
     media_type = st.radio("Select Media Type", ["Video", "Audio"], horizontal=True)
 
     st.warning("⚠️ Capturing frames — check logs + S3 for activity")
