@@ -12,20 +12,15 @@ load_dotenv()  # 🔁 Make sure to reload .env
 AWS_BUCKET = st.secrets["S3_BUCKET"]
 AWS_REGION = st.secrets["AWS_REGION"]
 
-def upload_to_s3_bytes(data: bytes, filename: str, content_type: str):
+def upload_to_s3_bytes(byte_data, filename, content_type):
+    st.write(f"🔍 Attempting upload: {filename} ({content_type})")
     try:
         s3 = boto3.client("s3")
-        s3.put_object(
-            Bucket=AWS_BUCKET,
-            Key=filename,
-            Body=data,
-            ContentType=content_type
-        )
-        st.success(f"✅ Uploaded `{filename}` to bucket `{AWS_BUCKET}`.")
-        print(f"[DEBUG] Uploaded {filename} to S3.")
+        s3.put_object(Bucket=AWS_BUCKET, Key=filename, Body=byte_data, ContentType=content_type)
+        st.success(f"✅ Uploaded to S3: {filename}")
     except Exception as e:
-        st.error(f"❌ Upload failed: {str(e)}")
-        print(f"[ERROR] S3 Upload failed: {str(e)}")
+        st.error(f"❌ Upload failed: {e}")
+
 
 def video_frame_callback(frame):
     try:
