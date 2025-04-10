@@ -66,7 +66,7 @@ def run_chat_core():
 
 
     # Form + media buttons row
-    col1, col2, col3 = st.columns([6, 1, 1])
+    col1, col2, col3, col4 = st.columns([5, 1, 1, 1])
     with col1:
         with st.form("chat_form", clear_on_submit=True):
             user_input = st.text_input("Type a message...", key="chat_input")
@@ -75,6 +75,11 @@ def run_chat_core():
         upload_toggle = st.button("📁 Upload", key="upload_btn")
     with col3:
         capture_toggle = st.button("📷 Capture", key="capture_btn")
+    with col4:
+        if st.button("🔄 Close All Media Panels"):
+            st.session_state.show_upload = False
+            st.session_state.show_capture = False
+
 
     # Set flags on click
     if "show_upload" not in st.session_state:
