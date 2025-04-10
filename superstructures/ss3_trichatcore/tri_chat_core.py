@@ -7,7 +7,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from superstructures.ss5_summonengine.summon_engine import run_summon_engine
-from superstructures.ss7_mediastream import media_stream
+from superstructures.ss7_mediastream import run_media_interface
 from superstructures.ss8_canvascard.canvascard import create_canvas_card
 
 CHAT_LOG_PATH = "logs/chat_thread_main.json"
@@ -35,7 +35,8 @@ def run_chat_core():
         chat_log = []
 
     with st.expander("📸 Upload or Capture Media"):
-        media_stream()
+        run_media_interface()
+
 
     st.markdown("---")
     st.markdown("### 💬 Conversation")
