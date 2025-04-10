@@ -33,6 +33,7 @@ def run_chat_core():
     if "persona" not in st.session_state or "thread_id" not in st.session_state:
         st.warning("⚠️ No role selected. Please log in via PersonaGate.")
         st.session_state["persona"] = "tenant"
+        st.session_state["thread_id"] = "123"
         # return
 
     persona = st.session_state["persona"]
