@@ -1,34 +1,37 @@
 import streamlit as st
 import boto3
 import os
-# from superstructures.ss7_mediastream.webrtc_debug import upload_to_s3
-from utils.gpt_call import call_whisper, call_gpt_vision
-from utils.incident_writer import save_incident_from_media
 import json
+import base64
 from datetime import datetime
 from uuid import uuid4
 from dotenv import load_dotenv
+from utils.gpt_call import call_whisper, call_gpt_vision
+from utils.incident_writer import save_incident_from_media
+
 load_dotenv()
 
 AWS_ACCESS_KEY_ID = st.secrets["AWS_ACCESS_KEY"]
 AWS_SECRET_ACCESS_KEY = st.secrets["AWS_SECRET_ACCESS_KEY"]
-# AWS_S3_BUCKET = st.secrets["S3_BUCKET"]
 AWS_S3_BUCKET = "landtena"
-s3 = boto3.client("s3", aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 
-
-def upload_file(file, filename, content_type):
-    try:
-        st.success(f"AWS_S3_BUCKET : {AWS_S3_BUCKET}")
-        s3.upload_fileobj(file, AWS_S3_BUCKET, filename, ExtraArgs={"ContentType": content_type})
-        st.success(f"✅ Uploaded: `{filename}` to bucket `{AWS_S3_BUCKET}`")
-        return True
-    except Exception as e:
-        st.error(f"❌ Upload failed: {str(e)}")
-        return False
-
+s3 = boto3.client("s3",
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+)
 
 CHAT_LOG_PATH = "logs/chat_thread_main.json"
+
+
+def upload_file(file_bytes, filename, content_type):
+    try:
+        s3.put_object(Bucket=AWS_S3_BUCKET, Key=filename, Body=file_bytes, ContentType=content_type)
+        st.success(f"✅ Uploaded `{filename}` to S3 bucket `{AWS_S3_BUCKET}`")
+        return True
+    except Exception as e:
+        st.error(f"❌ Upload failed: {e}")
+        return False
+
 
 def handle_uploaded_media():
     st.markdown("### 📤 Upload Recorded Audio/Video/Image")
@@ -44,49 +47,60 @@ def handle_uploaded_media():
             filename = f"uploads/{datetime.utcnow().isoformat()}_{uploaded_file.name}"
 
             if not file_bytes:
-                st.error("❌ File appears empty.")
+                st.error("❌ Uploaded file is empty.")
                 return
 
-            # # Upload to S3
-            # upload_to_s3(file_bytes, filename, content_type)
-            # st.success(f"✅ Uploaded to S3 as `{filename}`")
+            if not upload_file(file_bytes, filename, content_type):
+                return
 
             result = ""
+            file_display = ""
 
             if "audio" in content_type:
-                with st.spinner("Transcribing audio..."):
+                with st.spinner("🧠 Transcribing with Whisper..."):
                     result = call_whisper(file_bytes)
-                    st.success("🧠 Transcription complete:")
+                    b64_audio = base64.b64encode(file_bytes).decode("utf-8")
+                    file_display = f"""
+                        <audio controls>
+                            <source src="data:{content_type};base64,{b64_audio}" type="{content_type}">
+                        </audio>
+                    """
+                    st.success("🎧 Transcription complete")
                     st.code(result)
 
             elif "image" in content_type:
-                with st.spinner("Analyzing image..."):
+                with st.spinner("🧠 Analyzing image with GPT Vision..."):
                     result = call_gpt_vision(file_bytes)
-                    st.success("🧠 Image description complete:")
+                    b64_img = base64.b64encode(file_bytes).decode("utf-8")
+                    file_display = f'<img src="data:{content_type};base64,{b64_img}" width="300"/>'
+                    st.success("🖼️ Image description complete")
                     st.code(result)
 
             else:
-                st.warning("⚠️ Unsupported file type for GPT processing.")
+                st.warning("⚠️ File uploaded but GPT processing unsupported.")
                 return
 
-            # Save to incident DB
+            # Save incident from inference
             save_incident_from_media(filename, result, content_type)
 
-            # Append to chat log
-            chat_msg = {
-                "id": str(uuid4()),
-                "timestamp": datetime.utcnow().isoformat(),
-                "role": "tenant",
-                "message": f"[📎 Uploaded: {uploaded_file.name}]\n\n{result}"
-            }
-
+            # Load and update chat log
             try:
                 with open(CHAT_LOG_PATH, "r") as f:
                     chat_log = json.load(f)
             except (FileNotFoundError, json.JSONDecodeError):
                 chat_log = []
 
-            chat_log.append(chat_msg)
+            chat_log.append({
+                "id": str(uuid4()),
+                "timestamp": datetime.utcnow().isoformat(),
+                "role": "tenant",
+                "message": f"""
+                    <div style='background:#111;padding:10px;border-radius:10px;'>
+                        {file_display}<br><br>
+                        <strong>🧠 Agent Inference:</strong><br>{result}
+                    </div>
+                """
+            })
 
             with open(CHAT_LOG_PATH, "w") as f:
                 json.dump(chat_log, f, indent=2)
@@ -94,5 +108,4 @@ def handle_uploaded_media():
             st.success("💡 Agent updated with media context.")
 
         except Exception as e:
-            st.error(f"❌ Upload failed: {e}")
-
+            st.error(f"❌ Exception during processing: {e}")
