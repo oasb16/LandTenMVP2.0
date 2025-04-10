@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_elements import elements
 import json
 import os
 from datetime import datetime
@@ -40,14 +41,17 @@ def run_chat_core():
 
     # --- Render expandable GPT card (Canvas style) ---
     st.markdown("#### 🧠 Suggested Smart Summary:")
-    create_canvas_card(
-        title="Incident #123 – Leaking Pipe",
-        content="Detected an incident: leaking pipe under kitchen sink reported by tenant.",
-        actions=[
-            {"label": "Create Job Ticket", "callback": lambda: st.success("✅ Job Ticket Created")},
-            {"label": "Request More Info", "callback": lambda: st.info("ℹ️ Waiting for photo upload")}
-        ]
-    )
+
+    with elements("canvas"):
+        create_canvas_card(
+            title="Incident #123 – Leaking Pipe",
+            content="Detected an incident: leaking pipe under kitchen sink reported by tenant.",
+            actions=[
+                {"label": "Create Job Ticket", "callback": lambda: st.success("✅ Job Ticket Created")},
+                {"label": "Request More Info", "callback": lambda: st.info("ℹ️ Waiting for photo upload")}
+            ]
+        )
+
 
     st.markdown("---")
 
