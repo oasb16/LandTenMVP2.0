@@ -1,1 +1,1 @@
-from .mediastream import media_stream
+from .mediastream import run_media_interface
