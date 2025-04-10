@@ -71,14 +71,26 @@ def run_chat_core():
     with col3:
         capture_toggle = st.button("📷 Capture", key="capture_btn")
 
-    # Below row: expandable media options
+    # Set flags on click
+    if "show_upload" not in st.session_state:
+        st.session_state.show_upload = False
+    if "show_capture" not in st.session_state:
+        st.session_state.show_capture = False
+
     if upload_toggle:
+        st.session_state.show_upload = not st.session_state.show_upload
+    if capture_toggle:
+        st.session_state.show_capture = not st.session_state.show_capture
+
+
+    if st.session_state.show_upload:
         with st.expander("📎 Upload Media (Audio / Image)", expanded=True):
             run_media_interface(mode="upload")
 
-    if capture_toggle:
+    if st.session_state.show_capture:
         with st.expander("🎥 Record Live Audio/Video", expanded=True):
             run_media_interface(mode="capture")
+
 
 
     if submitted and user_input.strip():
