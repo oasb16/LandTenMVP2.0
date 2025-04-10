@@ -11,3 +11,10 @@ def run_media_interface():
         media_stream()
     else:
         handle_uploaded_media()
+        chat_log.append({
+            "id": str(uuid4()),
+            "timestamp": datetime.utcnow().isoformat(),
+            "role": "system",
+            "message": f"📎 Uploaded file: `{filename}` → summary: {summary_text}"
+        })
+

@@ -34,10 +34,6 @@ def run_chat_core():
     except (FileNotFoundError, json.JSONDecodeError):
         chat_log = []
 
-    with st.expander("📸 Upload or Capture Media"):
-        run_media_interface()
-
-
     st.markdown("---")
     st.markdown("### 💬 Conversation")
 
@@ -64,9 +60,26 @@ def run_chat_core():
                 """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-    with st.form("chat_form", clear_on_submit=True):
-        user_input = st.text_input("Type a message...", key="chat_input")
-        submitted = st.form_submit_button("Send")
+    # Form + media buttons row
+    col1, col2, col3 = st.columns([5, 1.5, 1.5])
+    with col1:
+        with st.form("chat_form", clear_on_submit=True):
+            user_input = st.text_input("Type a message...", key="chat_input")
+            submitted = st.form_submit_button("Send")
+    with col2:
+        upload_toggle = st.button("📁 Upload", key="upload_btn")
+    with col3:
+        capture_toggle = st.button("📷 Capture", key="capture_btn")
+
+    # Below row: expandable media options
+    if upload_toggle:
+        with st.expander("📎 Upload Media (Audio / Image)", expanded=True):
+            run_media_interface(mode="upload")
+
+    if capture_toggle:
+        with st.expander("🎥 Record Live Audio/Video", expanded=True):
+            run_media_interface(mode="capture")
+
 
     if submitted and user_input.strip():
         user_msg = {
