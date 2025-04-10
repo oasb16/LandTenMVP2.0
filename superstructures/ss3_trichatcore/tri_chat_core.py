@@ -39,7 +39,12 @@ def run_chat_core():
         for msg in chat_log[-30:]:
             role = msg.get("role", "").capitalize()
             content = msg.get("message", "")
+
+            if not isinstance(content, str):
+                content = str(content)  # ← Fallback to stringify any non-str message
+
             word_count = len(content.split())
+
             use_canvas = word_count > 100 or any(
                 kw in content.lower() for kw in ["summary", "inference", "incident", "description", "transcription"]
             )
