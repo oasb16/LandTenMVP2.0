@@ -43,13 +43,11 @@ def run_chat_core():
             role = msg.get("role", "").capitalize()
             content = msg.get("message", "")
             word_count = len(content.split())
-
-            # Auto-detect if canvas bubble needed
-            is_canvas = word_count > 100 or any(
-                kw in content.lower() for kw in ["summary", "incident", "issue", "transcription"]
+            use_canvas = word_count > 100 or any(
+                kw in content.lower() for kw in ["summary", "inference", "incident", "description", "transcription"]
             )
 
-            if is_canvas:
+            if use_canvas:
                 with elements(f"canvas_{msg['id']}"):
                     create_canvas_card(
                         title=f"{role} - Media Summary" if "📎" in content else f"{role} - Long Message",
@@ -58,12 +56,13 @@ def run_chat_core():
                     )
             else:
                 st.markdown(f"""
-                    <div style='background-color:#1e1e1e; padding:10px; margin:8px 0; 
+                    <div style='background-color:#1e1e1e; padding:10px; margin:8px 0;
                                 border-radius:10px; color:#eee;'>
                         <strong>{role}:</strong><br>{content}
                     </div>
                 """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
+
 
 
     # Form + media buttons row
