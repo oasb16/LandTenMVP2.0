@@ -1,4 +1,4 @@
-# tri_chat_core.py
+# tri_chat_core.py (ScarOS hardened)
 import streamlit as st, json, os
 from datetime import datetime
 from uuid import uuid4
@@ -13,13 +13,12 @@ def run_chat_core():
     st.title("Tenant Chat Interface")
     st.subheader("TriChat – Unified Chat Interface")
 
-    # Init
     if "persona" not in st.session_state:
         st.session_state["persona"] = "tenant"
     if "thread_id" not in st.session_state:
         st.session_state["thread_id"] = str(uuid4())
     if "chat_log" not in st.session_state:
-        st.session_state.chat_log = load_chat_log(st.session_state.thread_id)
+        st.session_state.chat_log = load_chat_log(st.session_state["thread_id"])
     if "last_action" not in st.session_state:
         st.session_state.last_action = None
     if "show_upload" not in st.session_state:
@@ -27,9 +26,9 @@ def run_chat_core():
     if "show_capture" not in st.session_state:
         st.session_state.show_capture = False
 
-    persona = st.session_state["persona"]
     thread_id = st.session_state["thread_id"]
     chat_log = st.session_state.chat_log
+    persona = st.session_state["persona"]
 
     st.markdown("### 💬 Conversation")
     with st.container():
@@ -58,16 +57,21 @@ def run_chat_core():
                 """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # Sidebar controls
     with st.sidebar:
-        st.markdown("### ⚙️ Controls")
+        st.markdown("### 🧭 Media Controls")
         if st.button("📁 Toggle Upload"):
             st.session_state.show_upload = not st.session_state.show_upload
+            st.session_state.last_action = "toggle_upload"
+            st.rerun()
         if st.button("📷 Toggle Capture"):
             st.session_state.show_capture = not st.session_state.show_capture
+            st.session_state.last_action = "toggle_capture"
+            st.rerun()
         if st.button("🔄 Close All Panels"):
             st.session_state.show_upload = False
             st.session_state.show_capture = False
+            st.session_state.last_action = "close_panels"
+            st.rerun()
 
     if st.session_state.show_upload:
         with st.expander("📎 Upload Media", expanded=True):
@@ -79,7 +83,7 @@ def run_chat_core():
                 st.rerun()
 
     if st.session_state.show_capture:
-        with st.expander("📹 Record Live Media", expanded=True):
+        with st.expander("📹 Record Media", expanded=True):
             media_msg = run_media_interface(mode="capture")
             if media_msg:
                 st.session_state.chat_log.append(media_msg)
@@ -87,7 +91,7 @@ def run_chat_core():
                 st.session_state.last_action = "media_capture"
                 st.rerun()
 
-    # Chat form
+    # 🧠 Actual chat form
     with st.form("chat_form", clear_on_submit=True):
         user_input = st.text_input("Type a message...")
         submitted = st.form_submit_button("Send")
@@ -104,7 +108,12 @@ def run_chat_core():
         st.session_state.last_action = "text_input"
 
         try:
-            agent_reply = run_summon_engine(st.session_state.chat_log, user_input.strip(), persona, thread_id)
+            agent_reply = run_summon_engine(
+                chat_log=st.session_state.chat_log,
+                latest_user_message=user_input.strip(),
+                persona=persona,
+                thread_id=thread_id
+            )
         except Exception as e:
             agent_reply = f"[Agent error: {str(e)}]"
 
