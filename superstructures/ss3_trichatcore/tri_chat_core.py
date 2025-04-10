@@ -61,7 +61,7 @@ def run_chat_core():
         st.markdown("</div>", unsafe_allow_html=True)
 
     # Form + media buttons row
-    col1, col2, col3 = st.columns([5, 1.5, 1.5])
+    col1, col2, col3 = st.columns([6, 1, 1])
     with col1:
         with st.form("chat_form", clear_on_submit=True):
             user_input = st.text_input("Type a message...", key="chat_input")
