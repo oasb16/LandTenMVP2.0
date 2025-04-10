@@ -11,7 +11,6 @@ AWS_SECRET_ACCESS_KEY = st.secrets["AWS_SECRET_ACCESS_KEY"]
 AWS_S3_BUCKET = "landtena"
 
 s3 = boto3.client("s3", aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
-CHAT_LOG_PATH = "logs/chat_thread_main.json"
 
 def upload_file(file_bytes, filename, content_type):
     try:
@@ -25,7 +24,7 @@ def handle_uploaded_media():
     st.markdown("### 📤 Upload Recorded Audio/Video/Image")
     uploaded_file = st.file_uploader("Choose a file", type=["jpg", "jpeg", "png", "wav", "mp3", "mp4"])
     if uploaded_file is None:
-        return
+        return None
 
     content_type = uploaded_file.type
     file_bytes = uploaded_file.getvalue()
@@ -34,10 +33,10 @@ def handle_uploaded_media():
 
     if not file_bytes:
         st.error("❌ Uploaded file is empty.")
-        return
+        return None
 
     if not upload_file(file_bytes, filename, content_type):
-        return
+        return None
 
     result, file_display = "", ""
 
@@ -56,18 +55,11 @@ def handle_uploaded_media():
 
         else:
             st.warning("Unsupported media format for GPT inference.")
-            return
+            return None
 
         save_incident_from_media(filename, result, content_type)
 
-        # Append to chat
-        try:
-            with open(CHAT_LOG_PATH, "r") as f:
-                chat_log = json.load(f)
-        except:
-            chat_log = []
-
-        chat_log.append({
+        return {
             "id": str(uuid4()),
             "timestamp": datetime.utcnow().isoformat(),
             "role": "tenant",
@@ -78,13 +70,8 @@ def handle_uploaded_media():
                     <strong>🧠 Inference:</strong><br>{result}
                 </div>
             """
-        })
-
-        with open(CHAT_LOG_PATH, "w") as f:
-            json.dump(chat_log, f, indent=2)
-
-        st.success("✅ Chat updated with media + summary.")
-        st.session_state.show_upload = False  # Close panel post success
+        }
 
     except Exception as e:
         st.error(f"❌ Inference Error: {e}")
+        return None
