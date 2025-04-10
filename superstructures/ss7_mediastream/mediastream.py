@@ -29,6 +29,8 @@ def upload_to_s3_bytes(data: bytes, filename: str, content_type: str):
 
 def video_frame_callback(frame):
     try:
+        st.toast("📸 Capturing video frame...")
+        print("[DEBUG] Frame callback triggered.")
         image = frame.to_image()
         buf = io.BytesIO()
         image.save(buf, format="JPEG")
@@ -36,7 +38,6 @@ def video_frame_callback(frame):
         ts = datetime.utcnow().strftime("%Y%m%dT%H%M%S")
         filename = f"video_capture_{ts}.jpg"
         upload_to_s3_bytes(buf.read(), filename, "image/jpeg")
-        print(f"[DEBUG] Captured frame {filename}")
         return frame
     except Exception as e:
         print(f"[ERROR] Frame conversion failed: {str(e)}")
