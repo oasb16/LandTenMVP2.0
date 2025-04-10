@@ -7,8 +7,8 @@ import os
 from datetime import datetime
 
 # Load AWS credentials from environment
-AWS_BUCKET = os.getenv("AWS_S3_BUCKET_NAME")
-AWS_REGION = os.getenv("AWS_REGION", "us-east-1")  # default fallback
+AWS_BUCKET = st.secrets["AWS_S3_BUCKET_NAME"]
+AWS_REGION = st.secrets["AWS_REGION", "us-east-1"]  # default fallback
 
 def upload_to_s3_bytes(data: bytes, filename: str, content_type: str):
     try:
