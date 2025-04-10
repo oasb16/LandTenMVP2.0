@@ -52,12 +52,15 @@ def run_chat_core():
                         actions=[]
                     )
             else:
-                st.markdown(f"""
-                    <div style='background-color:#1e1e1e; padding:10px; margin:8px 0; 
-                                border-radius:10px; color:#eee;'>
-                        <strong>{role}:</strong><br>{content}
-                    </div>
-                """, unsafe_allow_html=True)
+                if content.strip().startswith("<div"):
+                    st.markdown(content, unsafe_allow_html=True)
+                else:
+                    st.markdown(f"""
+                        <div style='background-color:#1e1e1e; padding:10px; margin:8px 0; 
+                                    border-radius:10px; color:#eee;'>
+                            <strong>{role}:</strong><br>{content}
+                        </div>
+                    """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
     # Form + media buttons row
