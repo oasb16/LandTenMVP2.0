@@ -4,6 +4,7 @@ uuid
 pandas
 boto3
 pydantic
+dotenv
 python-dotenv
 requests
 PyJWT

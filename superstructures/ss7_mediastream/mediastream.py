@@ -5,6 +5,8 @@ import numpy as np
 import boto3
 import io
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 AWS_S3_BUCKET = os.getenv("AWS_S3_BUCKET_NAME")
 

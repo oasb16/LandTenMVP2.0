@@ -3,8 +3,9 @@ import os
 from PIL import Image
 import io
 import base64
+import streamlit as st
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = st.secrets("OPENAI_API_KEY")
 
 def call_gpt_agent(chat_log):
     messages = [{"role": "system", "content": "You are a helpful agent for property issues."}]
