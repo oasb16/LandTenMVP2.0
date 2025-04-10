@@ -1,3 +1,4 @@
+# tri_chat_core.py
 import streamlit as st
 from streamlit_elements import elements
 import json
@@ -6,16 +7,16 @@ from datetime import datetime
 from uuid import uuid4
 
 from superstructures.ss5_summonengine.summon_engine import run_summon_engine
-from superstructures.ss7_mediastream.mediastream import media_stream
+from superstructures.ss7_mediastream import media_stream
 from superstructures.ss8_canvascard.canvascard import create_canvas_card
 
 CHAT_LOG_PATH = "logs/chat_thread_main.json"
+
 
 def run_chat_core():
     st.title("Tenant Chat Interface")
     st.subheader("TriChat – Unified Chat Interface")
 
-    # --- State boot ---
     if "persona" not in st.session_state:
         st.session_state["persona"] = "tenant"
     if "thread_id" not in st.session_state:
@@ -24,56 +25,49 @@ def run_chat_core():
     persona = st.session_state["persona"]
     thread_id = st.session_state["thread_id"]
 
-    # --- Ensure logs dir exists ---
     if not os.path.exists("logs"):
         os.makedirs("logs")
 
-    # --- Load existing chat ---
     try:
         with open(CHAT_LOG_PATH, "r") as f:
             chat_log = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         chat_log = []
 
-    # --- Render media stream (photo or camera) ---
     with st.expander("📸 Upload or Capture Media"):
         media_stream()
 
-    # --- GPT card canvas UI (SS8 mock logic) ---
-    st.markdown("#### 🧠 Suggested Smart Summary:")
-    with elements("canvas"):
-        create_canvas_card(
-            title="Incident #123 – Leaking Pipe",
-            content="Detected an incident: leaking pipe under kitchen sink reported by tenant.",
-            actions=[
-                {"label": "Create Job Ticket", "callback": lambda: st.success("✅ Job Ticket Created")},
-                {"label": "Request More Info", "callback": lambda: st.info("ℹ️ Waiting for photo upload")}
-            ]
-        )
-
-    # --- Scrollable chat window ---
     st.markdown("---")
+    st.markdown("### 💬 Conversation")
+
     with st.container():
-        st.markdown(
-            """
-            <div style='height: 400px; overflow-y: auto; border: 1px solid #333; padding: 10px; background-color: #0f0f0f;'>
-            """,
-            unsafe_allow_html=True
-        )
-        for msg in chat_log:
+        st.markdown("<div style='height: 400px; overflow-y: auto;'>", unsafe_allow_html=True)
+        for msg in chat_log[-15:]:
             role = msg.get("role", "").capitalize()
             content = msg.get("message", "")
-            st.markdown(f"<p style='margin-bottom: 6px;'><strong>{role}:</strong> {content}</p>", unsafe_allow_html=True)
+            word_count = len(content.split())
+
+            if word_count > 100 or "summary" in content.lower() or "incident" in content.lower():
+                with elements(f"canvas_{msg['id']}"):
+                    create_canvas_card(
+                        title=f"{role} - Long Message",
+                        content=content,
+                        actions=[]
+                    )
+            else:
+                st.markdown(f"""
+                    <div style='background-color:#1e1e1e; padding:10px; margin:8px 0; 
+                                border-radius:10px; color:#eee;'>
+                        <strong>{role}:</strong><br>{content}
+                    </div>
+                """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # --- User input form ---
     with st.form("chat_form", clear_on_submit=True):
         user_input = st.text_input("Type a message...", key="chat_input")
         submitted = st.form_submit_button("Send")
 
-    # --- On user message ---
     if submitted and user_input.strip():
-        # Append user message
         user_msg = {
             "id": str(uuid4()),
             "timestamp": datetime.utcnow().isoformat(),
@@ -82,7 +76,6 @@ def run_chat_core():
         }
         chat_log.append(user_msg)
 
-        # Get GPT agent reply via Summon Engine
         try:
             agent_reply = run_summon_engine(chat_log, user_input.strip(), persona, thread_id)
         except Exception as e:
@@ -97,7 +90,6 @@ def run_chat_core():
             }
             chat_log.append(agent_msg)
 
-        # Save updated chat log
         with open(CHAT_LOG_PATH, "w") as f:
             json.dump(chat_log, f, indent=2)
 

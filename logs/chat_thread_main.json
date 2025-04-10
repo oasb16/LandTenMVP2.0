@@ -1,0 +1,16 @@
+[
+  {
+    "id": "7fa538ee-a7cf-43f3-ba7d-f0b3e23d91a9",
+    "timestamp": "2025-04-10T16:38:59.747720",
+    "role": "tenant",
+    "message": "There's water leaking under the sink."
+  },
+  {
+    "id": "bee0e35d-8757-49b5-951d-58b8625a7b48",
+    "timestamp": "2025-04-10T16:38:59.749164",
+    "role": "agent",
+    "message": "[GPT error: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable]",
+    "thread_id": "604b4b25-afc2-477a-8f93-464ad43dd1a5",
+    "persona_context": "tenant"
+  }
+]
