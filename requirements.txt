@@ -10,3 +10,4 @@ PyJWT
 streamlit-webrtc
 streamlit-elements
 boto3
+streamlit-server-state

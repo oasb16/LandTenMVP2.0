@@ -15,7 +15,6 @@ def run_chat_core():
     st.title("Tenant Chat Interface")
     st.subheader("TriChat – Unified Chat Interface")
 
-    # --- State boot ---
     if "persona" not in st.session_state:
         st.session_state["persona"] = "tenant"
     if "thread_id" not in st.session_state:
@@ -24,22 +23,18 @@ def run_chat_core():
     persona = st.session_state["persona"]
     thread_id = st.session_state["thread_id"]
 
-    # --- Ensure logs dir ---
     if not os.path.exists("logs"):
         os.makedirs("logs")
 
-    # --- Load chat history ---
     try:
         with open(CHAT_LOG_PATH, "r") as f:
             chat_log = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         chat_log = []
 
-    # --- Render media stream (camera or photo) ---
     with st.expander("📸 Upload or Capture Media"):
         media_stream()
 
-    # --- Render expandable GPT card (Canvas style) ---
     st.markdown("#### 🧠 Suggested Smart Summary:")
 
     with elements("canvas"):
@@ -52,10 +47,8 @@ def run_chat_core():
             ]
         )
 
-
     st.markdown("---")
 
-    # --- Scrollable chat box ---
     with st.container():
         st.markdown(
             """
@@ -69,14 +62,11 @@ def run_chat_core():
             st.markdown(f"<p style='margin-bottom: 6px;'><strong>{role}:</strong> {content}</p>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # --- Input box ---
     with st.form("chat_form", clear_on_submit=True):
         user_input = st.text_input("Type a message...", key="chat_input")
         submitted = st.form_submit_button("Send")
 
-    # --- On user message ---
     if submitted and user_input.strip():
-        # Append user message
         user_msg = {
             "id": str(uuid4()),
             "timestamp": datetime.utcnow().isoformat(),
@@ -85,13 +75,11 @@ def run_chat_core():
         }
         chat_log.append(user_msg)
 
-        # GPT agent reply
         try:
             agent_reply = run_summon_engine(chat_log, user_input.strip(), persona, thread_id)
         except Exception as e:
             agent_reply = f"[Agent error: {str(e)}]"
 
-        # Append agent response
         if agent_reply:
             agent_msg = {
                 "id": str(uuid4()),
@@ -101,7 +89,6 @@ def run_chat_core():
             }
             chat_log.append(agent_msg)
 
-        # Save updated log
         with open(CHAT_LOG_PATH, "w") as f:
             json.dump(chat_log, f, indent=2)
 
