@@ -41,7 +41,11 @@ def handle_uploaded_media():
                     save_incident_from_media(transcript)
             elif "image" in content_type:
                 with st.spinner("Analyzing image..."):
-                    description = call_gpt_vision(uploaded_file.read())
+                    file_bytes = uploaded_file.read()
+                    if not file_bytes:
+                        st.error("❌ Uploaded file is empty.")
+                    else:
+                        description = call_gpt_vision(file_bytes)
                     st.success("🧠 Description complete:")
                     st.code(description)
                     save_incident_from_media(description)
