@@ -4,8 +4,15 @@ import os
 from utils.gpt_call import call_whisper, call_gpt_vision
 from utils.incident_writer import save_incident_from_media
 
+from dotenv import load_dotenv
+load_dotenv()
+
+AWS_ACCESS_KEY_ID = st.secrets["AWS_ACCESS_KEY"]
+AWS_SECRET_ACCESS_KEY = st.secrets["AWS_SECRET_ACCESS_KEY"]
 AWS_S3_BUCKET = st.secrets["S3_BUCKET"]
-s3 = boto3.client("s3")
+
+s3 = boto3.client("s3", aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+
 
 def upload_file(file, filename, content_type):
     try:
