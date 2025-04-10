@@ -1,65 +1,51 @@
-import streamlit as st
-from streamlit_webrtc import webrtc_streamer
-import boto3
+from streamlit_webrtc import webrtc_streamer, WebRtcMode
 import av
-import os
+import streamlit as st
+import numpy as np
+import boto3
 import io
-from dotenv import load_dotenv
+import os
 
-# Load environment variables
-load_dotenv()
+AWS_S3_BUCKET = os.getenv("AWS_S3_BUCKET_NAME")
 
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-AWS_S3_BUCKET_NAME = os.getenv("AWS_S3_BUCKET_NAME")
-
-
-def upload_to_s3(file_bytes, filename, content_type):
-    try:
-        s3 = boto3.client(
-            's3',
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY
-        )
-        s3.put_object(
-            Bucket=AWS_S3_BUCKET_NAME,
-            Key=filename,
-            Body=file_bytes,
-            ContentType=content_type
-        )
-        st.success(f"✅ Uploaded to S3: `{filename}`")
-    except Exception as e:
-        st.error(f"❌ S3 Upload Failed: {e}")
-
+def upload_to_s3_bytes(byte_data, filename, content_type):
+    s3 = boto3.client("s3")
+    s3.put_object(Bucket=AWS_S3_BUCKET, Key=filename, Body=byte_data, ContentType=content_type)
 
 def video_frame_callback(frame):
     img = frame.to_image()
     buffer = io.BytesIO()
-    img.save(buffer, format='JPEG')
-    upload_to_s3(buffer.getvalue(), "captured_image.jpg", "image/jpeg")
+    img.save(buffer, format="JPEG")
+    buffer.seek(0)
+    upload_to_s3_bytes(buffer.read(), "tenant_capture.jpg", "image/jpeg")
     return frame
-
 
 def audio_frame_callback(frame):
-    audio_np = frame.to_ndarray()
-    buffer = io.BytesIO(audio_np.tobytes())
-    upload_to_s3(buffer.getvalue(), "captured_audio.wav", "audio/wav")
+    audio_bytes = frame.to_ndarray().tobytes()
+    upload_to_s3_bytes(audio_bytes, "tenant_audio.wav", "audio/wav")
     return frame
-
 
 def media_stream():
     st.header("Media Stream")
-    media_type = st.radio("Choose media type:", ["Video", "Audio"], horizontal=True)
 
-    if media_type == "Video":
+    mode = st.radio("Choose media type", ["Video", "Audio"])
+
+    if mode == "Video":
+        st.info("🎥 Recording will auto-capture frames to S3")
         webrtc_streamer(
-            key="video_stream",
+            key="video",
+            mode=WebRtcMode.SENDRECV,
             video_frame_callback=video_frame_callback,
-            media_stream_constraints={"video": True, "audio": False}
+            media_stream_constraints={"video": True, "audio": False},
+            async_processing=True,
         )
-    elif media_type == "Audio":
+
+    elif mode == "Audio":
+        st.info("🎤 Recording will auto-capture audio chunks to S3")
         webrtc_streamer(
-            key="audio_stream",
+            key="audio",
+            mode=WebRtcMode.SENDRECV,
             audio_frame_callback=audio_frame_callback,
-            media_stream_constraints={"video": False, "audio": True}
+            media_stream_constraints={"video": False, "audio": True},
+            async_processing=True,
         )
