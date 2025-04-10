@@ -10,14 +10,12 @@ load_dotenv()
 AWS_ACCESS_KEY_ID = st.secrets["AWS_ACCESS_KEY"]
 AWS_SECRET_ACCESS_KEY = st.secrets["AWS_SECRET_ACCESS_KEY"]
 AWS_S3_BUCKET = st.secrets["S3_BUCKET"]
-
-st.success(f"AWS_S3_BUCKET : {AWS_S3_BUCKET}")
-
 s3 = boto3.client("s3", aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
 
 
 def upload_file(file, filename, content_type):
     try:
+        st.success(f"AWS_S3_BUCKET : {AWS_S3_BUCKET}")
         s3.upload_fileobj(file, AWS_S3_BUCKET, filename, ExtraArgs={"ContentType": content_type})
         st.success(f"✅ Uploaded: `{filename}` to bucket `{AWS_S3_BUCKET}`")
         return True
