@@ -1,3 +1,5 @@
+# upload_pipeline.py
+
 import streamlit as st
 import boto3
 import os
@@ -6,6 +8,7 @@ import base64
 from datetime import datetime
 from uuid import uuid4
 from dotenv import load_dotenv
+
 from utils.gpt_call import call_whisper, call_gpt_vision
 from utils.incident_writer import save_incident_from_media
 
@@ -55,6 +58,7 @@ def handle_uploaded_media():
 
             result = ""
             file_display = ""
+            s3_url = f"https://{AWS_S3_BUCKET}.s3.amazonaws.com/{filename}"
 
             if "audio" in content_type:
                 with st.spinner("🧠 Transcribing with Whisper..."):
@@ -95,10 +99,9 @@ def handle_uploaded_media():
                 "timestamp": datetime.utcnow().isoformat(),
                 "role": "tenant",
                 "message": f"""
-                    <div style='background:#111;padding:10px;border-radius:10px;'>
-                        {file_display}<br><br>
-                        <strong>🧠 Agent Inference:</strong><br>{result}
-                    </div>
+                    📎 <a href="{s3_url}" target="_blank">{uploaded_file.name}</a><br>
+                    {file_display}<br>
+                    <strong>🧠 Summary:</strong><br>{result}
                 """
             })
 

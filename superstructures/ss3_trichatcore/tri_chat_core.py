@@ -39,29 +39,32 @@ def run_chat_core():
 
     with st.container():
         st.markdown("<div style='height: 400px; overflow-y: auto;'>", unsafe_allow_html=True)
-        for msg in chat_log[-15:]:
+        for msg in chat_log[-30:]:
             role = msg.get("role", "").capitalize()
             content = msg.get("message", "")
             word_count = len(content.split())
 
-            if word_count > 100 or "summary" in content.lower() or "incident" in content.lower():
+            # Auto-detect if canvas bubble needed
+            is_canvas = word_count > 100 or any(
+                kw in content.lower() for kw in ["summary", "incident", "issue", "transcription"]
+            )
+
+            if is_canvas:
                 with elements(f"canvas_{msg['id']}"):
                     create_canvas_card(
-                        title=f"{role} - Long Message",
+                        title=f"{role} - Media Summary" if "📎" in content else f"{role} - Long Message",
                         content=content,
                         actions=[]
                     )
             else:
-                if content.strip().startswith("<div"):
-                    st.markdown(content, unsafe_allow_html=True)
-                else:
-                    st.markdown(f"""
-                        <div style='background-color:#1e1e1e; padding:10px; margin:8px 0; 
-                                    border-radius:10px; color:#eee;'>
-                            <strong>{role}:</strong><br>{content}
-                        </div>
-                    """, unsafe_allow_html=True)
+                st.markdown(f"""
+                    <div style='background-color:#1e1e1e; padding:10px; margin:8px 0; 
+                                border-radius:10px; color:#eee;'>
+                        <strong>{role}:</strong><br>{content}
+                    </div>
+                """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
+
 
     # Form + media buttons row
     col1, col2, col3 = st.columns([6, 1, 1])
