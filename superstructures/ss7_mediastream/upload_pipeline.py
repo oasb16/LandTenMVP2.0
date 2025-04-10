@@ -41,7 +41,7 @@ def handle_uploaded_media():
                     save_incident_from_media(transcript)
             elif "image" in content_type:
                 with st.spinner("Analyzing image..."):
-                    description = call_gpt_vision(uploaded_file)
+                    description = call_gpt_vision(uploaded_file.read())
                     st.success("🧠 Description complete:")
                     st.code(description)
                     save_incident_from_media(description)
