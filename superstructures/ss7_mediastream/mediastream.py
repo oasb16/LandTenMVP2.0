@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 
 load_dotenv()  # 🔁 Make sure to reload .env
 
-AWS_BUCKET = os.getenv("AWS_S3_BUCKET_NAME")
-AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+AWS_BUCKET = st.secrets["S3_BUCKET"]
+AWS_REGION = st.secrets["AWS_REGION"]
 
 def upload_to_s3_bytes(data: bytes, filename: str, content_type: str):
     try:
