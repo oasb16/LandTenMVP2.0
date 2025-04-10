@@ -1,7 +1,7 @@
 import streamlit as st
 import boto3
 import os
-from superstructures.ss7_mediastream.webrtc_debug import upload_to_s3
+# from superstructures.ss7_mediastream.webrtc_debug import upload_to_s3
 from utils.gpt_call import call_whisper, call_gpt_vision
 from utils.incident_writer import save_incident_from_media
 import json
@@ -47,9 +47,9 @@ def handle_uploaded_media():
                 st.error("❌ File appears empty.")
                 return
 
-            # Upload to S3
-            upload_to_s3(file_bytes, filename, content_type)
-            st.success(f"✅ Uploaded to S3 as `{filename}`")
+            # # Upload to S3
+            # upload_to_s3(file_bytes, filename, content_type)
+            # st.success(f"✅ Uploaded to S3 as `{filename}`")
 
             result = ""
 
