@@ -18,7 +18,7 @@ def route_user(persona: str):
 
 
     if persona == "tenant":
-        st.title("Tenant Chat Interface")
+        st.title("LandTenMVP2.0")
         run_chat_core()
         run_agent_toggle()
         try:
