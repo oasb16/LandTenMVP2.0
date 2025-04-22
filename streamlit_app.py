@@ -105,7 +105,6 @@ with col1:
                 overflow-y: auto;
                 border: 1px solid #ccc;
                 padding: 10px;
-                background-color: #f9f9f9;
                 color: #333;
                 font-family: Arial, sans-serif;
                 font-size: 14px;
@@ -119,13 +118,11 @@ with col1:
                 word-wrap: break-word;
             }
             .user-message {
-                background-color: #d1e7dd;
                 text-align: left;
                 float: left;
                 clear: both;
             }
             .agent-message {
-                background-color: #f8d7da;
                 text-align: right;
                 float: right;
                 clear: both;
