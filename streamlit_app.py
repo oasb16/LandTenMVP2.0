@@ -62,19 +62,16 @@ with st.sidebar:
         st.write("Debug: Initialized new thread with empty chat_log.")
         thread_options +=  st.session_state['selected_thread']
         selected_thread = st.session_state['selected_thread']
-        st.rerun()
     elif selected_thread != "Select a Thread":
         st.session_state['selected_thread'] = selected_thread
         st.session_state['chat_log'] = get_thread_from_s3(selected_thread) or []  # Initialize chat_log if not present
         st.write(f"Debug: Loaded chat_log for thread {selected_thread}: {st.session_state['chat_log']}")
-        st.rerun()
 
     # Add a button to delete all threads
     if st.button("Delete All Threads"):
         delete_all_threads_from_dynamodb()
         st.session_state['selected_thread'] = None  # Clear selected thread
         st.success("All threads have been deleted.")
-        st.rerun()
 
 # -- Main Layout
 persona = st.session_state.get("persona", "tenant")
