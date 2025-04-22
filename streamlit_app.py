@@ -76,28 +76,28 @@ persona = st.session_state.get("persona", "tenant")
 
 st.title(f"{persona.capitalize()} Dashboard")
 
-# Add a scrollable container for the chat window
-if st.session_state.get('selected_thread'):
-    st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
-    thread_messages = [t for t in threads if t['thread_id'] == st.session_state['selected_thread']]
-    st.markdown("""
-        <div style='height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>
-    """, unsafe_allow_html=True)
-    for message in thread_messages:
-        st.markdown(f"<p><strong>{message['role'].capitalize()}:</strong> {message['message']}</p>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
 
-    # Ensure thread content is stored in S3
-    if st.session_state.get('chat_log'):
-        upload_thread_to_s3(st.session_state['selected_thread'], st.session_state['chat_log'])
 
 # Split layout into two halves
 col1, col2 = st.columns([2, 3])
 
 # Left column: Chat window
 with col1:
-    st.subheader("Chat Window")
-    run_chat_core()
+    # Add a scrollable container for the chat window
+    if st.session_state.get('selected_thread'):
+        st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
+        thread_messages = [t for t in threads if t['thread_id'] == st.session_state['selected_thread']]
+        run_chat_core()
+        st.markdown("""
+            <div style='height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>
+        """, unsafe_allow_html=True)
+        for message in thread_messages:
+            st.markdown(f"<p><strong>{message['role'].capitalize()}:</strong> {message['message']}</p>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # Ensure thread content is stored in S3
+        if st.session_state.get('chat_log'):
+            upload_thread_to_s3(st.session_state['selected_thread'], st.session_state['chat_log'])
 
 # Right column: Persona-specific container
 with col2:
