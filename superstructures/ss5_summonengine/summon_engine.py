@@ -184,7 +184,7 @@ def delete_all_threads_from_dynamodb():
         response = table.scan()
         with table.batch_writer() as batch:
             for item in response.get("Items", []):
-                batch.delete_item(Key={"thread_id": item["thread_id"], "timestamp": item["timestamp"]})
+                batch.delete_item(Key={"id": item["id"]})
     except ClientError as e:
         st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
 
