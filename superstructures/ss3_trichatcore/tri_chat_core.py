@@ -8,7 +8,7 @@ import logging
 # Configure logging
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
-from superstructures.ss5_summonengine.summon_engine import run_summon_engine
+from superstructures.ss5_summonengine.summon_engine import run_summon_engine, save_message_to_dynamodb
 from superstructures.ss7_mediastream import run_media_interface
 from superstructures.ss8_canvascard.canvascard import create_canvas_card
 from utils.chat_log_writer import load_chat_log, append_chat_log
@@ -21,6 +21,18 @@ def run_chat_core():
         st.session_state["persona"] = "tenant"
     if "thread_id" not in st.session_state:
         st.session_state["thread_id"] = str(uuid4())
+        # Save the new thread_id to DynamoDB with an initial message
+        initial_message = {
+            "id": str(uuid4()),
+            "timestamp": datetime.utcnow().isoformat(),
+            "role": "system",
+            "message": "New conversation started.",
+            "persona": st.session_state.get("persona", "unknown"),
+            "user_id": st.session_state.get("email", "unknown"),
+            "thread_id": st.session_state["thread_id"]
+        }
+        save_message_to_dynamodb(st.session_state["thread_id"], initial_message)
+        st.session_state.chat_log = [initial_message]
     if "chat_log" not in st.session_state:
         st.session_state.chat_log = load_chat_log(st.session_state["thread_id"])
     if "last_action" not in st.session_state:
@@ -105,10 +117,12 @@ def run_chat_core():
             "id": str(uuid4()),
             "timestamp": datetime.utcnow().isoformat(),
             "role": persona,
-            "message": user_input.strip()
+            "message": user_input.strip(),
+            "thread_id": thread_id
         }
         st.session_state.chat_log.append(user_msg)
         append_chat_log(thread_id, user_msg)
+        save_message_to_dynamodb(thread_id, user_msg)
         st.session_state.last_action = "text_input"
 
         try:
