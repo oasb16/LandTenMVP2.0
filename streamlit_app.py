@@ -58,7 +58,9 @@ with st.sidebar:
     # Add a button to delete all threads
     if st.button("Delete All Threads"):
         delete_all_threads_from_dynamodb()
+        st.session_state['selected_thread'] = None  # Clear selected thread
         st.success("All threads have been deleted.")
+        # Ensure session state is updated before rerunning
         st.experimental_rerun()
 
 # -- Main Layout
