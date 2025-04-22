@@ -31,7 +31,7 @@ def save_message_to_dynamodb(thread_id, message):
     try:
         table.put_item(Item=message)
     except ClientError as e:
-        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
+        st.error(f"DynamoDB Error in save_message_to_dynamodb: {e.response['Error']['Message']}")
         print(f"DynamoDB Error: {e.response['Error']['Message']}")
         return False
     return True
@@ -47,7 +47,7 @@ def append_chat_log(thread_id, message):
             }
         )
     except ClientError as e:
-        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
+        st.error(f"DynamoDB Error in append_chat_log: {e.response['Error']['Message']}")
         print(f"DynamoDB Error: {e.response['Error']['Message']}")
         return False
     return True
@@ -67,7 +67,7 @@ def save_incident_from_media(chat_log, persona, thread_id):
     try:
         table.put_item(Item=incident)
     except ClientError as e:
-        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
+        st.error(f"DynamoDB Error in save_incident_from_media: {e.response['Error']['Message']}")
         print(f"DynamoDB Error: {e.response['Error']['Message']}")
         return False
     return True
@@ -77,7 +77,7 @@ def get_chat_log(thread_id):
         response = table.get_item(Key={'thread_id': thread_id})
         return response.get("Item", {}).get("chat_log", [])
     except ClientError as e:
-        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
+        st.error(f"DynamoDB Error in get_chat_log: {e.response['Error']['Message']}")
         print(f"DynamoDB Error: {e.response['Error']['Message']}")
         return []
 def get_thread_id():
@@ -177,7 +177,7 @@ def get_all_threads_from_dynamodb():
         response = table.scan()
         return response.get("Items", [])
     except ClientError as e:
-        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
+        st.error(f"DynamoDB Error in get_all_threads_from_dynamodb: {e.response['Error']['Message']}")
         print(f"DynamoDB Error: {e.response['Error']['Message']}")
         return []
 
@@ -193,7 +193,7 @@ def delete_all_threads_from_dynamodb():
                     "id": item["id"]
                 })
     except ClientError as e:
-        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
+        st.error(f"DynamoDB Error in delete_all_threads_from_dynamodb: {e.response['Error']['Message']}")
 
 def upload_media_to_s3(file, thread_id):
     try:
@@ -291,4 +291,4 @@ def update_thread_timestamp_in_dynamodb(thread_id):
             ExpressionAttributeValues={":timestamp": datetime.utcnow().isoformat()}
         )
     except ClientError as e:
-        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
+        st.error(f"DynamoDB Error in update_thread_timestamp_in_dynamodb: {e.response['Error']['Message']}")
