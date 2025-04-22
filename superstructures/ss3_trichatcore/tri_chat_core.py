@@ -29,6 +29,7 @@ def run_chat_core():
             "message": "New conversation started.",
             "persona": st.session_state.get("persona", "unknown"),
             "user_id": st.session_state.get("email", "unknown"),
+            "email": st.session_state.get("email", "unknown"),
             "thread_id": st.session_state["thread_id"]
         }
         save_message_to_dynamodb(st.session_state["thread_id"], initial_message)
@@ -118,7 +119,8 @@ def run_chat_core():
             "timestamp": datetime.utcnow().isoformat(),
             "role": persona,
             "message": user_input.strip(),
-            "thread_id": thread_id
+            "thread_id": thread_id,
+            "email": st.session_state.get("email", "unknown")
         }
         st.session_state.chat_log.append(user_msg)
         append_chat_log(thread_id, user_msg)
