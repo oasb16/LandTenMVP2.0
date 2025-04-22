@@ -53,12 +53,14 @@ with st.sidebar:
     selected_thread = st.selectbox("Select a thread", options=thread_options)
 
     if selected_thread == "New Thread":
-        st.session_state['selected_thread'] = str(uuid4())
-        st.session_state['chat_log'] = []
-        st.success("Started a new thread.")
-        st.experimental_rerun()
+        if st.session_state.get('selected_thread') != "New Thread":
+            st.session_state['selected_thread'] = str(uuid4())
+            st.session_state['chat_log'] = []
+            st.success("Started a new thread.")
+            st.experimental_rerun()
     else:
-        st.session_state['selected_thread'] = selected_thread
+        if st.session_state.get('selected_thread') != selected_thread:
+            st.session_state['selected_thread'] = selected_thread
 
     # Add a button to delete all threads
     if st.button("Delete All Threads"):
