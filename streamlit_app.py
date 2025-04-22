@@ -76,7 +76,13 @@ persona = st.session_state.get("persona", "tenant")
 
 st.title(f"{persona.capitalize()} Dashboard")
 
-
+# Main execution flow
+if "email" not in st.session_state:
+    run_login()
+elif "persona" not in st.session_state:
+    run_router()
+else:
+    run_chat_core()
 
 # Split layout into two halves
 col1, col2 = st.columns([2, 3])
