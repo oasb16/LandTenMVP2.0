@@ -1,4 +1,7 @@
 import streamlit as st
+
+st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")
+
 from streamlit.components.v1 import html
 
 # -- SS1: Login (Google SSO via Cognito)
@@ -21,9 +24,6 @@ try:
 except KeyError as e:
     st.error(f"Missing required secret: {e.args[0]}")
     st.stop()
-
-# -- App UI setup
-st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")
 
 # -- Sidebar
 with st.sidebar:
