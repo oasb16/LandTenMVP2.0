@@ -60,6 +60,7 @@ with st.sidebar:
         st.session_state['chat_log'] = []  # Initialize chat_log
         st.success("Started a new thread.")
         st.write("Debug: Initialized new thread with empty chat_log.")
+        thread_options +=  st.session_state['selected_thread']
         selected_thread = st.session_state['selected_thread']
         st.rerun()
     elif selected_thread != "Select a Thread":
