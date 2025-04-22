@@ -184,10 +184,10 @@ def delete_all_threads_from_dynamodb():
         response = table.scan()
         with table.batch_writer() as batch:
             for item in response.get("Items", []):
-                # Ensure both Partition Key (thread_id) and Sort Key (timestamp) are provided
+                # Use both Partition Key (email) and Sort Key (id) for deletion
                 batch.delete_item(Key={
-                    "thread_id": item["thread_id"],
-                    "timestamp": item["timestamp"]
+                    "email": item["email"],
+                    "id": item["id"]
                 })
     except ClientError as e:
         st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
