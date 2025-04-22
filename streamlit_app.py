@@ -6,9 +6,6 @@ from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
 # -- SS2: Persona router
 from superstructures.ss2_pulse.ss2_pulse_app import run_router
 
-# -- SS3: Echo module
-from superstructures.ss3_echo.ss3_echo_app import run_echo
-
 # -- Optional logout logic in sidebar
 from urllib.parse import quote
 
@@ -44,7 +41,4 @@ if st.session_state.get("logged_in"):
 if not st.session_state.get("logged_in"):
     run_login()
 else:
-    if st.session_state.get("action") == "chat_with_gpt":
-        run_echo()
-    else:
-        run_router()
+            run_router()
