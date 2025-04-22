@@ -16,8 +16,9 @@ from superstructures.ss3_trichatcore.tri_chat_core import run_chat_core
 # -- Optional logout logic in sidebar
 from urllib.parse import quote
 
-from superstructures.ss5_summonengine.summon_engine import get_all_threads_from_dynamodb, delete_all_threads_from_dynamodb, upload_thread_to_s3, get_thread_from_s3
+from superstructures.ss5_summonengine.summon_engine import get_all_threads_from_dynamodb, delete_all_threads_from_dynamodb, upload_thread_to_s3, get_thread_from_s3, update_thread_timestamp_in_dynamodb
 from uuid import uuid4
+from datetime import datetime
 
 # Verify secrets configuration
 try:
@@ -53,16 +54,14 @@ with st.sidebar:
     selected_thread = st.selectbox("Select a thread", options=thread_options)
 
     if selected_thread == "New Thread":
-        if st.session_state.get('selected_thread') != "New Thread":
-            st.session_state['selected_thread'] = str(uuid4())
-            st.session_state['chat_log'] = []
-            st.success("Started a new thread.")
-            selected_thread == st.session_state['selected_thread']
-            st.rerun()
-            
-    else:
-        if st.session_state.get('selected_thread') != selected_thread:
-            st.session_state['selected_thread'] = selected_thread
+        st.session_state['selected_thread'] = str(uuid4())
+        st.session_state['chat_log'] = []
+        st.success("Started a new thread.")
+        st.experimental_rerun()
+    elif selected_thread != "Select a Thread":
+        st.session_state['selected_thread'] = selected_thread
+        st.session_state['chat_log'] = get_thread_from_s3(selected_thread)
+        st.experimental_rerun()
 
     # Add a button to delete all threads
     if st.button("Delete All Threads"):
@@ -93,7 +92,7 @@ with col1:
     # Add a scrollable container for the chat window
     if st.session_state.get('selected_thread'):
         st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
-        thread_messages = get_thread_from_s3(st.session_state['selected_thread'])
+        thread_messages = st.session_state.get('chat_log', [])
         st.markdown(
             """
             <style>
@@ -110,18 +109,28 @@ with col1:
             """,
             unsafe_allow_html=True
         )
-        if thread_messages:
-            for message in thread_messages:
-                st.markdown(f"<p><strong>{message['role'].capitalize()}:</strong> {message['message']}</p>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-        else:
-            st.error("No messages found in this thread.")
+        for message in thread_messages:
+            st.markdown(f"<p><strong>{message['role'].capitalize()}:</strong> {message['message']}</p>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # Real-Time Updates
+        with st.form("chat_form", clear_on_submit=True):
+            user_input = st.text_input("Type a message...")
+            submitted = st.form_submit_button("Send")
+
+        if submitted and user_input.strip():
+            new_message = {
+                "id": str(uuid4()),
+                "timestamp": datetime.utcnow().isoformat(),
+                "role": st.session_state.get("persona", "user"),
+                "message": user_input.strip()
+            }
+            st.session_state['chat_log'].append(new_message)
+            upload_thread_to_s3(st.session_state['selected_thread'], st.session_state['chat_log'])
+            update_thread_timestamp_in_dynamodb(st.session_state['selected_thread'])
+            st.experimental_rerun()
     else: 
         st.error("Please select a thread to view messages.")   
-
-        # Ensure thread content is stored in S3
-        if st.session_state.get('chat_log'):
-            upload_thread_to_s3(st.session_state['selected_thread'], st.session_state['chat_log'])
 
 # Right column: Persona-specific container
 with col2:
