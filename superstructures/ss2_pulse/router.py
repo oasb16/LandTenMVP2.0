@@ -16,8 +16,6 @@ from superstructures.ss11_performance_dashboard import show_performance_dashboar
 from superstructures.ss12_ai_suggestions import show_ai_suggestions
 from superstructures.ss13_real_time_communication import handle_real_time_communication
 from superstructures.ss14_interactive_extensions import show_interactive_extensions
-from superstructures.ss3_echo.ss3_echo_app import run_echo
-
 
 def route_user(persona: str):
 
@@ -32,14 +30,10 @@ def route_user(persona: str):
         st.button("Submit Maintenance Request", on_click=lambda: st.session_state.update({"action": "submit_request"}))
         st.button("View Rent Payment History", on_click=lambda: st.session_state.update({"action": "view_payments"}))
         st.button("Contact Landlord", on_click=lambda: st.session_state.update({"action": "contact_landlord"}))
-        st.button("Chat with GPT", on_click=lambda: st.session_state.update({"action": "chat_with_gpt"}))
         st.info("💡 Tip: Use the chat to ask questions or report issues directly.")
 
         if st.session_state.get("action") == "submit_request":
             handle_maintenance_requests()
-
-        if st.session_state.get("action") == "chat_with_gpt":
-            run_echo()
 
         try:
             chat_history = st.session_state.get("chat_log", [])
