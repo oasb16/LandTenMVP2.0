@@ -114,7 +114,7 @@ def run_chat_core():
         try:
             agent_reply = run_summon_engine(
                 chat_log=st.session_state.chat_log,
-                latest_user_message=user_input.strip(),
+                user_input=user_input.strip(),
                 persona=persona,
                 thread_id=thread_id
             )
