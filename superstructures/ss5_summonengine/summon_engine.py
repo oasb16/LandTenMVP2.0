@@ -213,7 +213,9 @@ def upload_thread_to_s3(thread_id, chat_log):
             Body=json.dumps(chat_log, indent=2),
             ContentType="application/json"
         )
-        return f"https://{st.secrets['S3_BUCKET']}.s3.amazonaws.com/{file_key}"
+        s3_url = f"https://{st.secrets['S3_BUCKET']}.s3.amazonaws.com/{file_key}"
+        st.success("Thread uploaded to S3. To view click [here](%s)" % s3_url)
+        return s3_url
     except ClientError as e:
         st.error(f"S3 Upload Error: {e.response['Error']['Message']}")
         return None
