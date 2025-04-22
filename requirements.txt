@@ -13,3 +13,4 @@ streamlit-elements
 boto3
 streamlit-server-state
 matplotlib
+websockets
