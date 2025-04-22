@@ -124,6 +124,7 @@ def run_chat_core():
                     "message": f"[Media uploaded]({media_url})"
                 }
                 append_chat_log(thread_id, media_msg)
+                upload_thread_to_s3(thread_id, get_chat_log(thread_id))
                 st.session_state.last_action = "media_upload"
                 st.rerun()
 
@@ -143,6 +144,7 @@ def run_chat_core():
             "message": user_input.strip()
         }
         append_chat_log(thread_id, user_msg)
+        upload_thread_to_s3(thread_id, get_chat_log(thread_id))
         st.session_state.last_action = "text_input"
         try:
             agent_reply = run_summon_engine(
@@ -162,6 +164,7 @@ def run_chat_core():
                 "message": agent_reply
             }
             append_chat_log(thread_id, agent_msg)
+            upload_thread_to_s3(thread_id, get_chat_log(thread_id))
             st.session_state.last_action = "text_input"
             st.session_state.chat_log.append(agent_msg)
 
@@ -196,6 +199,20 @@ def upload_media_to_s3(file, thread_id):
     try:
         file_key = f"media/{thread_id}/{file.name}"
         s3_client.upload_fileobj(file, st.secrets["S3_BUCKET"], file_key)
+        return f"https://{st.secrets['S3_BUCKET']}.s3.amazonaws.com/{file_key}"
+    except ClientError as e:
+        st.error(f"S3 Upload Error: {e.response['Error']['Message']}")
+        return None
+
+def upload_thread_to_s3(thread_id, chat_log):
+    try:
+        file_key = f"threads/{thread_id}.json"
+        s3_client.put_object(
+            Bucket=st.secrets["S3_BUCKET"],
+            Key=file_key,
+            Body=json.dumps(chat_log, indent=2),
+            ContentType="application/json"
+        )
         return f"https://{st.secrets['S3_BUCKET']}.s3.amazonaws.com/{file_key}"
     except ClientError as e:
         st.error(f"S3 Upload Error: {e.response['Error']['Message']}")
@@ -247,5 +264,8 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
         save_incident_from_media(chat_log, persona, thread_id)
     except Exception as e:
         st.warning(f"Incident detection failed: {e}")
+
+    # 5. Upload thread to S3
+    upload_thread_to_s3(thread_id, chat_log)
 
     st.success("💡 Agent updated with media context.")

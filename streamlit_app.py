@@ -16,7 +16,8 @@ from superstructures.ss3_trichatcore.tri_chat_core import run_chat_core
 # -- Optional logout logic in sidebar
 from urllib.parse import quote
 
-from superstructures.ss5_summonengine.summon_engine import get_all_threads_from_dynamodb, delete_all_threads_from_dynamodb
+from superstructures.ss5_summonengine.summon_engine import get_all_threads_from_dynamodb, delete_all_threads_from_dynamodb, upload_thread_to_s3
+from uuid import uuid4
 
 # Verify secrets configuration
 try:
@@ -48,19 +49,22 @@ with st.sidebar:
 
     # Display threads in a sidebar
     st.subheader("Available Threads")
-    if threads:
-        selected_thread = st.selectbox("Select a thread", options=[t['thread_id'] for t in threads])
-        st.session_state['selected_thread'] = selected_thread
+    thread_options = ["New Thread"] + [t['thread_id'] for t in threads]
+    selected_thread = st.selectbox("Select a thread", options=thread_options)
+
+    if selected_thread == "New Thread":
+        st.session_state['selected_thread'] = str(uuid4())
+        st.session_state['chat_log'] = []
+        st.success("Started a new thread.")
+        st.experimental_rerun()
     else:
-        st.info("No threads available.")
-        st.session_state['selected_thread'] = None
+        st.session_state['selected_thread'] = selected_thread
 
     # Add a button to delete all threads
     if st.button("Delete All Threads"):
         delete_all_threads_from_dynamodb()
         st.session_state['selected_thread'] = None  # Clear selected thread
         st.success("All threads have been deleted.")
-        # Ensure session state is updated before rerunning
         st.experimental_rerun()
 
 # -- Main Layout
@@ -74,6 +78,10 @@ if st.session_state.get('selected_thread'):
     thread_messages = [t for t in threads if t['thread_id'] == st.session_state['selected_thread']]
     for message in thread_messages:
         st.markdown(f"**{message['role'].capitalize()}**: {message['message']}")
+
+    # Ensure thread content is stored in S3
+    if st.session_state.get('chat_log'):
+        upload_thread_to_s3(st.session_state['selected_thread'], st.session_state['chat_log'])
 
 # Split layout into two halves
 col1, col2 = st.columns([2, 3])
