@@ -281,3 +281,14 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
     upload_thread_to_s3(thread_id, chat_log)
 
     st.success("💡 Agent updated with media context.")
+
+def update_thread_timestamp_in_dynamodb(thread_id):
+    table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
+    try:
+        table.update_item(
+            Key={"thread_id": thread_id},
+            UpdateExpression="SET last_updated = :timestamp",
+            ExpressionAttributeValues={":timestamp": datetime.utcnow().isoformat()}
+        )
+    except ClientError as e:
+        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
