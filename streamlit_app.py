@@ -93,7 +93,6 @@ with col1:
         run_chat_core()
         for message in thread_messages:
             st.markdown(f"<p><strong>{message['role'].capitalize()}:</strong> {message['message']}</p>", unsafe_allow_html=True)
-            run_chat_core()
         st.markdown("</div>", unsafe_allow_html=True)
 
         # Ensure thread content is stored in S3
