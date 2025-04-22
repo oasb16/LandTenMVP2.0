@@ -87,12 +87,13 @@ with col1:
     if st.session_state.get('selected_thread'):
         st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
         thread_messages = [t for t in threads if t['thread_id'] == st.session_state['selected_thread']]
-        run_chat_core()
         st.markdown("""
             <div style='height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>
         """, unsafe_allow_html=True)
+        run_chat_core()
         for message in thread_messages:
             st.markdown(f"<p><strong>{message['role'].capitalize()}:</strong> {message['message']}</p>", unsafe_allow_html=True)
+            run_chat_core()
         st.markdown("</div>", unsafe_allow_html=True)
 
         # Ensure thread content is stored in S3
