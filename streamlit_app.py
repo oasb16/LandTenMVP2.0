@@ -106,8 +106,23 @@ with col1:
                 overflow-y: auto;
                 border: 1px solid #ccc;
                 padding: 10px;
-                background-color: #1e1e1e;
-                color: #fff;
+                background-color: #f9f9f9;
+                color: #333;
+                font-family: Arial, sans-serif;
+                font-size: 14px;
+            }
+            .message {
+                margin-bottom: 10px;
+                padding: 8px;
+                border-radius: 5px;
+            }
+            .user-message {
+                background-color: #d1e7dd;
+                text-align: left;
+            }
+            .agent-message {
+                background-color: #f8d7da;
+                text-align: right;
             }
             </style>
             <div class='scrollable-container'>
@@ -115,7 +130,13 @@ with col1:
             unsafe_allow_html=True
         )
         for message in thread_messages:
-            st.markdown(f"<p><strong>{message['role'].capitalize()}:</strong> {message['message']}</p>", unsafe_allow_html=True)
+            role_class = "user-message" if message['role'] == "tenant" else "agent-message"
+            st.markdown(
+                f"<div class='message {role_class}'>"
+                f"<strong>{message['role'].capitalize()}:</strong> {message['message']}"
+                f"</div>",
+                unsafe_allow_html=True
+            )
         st.markdown("</div>", unsafe_allow_html=True)
 
         # Real-Time Updates
