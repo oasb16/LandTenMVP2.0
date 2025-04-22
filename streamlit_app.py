@@ -93,7 +93,7 @@ col1, col2 = st.columns([2, 3])
 
 # Left column: Chat window
 with col1:
-    # Add a scrollable container for the chat window
+    # Refine rendering logic for better alignment and visibility
     if st.session_state.get('selected_thread'):
         st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
         thread_messages = st.session_state.get('chat_log', [])
@@ -115,14 +115,21 @@ with col1:
                 margin-bottom: 10px;
                 padding: 8px;
                 border-radius: 5px;
+                display: inline-block;
+                max-width: 80%;
+                word-wrap: break-word;
             }
             .user-message {
                 background-color: #d1e7dd;
                 text-align: left;
+                float: left;
+                clear: both;
             }
             .agent-message {
                 background-color: #f8d7da;
                 text-align: right;
+                float: right;
+                clear: both;
             }
             </style>
             <div class='scrollable-container'>
