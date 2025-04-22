@@ -16,6 +16,8 @@ from superstructures.ss3_trichatcore.tri_chat_core import run_chat_core
 # -- Optional logout logic in sidebar
 from urllib.parse import quote
 
+from superstructures.ss5_summonengine.summon_engine import get_all_threads_from_dynamodb
+
 # Verify secrets configuration
 try:
     CLIENT_ID = st.secrets["COGNITO_CLIENT_ID"]
@@ -41,10 +43,25 @@ with st.sidebar:
         except Exception as e:
             st.error(f"Error during logout: {str(e)}")
 
+    st.subheader("Available Threads")
+    threads = get_all_threads_from_dynamodb()
+    if threads:
+        selected_thread = st.selectbox("Select a thread", options=[t['thread_id'] for t in threads])
+    else:
+        st.info("No threads available.")
+        selected_thread = None
+
 # -- Main Layout
 persona = st.session_state.get("persona", "tenant")
 
 st.title(f"{persona.capitalize()} Dashboard")
+
+# Display messages for the selected thread
+if selected_thread:
+    st.subheader(f"Messages in Thread: {selected_thread}")
+    thread_messages = [t for t in threads if t['thread_id'] == selected_thread]
+    for message in thread_messages:
+        st.markdown(f"**{message['role'].capitalize()}**: {message['message']}")
 
 # Split layout into two halves
 col1, col2 = st.columns([2, 3])
