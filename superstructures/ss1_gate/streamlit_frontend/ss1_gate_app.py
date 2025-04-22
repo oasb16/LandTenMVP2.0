@@ -12,11 +12,16 @@ from superstructures.ss1_gate.shared.dynamodb import write_user_profile
 # ------------------------------
 # Configuration
 # ------------------------------
-COGNITO_DOMAIN = st.secrets.get("COGNITO_DOMAIN")
-REDIRECT_URI = st.secrets.get("REDIRECT_URI")
-CLIENT_ID = st.secrets.get("COGNITO_CLIENT_ID")
-CLIENT_SECRET = st.secrets.get("COGNITO_CLIENT_SECRET")
-TOKEN_ENDPOINT = f"{COGNITO_DOMAIN}/oauth2/token"
+# Verify secrets configuration
+try:
+    COGNITO_DOMAIN = st.secrets["COGNITO_DOMAIN"]
+    REDIRECT_URI = st.secrets["REDIRECT_URI"]
+    CLIENT_ID = st.secrets["COGNITO_CLIENT_ID"]
+    CLIENT_SECRET = st.secrets["COGNITO_CLIENT_SECRET"]
+    TOKEN_ENDPOINT = f"{COGNITO_DOMAIN}/oauth2/token"
+except KeyError as e:
+    st.error(f"Missing required secret: {e.args[0]}")
+    st.stop()
 
 # ------------------------------
 # Login Flow
@@ -87,8 +92,12 @@ def run_login():
             else:
                 st.error(f"Login failed: {res.text}")
 
+        except requests.exceptions.RequestException as req_error:
+            st.error(f"Network error during login: {req_error}")
+        except jwt.DecodeError:
+            st.error("Failed to decode ID token. Please try again.")
         except Exception as e:
-            st.error(f"Login error: {e}")
+            st.error(f"Unexpected error during login: {e}")
 
     # Step 4: Show login button if not authenticated
     else:

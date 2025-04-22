@@ -3,6 +3,10 @@ import streamlit as st, json, os
 from datetime import datetime
 from uuid import uuid4
 from streamlit_elements import elements
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
 from superstructures.ss5_summonengine.summon_engine import run_summon_engine
 from superstructures.ss7_mediastream import run_media_interface
@@ -115,6 +119,7 @@ def run_chat_core():
                 thread_id=thread_id
             )
         except Exception as e:
+            logging.error(f"Error in run_summon_engine: {e}")
             agent_reply = f"[Agent error: {str(e)}]"
 
         if agent_reply:
