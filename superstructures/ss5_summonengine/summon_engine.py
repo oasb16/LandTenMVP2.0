@@ -178,6 +178,16 @@ def get_all_threads_from_dynamodb():
         print(f"DynamoDB Error: {e.response['Error']['Message']}")
         return []
 
+def delete_all_threads_from_dynamodb():
+    table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
+    try:
+        response = table.scan()
+        with table.batch_writer() as batch:
+            for item in response.get("Items", []):
+                batch.delete_item(Key={"thread_id": item["thread_id"], "timestamp": item["timestamp"]})
+    except ClientError as e:
+        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
+
 def upload_media_to_s3(file, thread_id):
     try:
         file_key = f"media/{thread_id}/{file.name}"

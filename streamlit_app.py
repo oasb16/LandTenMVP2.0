@@ -16,7 +16,7 @@ from superstructures.ss3_trichatcore.tri_chat_core import run_chat_core
 # -- Optional logout logic in sidebar
 from urllib.parse import quote
 
-from superstructures.ss5_summonengine.summon_engine import get_all_threads_from_dynamodb
+from superstructures.ss5_summonengine.summon_engine import get_all_threads_from_dynamodb, delete_all_threads_from_dynamodb
 
 # Verify secrets configuration
 try:
@@ -54,6 +54,12 @@ with st.sidebar:
     else:
         st.info("No threads available.")
         st.session_state['selected_thread'] = None
+
+    # Add a button to delete all threads
+    if st.button("Delete All Threads"):
+        delete_all_threads_from_dynamodb()
+        st.success("All threads have been deleted.")
+        st.experimental_rerun()
 
 # -- Main Layout
 persona = st.session_state.get("persona", "tenant")
