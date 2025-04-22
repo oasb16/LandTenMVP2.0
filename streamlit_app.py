@@ -81,7 +81,8 @@ if "email" not in st.session_state:
     run_login()
 elif "persona" not in st.session_state:
     run_router()
-else:
+
+if "email" and "persona" in st.session_state:
     run_chat_core()
 
 # Split layout into two halves
