@@ -6,6 +6,9 @@ from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
 # -- SS2: Persona router
 from superstructures.ss2_pulse.ss2_pulse_app import run_router
 
+# -- SS3: Chat core
+from superstructures.ss3_trichatcore.tri_chat_core import run_chat_core
+
 # -- Optional logout logic in sidebar
 from urllib.parse import quote
 
@@ -41,4 +44,16 @@ if st.session_state.get("logged_in"):
 if not st.session_state.get("logged_in"):
     run_login()
 else:
-            run_router()
+    persona = st.session_state.get("persona", "tenant")
+
+    if persona == "tenant":
+        st.title("Tenant Dashboard")
+        run_chat_core()
+    elif persona == "landlord":
+        st.title("Landlord Dashboard")
+        run_chat_core()
+    elif persona == "contractor":
+        st.title("Contractor Dashboard")
+        run_chat_core()
+    else:
+        st.error("Invalid persona. Please contact support.")
