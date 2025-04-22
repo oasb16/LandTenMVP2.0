@@ -218,6 +218,16 @@ def upload_thread_to_s3(thread_id, chat_log):
         st.error(f"S3 Upload Error: {e.response['Error']['Message']}")
         return None
 
+def get_thread_from_s3(thread_id):
+    try:
+        file_key = f"threads/{thread_id}.json"
+        response = s3_client.get_object(Bucket=st.secrets["S3_BUCKET"], Key=file_key)
+        thread_data = json.loads(response['Body'].read().decode('utf-8'))
+        return thread_data
+    except ClientError as e:
+        st.error(f"S3 Fetch Error: {e.response['Error']['Message']}")
+        return []
+
 def run_summon_engine(chat_log, user_input, persona, thread_id):
     if not st.session_state.get("agent_active", True):
         return

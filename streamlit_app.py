@@ -16,7 +16,7 @@ from superstructures.ss3_trichatcore.tri_chat_core import run_chat_core
 # -- Optional logout logic in sidebar
 from urllib.parse import quote
 
-from superstructures.ss5_summonengine.summon_engine import get_all_threads_from_dynamodb, delete_all_threads_from_dynamodb, upload_thread_to_s3
+from superstructures.ss5_summonengine.summon_engine import get_all_threads_from_dynamodb, delete_all_threads_from_dynamodb, upload_thread_to_s3, get_thread_from_s3
 from uuid import uuid4
 
 # Verify secrets configuration
@@ -82,8 +82,8 @@ if "email" not in st.session_state:
 elif "persona" not in st.session_state:
     run_router()
 
-if "email" and "persona" in st.session_state:
-    run_chat_core()
+can_run_chat_core = "email" and "persona" in st.session_state
+    
 
 # Split layout into two halves
 col1, col2 = st.columns([2, 3])
@@ -93,7 +93,7 @@ with col1:
     # Add a scrollable container for the chat window
     if st.session_state.get('selected_thread'):
         st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
-        thread_messages = [t for t in threads if t['thread_id'] == st.session_state['selected_thread']]
+        thread_messages = get_thread_from_s3(st.session_state['selected_thread'])
         st.markdown(
             """
             <style>
@@ -110,9 +110,14 @@ with col1:
             """,
             unsafe_allow_html=True
         )
-        for message in thread_messages:
-            st.markdown(f"<p><strong>{message['role'].capitalize()}:</strong> {message['message']}</p>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
+        if thread_messages:
+            for message in thread_messages:
+                st.markdown(f"<p><strong>{message['role'].capitalize()}:</strong> {message['message']}</p>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            st.error("No messages found in this thread.")
+    else: 
+        st.error("Please select a thread to view messages.")   
 
         # Ensure thread content is stored in S3
         if st.session_state.get('chat_log'):
