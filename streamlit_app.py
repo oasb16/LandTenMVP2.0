@@ -53,15 +53,16 @@ with st.sidebar:
     thread_options = ["Select a Thread"] + ["New Thread"] + [t['thread_id'] for t in threads]
     selected_thread = st.selectbox("Select a thread", options=thread_options)
 
+    # Ensure chat_log is initialized in session state
     if selected_thread == "New Thread":
         st.session_state['selected_thread'] = str(uuid4())
-        st.session_state['chat_log'] = []
+        st.session_state['chat_log'] = []  # Initialize chat_log
         st.success("Started a new thread.")
-        st.experimental_rerun()
+        st.rerun()
     elif selected_thread != "Select a Thread":
         st.session_state['selected_thread'] = selected_thread
-        st.session_state['chat_log'] = get_thread_from_s3(selected_thread)
-        st.experimental_rerun()
+        st.session_state['chat_log'] = get_thread_from_s3(selected_thread) or []  # Initialize chat_log if not present
+        st.rerun()
 
     # Add a button to delete all threads
     if st.button("Delete All Threads"):
@@ -128,7 +129,7 @@ with col1:
             st.session_state['chat_log'].append(new_message)
             upload_thread_to_s3(st.session_state['selected_thread'], st.session_state['chat_log'])
             update_thread_timestamp_in_dynamodb(st.session_state['selected_thread'])
-            st.experimental_rerun()
+            st.rerun()
     else: 
         st.error("Please select a thread to view messages.")   
 
