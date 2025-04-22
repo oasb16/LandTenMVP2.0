@@ -52,8 +52,7 @@ col1, col2 = st.columns([2, 3])
 # Left column: Chat window
 with col1:
     st.subheader("Chat Window")
-    st.markdown("<div style='height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Chat messages will appear here.</div>", unsafe_allow_html=True)
-    st.text_input("Type a message...")
+    run_chat_core()
 
 # Right column: Persona-specific container
 with col2:
