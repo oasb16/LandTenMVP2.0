@@ -54,14 +54,17 @@ with st.sidebar:
     selected_thread = st.selectbox("Select a thread", options=thread_options)
 
     # Ensure chat_log is initialized in session state
+    # Add logging to debug chat_log population
     if selected_thread == "New Thread":
         st.session_state['selected_thread'] = str(uuid4())
         st.session_state['chat_log'] = []  # Initialize chat_log
         st.success("Started a new thread.")
+        st.write("Debug: Initialized new thread with empty chat_log.")
         st.rerun()
     elif selected_thread != "Select a Thread":
         st.session_state['selected_thread'] = selected_thread
         st.session_state['chat_log'] = get_thread_from_s3(selected_thread) or []  # Initialize chat_log if not present
+        st.write(f"Debug: Loaded chat_log for thread {selected_thread}: {st.session_state['chat_log']}")
         st.rerun()
 
     # Add a button to delete all threads
@@ -94,6 +97,7 @@ with col1:
     if st.session_state.get('selected_thread'):
         st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
         thread_messages = st.session_state.get('chat_log', [])
+        st.write(f"Debug: Displaying thread_messages: {thread_messages}")  # Log thread messages
         st.markdown(
             """
             <style>
