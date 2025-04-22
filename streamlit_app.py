@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit.components.v1 import html
 
 # -- SS1: Login (Google SSO via Cognito)
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
@@ -24,10 +25,10 @@ except KeyError as e:
 # -- App UI setup
 st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")
 
-# -- Sidebar logout
-if st.session_state.get("logged_in"):
-    st.sidebar.markdown(f"👤 **{st.session_state.get('email', 'Unknown')}**")
-    if st.sidebar.button("Logout"):
+# -- Sidebar
+with st.sidebar:
+    st.markdown(f"👤 **{st.session_state.get('email', 'Unknown')}**")
+    if st.button("Logout"):
         try:
             logout_url = (
                 f"{COGNITO_DOMAIN}/logout?"
@@ -40,20 +41,35 @@ if st.session_state.get("logged_in"):
         except Exception as e:
             st.error(f"Error during logout: {str(e)}")
 
-# -- Route user
-if not st.session_state.get("logged_in"):
-    run_login()
-else:
-    persona = st.session_state.get("persona", "tenant")
+# -- Main Layout
+persona = st.session_state.get("persona", "tenant")
 
+st.title(f"{persona.capitalize()} Dashboard")
+
+# Split layout into two halves
+col1, col2 = st.columns([2, 3])
+
+# Left column: Chat window
+with col1:
+    st.subheader("Chat Window")
+    st.markdown("<div style='height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Chat messages will appear here.</div>", unsafe_allow_html=True)
+    st.text_input("Type a message...")
+
+# Right column: Persona-specific container
+with col2:
+    st.subheader("Details")
     if persona == "tenant":
-        st.title("Tenant Dashboard")
-        run_chat_core()
+        st.markdown("### Incidents")
+        st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Incident details will appear here.</div>", unsafe_allow_html=True)
     elif persona == "landlord":
-        st.title("Landlord Dashboard")
-        run_chat_core()
+        st.markdown("### Jobs")
+        st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Job details will appear here.</div>", unsafe_allow_html=True)
     elif persona == "contractor":
-        st.title("Contractor Dashboard")
-        run_chat_core()
+        st.markdown("### Jobs and Schedule")
+        st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Job details will appear here.</div>", unsafe_allow_html=True)
+        st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Schedule details will appear here.</div>", unsafe_allow_html=True)
     else:
         st.error("Invalid persona. Please contact support.")
+
+# -- Mobile Compatibility
+html("<style>@media (max-width: 768px) { .css-1lcbmhc { flex-direction: column; } }</style>")
