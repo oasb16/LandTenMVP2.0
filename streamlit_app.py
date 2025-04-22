@@ -67,7 +67,7 @@ with st.sidebar:
         delete_all_threads_from_dynamodb()
         st.session_state['selected_thread'] = None  # Clear selected thread
         st.success("All threads have been deleted.")
-        st.experimental_rerun()
+        st.rerun()
 
 # -- Main Layout
 persona = st.session_state.get("persona", "tenant")
