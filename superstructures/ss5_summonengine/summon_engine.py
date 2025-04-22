@@ -136,7 +136,7 @@ def run_chat_core():
         user_input = st.text_input("Type a message...")
         submitted = st.form_submit_button("Send")
     if submitted and user_input.strip():   
-        append_chat_log(thread_id, {"message": combined_reply, "role": "agent"})
+        append_chat_log(thread_id, {"message": user_input, "role": "agent"})
         user_msg = {
             "id": str(uuid4()),
             "timestamp": datetime.utcnow().isoformat(),
