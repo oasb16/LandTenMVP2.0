@@ -80,11 +80,12 @@ st.title(f"{persona.capitalize()} Dashboard")
 if st.session_state.get('selected_thread'):
     st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
     thread_messages = [t for t in threads if t['thread_id'] == st.session_state['selected_thread']]
-    with st.container():
-        st.markdown("<div style='height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>", unsafe_allow_html=True)
-        for message in thread_messages:
-            st.markdown(f"**{message['role'].capitalize()}**: {message['message']}")
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("""
+        <div style='height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>
+    """, unsafe_allow_html=True)
+    for message in thread_messages:
+        st.markdown(f"<p><strong>{message['role'].capitalize()}:</strong> {message['message']}</p>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
     # Ensure thread content is stored in S3
     if st.session_state.get('chat_log'):
