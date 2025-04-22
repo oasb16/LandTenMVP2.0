@@ -43,13 +43,17 @@ with st.sidebar:
         except Exception as e:
             st.error(f"Error during logout: {str(e)}")
 
-    st.subheader("Available Threads")
+    # Fetch all threads
     threads = get_all_threads_from_dynamodb()
+
+    # Display threads in a sidebar
+    st.subheader("Available Threads")
     if threads:
         selected_thread = st.selectbox("Select a thread", options=[t['thread_id'] for t in threads])
+        st.session_state['selected_thread'] = selected_thread
     else:
         st.info("No threads available.")
-        selected_thread = None
+        st.session_state['selected_thread'] = None
 
 # -- Main Layout
 persona = st.session_state.get("persona", "tenant")
@@ -57,9 +61,9 @@ persona = st.session_state.get("persona", "tenant")
 st.title(f"{persona.capitalize()} Dashboard")
 
 # Display messages for the selected thread
-if selected_thread:
-    st.subheader(f"Messages in Thread: {selected_thread}")
-    thread_messages = [t for t in threads if t['thread_id'] == selected_thread]
+if st.session_state.get('selected_thread'):
+    st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
+    thread_messages = [t for t in threads if t['thread_id'] == st.session_state['selected_thread']]
     for message in thread_messages:
         st.markdown(f"**{message['role'].capitalize()}**: {message['message']}")
 
