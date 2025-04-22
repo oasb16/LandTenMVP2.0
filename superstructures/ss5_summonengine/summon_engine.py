@@ -33,6 +33,15 @@ def save_message_to_dynamodb(thread_id, message):
     except ClientError as e:
         st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
 
+def get_all_threads_from_dynamodb():
+    table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
+    try:
+        response = table.scan()
+        return response.get("Items", [])
+    except ClientError as e:
+        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
+        return []
+
 def upload_media_to_s3(file, thread_id):
     try:
         file_key = f"media/{thread_id}/{file.name}"
