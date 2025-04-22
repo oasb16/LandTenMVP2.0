@@ -5,6 +5,8 @@ from datetime import datetime
 from uuid import uuid4
 from utils.gpt_call import call_gpt_agent, call_whisper, call_gpt_vision
 from utils.incident_writer import save_incident_from_media
+import boto3
+from botocore.exceptions import ClientError
 
 MEDIA_PATHS = {
     "audio": "captured_audio.wav",
@@ -13,6 +15,32 @@ MEDIA_PATHS = {
 
 LOG_PATH = "logs/chat_thread_main.json"
 
+# Initialize AWS clients
+s3_client = boto3.client('s3',
+                         aws_access_key_id=st.secrets["AWS_ACCESS_KEY"],
+                         aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"],
+                         region_name=st.secrets["AWS_REGION"])
+
+dynamodb = boto3.resource('dynamodb',
+                          aws_access_key_id=st.secrets["AWS_ACCESS_KEY"],
+                          aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"],
+                          region_name=st.secrets["AWS_REGION"])
+
+def save_message_to_dynamodb(thread_id, message):
+    table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
+    try:
+        table.put_item(Item=message)
+    except ClientError as e:
+        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
+
+def upload_media_to_s3(file, thread_id):
+    try:
+        file_key = f"media/{thread_id}/{file.name}"
+        s3_client.upload_fileobj(file, st.secrets["S3_BUCKET"], file_key)
+        return f"https://{st.secrets['S3_BUCKET']}.s3.amazonaws.com/{file_key}"
+    except ClientError as e:
+        st.error(f"S3 Upload Error: {e.response['Error']['Message']}")
+        return None
 
 def run_summon_engine(chat_log, user_input, persona, thread_id):
     if not st.session_state.get("agent_active", True):
@@ -51,6 +79,9 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
 
     with open(LOG_PATH, "w") as f:
         json.dump(chat_log, f, indent=2)
+
+    # Save message to DynamoDB
+    save_message_to_dynamodb(thread_id, agent_msg)
 
     # 4. Trigger Incident Detection
     try:
