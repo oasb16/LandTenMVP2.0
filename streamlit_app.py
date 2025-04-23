@@ -102,11 +102,12 @@ col1, col2 = st.columns([2, 3])
 
 # Left column: Chat window
 with col1:
-    # Refine rendering logic for better alignment and visibility
+    # Ensure chat_log is updated and messages are displayed correctly
     if st.session_state.get('selected_thread'):
         st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
         thread_messages = st.session_state.get('chat_log', [])
-        st.write(f"Debug: Displaying thread_messages: {thread_messages}")  # Log thread messages
+        logging.debug(f"Current chat_log: {thread_messages}")  # Log current chat log
+
         st.markdown(
             """
             <style>
@@ -115,6 +116,7 @@ with col1:
                 overflow-y: auto;
                 border: 1px solid #ccc;
                 padding: 10px;
+                background-color: #f9f9f9;
                 color: #333;
                 font-family: Arial, sans-serif;
                 font-size: 14px;
@@ -128,11 +130,13 @@ with col1:
                 word-wrap: break-word;
             }
             .user-message {
+                background-color: #d1e7dd;
                 text-align: left;
                 float: left;
                 clear: both;
             }
             .agent-message {
+                background-color: #f8d7da;
                 text-align: right;
                 float: right;
                 clear: both;
@@ -152,7 +156,7 @@ with col1:
             )
         st.markdown("</div>", unsafe_allow_html=True)
 
-        # Real-Time Updates
+        # Add a form to send new messages
         with st.form("chat_form", clear_on_submit=True):
             user_input = st.text_input("Type a message...")
             submitted = st.form_submit_button("Send")
@@ -165,6 +169,7 @@ with col1:
                 "message": user_input.strip()
             }
             st.session_state['chat_log'].append(new_message)
+            logging.debug(f"Appended new message: {new_message}")  # Log new message
             upload_thread_to_s3(st.session_state['selected_thread'], st.session_state['chat_log'])
             update_thread_timestamp_in_dynamodb(st.session_state['selected_thread'])
             st.rerun()
