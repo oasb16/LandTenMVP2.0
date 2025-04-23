@@ -94,7 +94,7 @@ with st.sidebar:
         st.session_state['selected_thread'] = str(uuid4())
         st.session_state['chat_log'] = []
         st.success("Started a new thread.")
-        st.experimental_rerun()
+        st.rerun()
     else:
         st.session_state['selected_thread'] = selected_thread
 
@@ -104,7 +104,7 @@ with st.sidebar:
             delete_all_threads_from_dynamodb()
             st.session_state['selected_thread'] = None  # Clear selected thread
             st.success("All threads have been deleted.")
-            st.experimental_rerun()
+            st.rerun()
         except Exception as e:
             logging.error(f"Error deleting threads: {e}")
             st.error(f"Failed to delete threads: {e}")
@@ -113,7 +113,7 @@ with st.sidebar:
     if st.button("Generate Dummy Threads"):
         dummy_threads = generate_dummy_threads()
         st.success(f"Generated 5 dummy threads: {', '.join(dummy_threads)}")
-        st.experimental_rerun()
+        st.rerun()
 
 # -- Main Layout
 persona = st.session_state.get("persona", "tenant")
