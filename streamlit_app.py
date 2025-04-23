@@ -49,8 +49,9 @@ with st.sidebar:
 
     # Display threads in a sidebar
     st.subheader("Available Threads")
+    thread_options = ["New Thread"]
     if threads:
-        thread_options = ["New Thread"] + [t['thread_id'] for t in threads]
+        thread_options =+ [t['thread_id'] for t in threads]
     selected_thread = st.selectbox("Select a thread", options=thread_options)
 
     if selected_thread == "New Thread":
