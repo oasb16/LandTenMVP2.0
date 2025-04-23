@@ -30,6 +30,46 @@ except KeyError as e:
     st.error(f"Missing required secret: {e.args[0]}")
     st.stop()
 
+# Function to generate dummy threads
+def generate_dummy_threads():
+    dummy_threads = []
+    for i in range(5):
+        thread_id = str(uuid4())
+        dummy_data = {
+            "thread_id": thread_id,
+            "chat_log": [
+                {"role": "tenant", "message": f"Dummy message {i+1} from tenant."},
+                {"role": "agent", "message": f"Dummy reply {i+1} from agent."}
+            ]
+        }
+        try:
+            # Save thread_id to DynamoDB with a default email and unique id
+            save_message_to_dynamodb(thread_id, {
+                "id": thread_id,  # Unique id
+                "thread_id": thread_id,
+                "email": "dummy@example.com",  # Default email
+                "last_updated": datetime.utcnow().isoformat()
+            })
+            # Save dummy data to S3
+            upload_thread_to_s3(thread_id, dummy_data["chat_log"])
+            dummy_threads.append(thread_id)
+        except Exception as e:
+            logging.error(f"Error generating dummy thread {thread_id}: {e}")
+            st.error(f"Failed to generate thread {thread_id}: {e}")
+    return dummy_threads
+
+# Function to fetch and display threads
+def fetch_and_display_threads():
+    threads = get_all_threads_from_dynamodb()
+    logging.debug(f"Fetched threads: {threads}")
+    thread_options = ["Select a Thread", "New Thread"]
+    for t in threads:
+        if 'thread_id' in t:
+            thread_options.append(t['thread_id'])
+        else:
+            logging.warning(f"Thread missing 'thread_id': {t}")
+    return thread_options
+
 # -- Sidebar
 with st.sidebar:
     st.markdown(f"👤 **{st.session_state.get('email', 'Unknown')}**")
@@ -46,60 +86,34 @@ with st.sidebar:
         except Exception as e:
             st.error(f"Error during logout: {str(e)}")
 
-    # Fetch all threads, including dummy threads, on initial page load
-    threads = get_all_threads_from_dynamodb()
-    logging.debug(f"Fetched threads on page load: {threads}")  # Log fetched threads
-
-    # Display threads in a sidebar
-    st.subheader("Available Threads")
-    thread_options = ["Select a Thread", "New Thread"]
-
-    # Add threads with valid 'thread_id' to the options
-    for t in threads:
-        if 'thread_id' in t:
-            thread_options.append(t['thread_id'])
-        else:
-            logging.warning(f"Thread missing 'thread_id': {t}")  # Log missing 'thread_id'
-
+    # Fetch and display threads
+    thread_options = fetch_and_display_threads()
     selected_thread = st.selectbox("Select a thread", options=thread_options)
 
     if selected_thread == "New Thread":
         st.session_state['selected_thread'] = str(uuid4())
         st.session_state['chat_log'] = []
         st.success("Started a new thread.")
+        st.experimental_rerun()
     else:
         st.session_state['selected_thread'] = selected_thread
 
     # Add a button to delete all threads
     if st.button("Delete All Threads"):
-        delete_all_threads_from_dynamodb()
-        st.session_state['selected_thread'] = None  # Clear selected thread
-        st.success("All threads have been deleted.")
+        try:
+            delete_all_threads_from_dynamodb()
+            st.session_state['selected_thread'] = None  # Clear selected thread
+            st.success("All threads have been deleted.")
+            st.experimental_rerun()
+        except Exception as e:
+            logging.error(f"Error deleting threads: {e}")
+            st.error(f"Failed to delete threads: {e}")
 
     # Add a button to generate 5 dummy threads
     if st.button("Generate Dummy Threads"):
-        dummy_threads = []
-        for i in range(5):
-            thread_id = str(uuid4())
-            dummy_data = {
-                "thread_id": thread_id,
-                "chat_log": [
-                    {"role": "tenant", "message": f"Dummy message {i+1} from tenant."},
-                    {"role": "agent", "message": f"Dummy reply {i+1} from agent."}
-                ]
-            }
-            # Save thread_id to DynamoDB with a default email and unique id
-            save_message_to_dynamodb(thread_id, {
-                "id": thread_id,  # Unique id
-                "thread_id": thread_id,
-                "email": "dummy@example.com",  # Default email
-                "last_updated": datetime.utcnow().isoformat()
-            })
-            # Save dummy data to S3
-            upload_thread_to_s3(thread_id, dummy_data["chat_log"])
-            dummy_threads.append(thread_id)
-
+        dummy_threads = generate_dummy_threads()
         st.success(f"Generated 5 dummy threads: {', '.join(dummy_threads)}")
+        st.experimental_rerun()
 
 # -- Main Layout
 persona = st.session_state.get("persona", "tenant")
@@ -109,6 +123,7 @@ st.title(f"{persona.capitalize()} Dashboard")
 # Display messages for the selected thread
 if st.session_state.get('selected_thread'):
     st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
+    threads = get_all_threads_from_dynamodb()
     thread_messages = [t for t in threads if t['thread_id'] == st.session_state['selected_thread']]
     for message in thread_messages:
         st.markdown(f"**{message['role'].capitalize()}**: {message['message']}")
