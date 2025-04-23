@@ -88,8 +88,9 @@ with st.sidebar:
                     {"role": "agent", "message": f"Dummy reply {i+1} from agent."}
                 ]
             }
-            # Save thread_id to DynamoDB with a default email
+            # Save thread_id to DynamoDB with a default email and unique id
             save_message_to_dynamodb(thread_id, {
+                "id": thread_id,  # Unique id
                 "thread_id": thread_id,
                 "email": "dummy@example.com",  # Default email
                 "last_updated": datetime.utcnow().isoformat()
