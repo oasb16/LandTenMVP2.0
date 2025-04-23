@@ -16,10 +16,8 @@ from superstructures.ss3_trichatcore.tri_chat_core import run_chat_core
 # -- Optional logout logic in sidebar
 from urllib.parse import quote
 
-from superstructures.ss5_summonengine.summon_engine import get_all_threads_from_dynamodb, delete_all_threads_from_dynamodb, upload_thread_to_s3, get_thread_from_s3, update_thread_timestamp_in_dynamodb
+from superstructures.ss5_summonengine.summon_engine import get_all_threads_from_dynamodb, delete_all_threads_from_dynamodb, upload_thread_to_s3
 from uuid import uuid4
-from datetime import datetime
-import logging
 
 # Verify secrets configuration
 try:
@@ -48,133 +46,58 @@ with st.sidebar:
 
     # Fetch all threads
     threads = get_all_threads_from_dynamodb()
-    logging.debug(f"Fetched threads from DynamoDB: {threads}")  # Log fetched threads
 
     # Display threads in a sidebar
     st.subheader("Available Threads")
-    thread_options = ["Select a Thread", "New Thread"]
-
-    # Add threads with valid 'thread_id' to the options
-    for t in threads:
-        if 'thread_id' in t:
-            thread_options.append(t['thread_id'])
-        else:
-            logging.warning(f"Thread missing 'thread_id': {t}")  # Log missing 'thread_id'
-
+    thread_options = ["Select a Thread"] + ["New Thread"] + [t['thread_id'] for t in threads]
     selected_thread = st.selectbox("Select a thread", options=thread_options)
 
-    # Ensure chat_log is initialized in session state
-    # Add logging to debug chat_log population
     if selected_thread == "New Thread":
-        st.session_state['selected_thread'] = str(uuid4())
-        st.session_state['chat_log'] = []  # Initialize chat_log
-        st.success("Started a new thread.")
-        st.write("Debug: Initialized new thread with empty chat_log.")
-        thread_options =  st.session_state['selected_thread']
-        selected_thread = st.session_state['selected_thread']
-    elif selected_thread != "Select a Thread":
-        st.session_state['selected_thread'] = selected_thread
-        st.session_state['chat_log'] = get_thread_from_s3(selected_thread) or []  # Initialize chat_log if not present
-        st.write(f"Debug: Loaded chat_log for thread {selected_thread}: {st.session_state['chat_log']}")
+        if st.session_state.get('selected_thread') != "New Thread":
+            st.session_state['selected_thread'] = str(uuid4())
+            st.session_state['chat_log'] = []
+            st.success("Started a new thread.")
+            selected_thread == st.session_state['selected_thread']
+            st.rerun()
+            
+    else:
+        if st.session_state.get('selected_thread') != selected_thread:
+            st.session_state['selected_thread'] = selected_thread
 
     # Add a button to delete all threads
     if st.button("Delete All Threads"):
         delete_all_threads_from_dynamodb()
         st.session_state['selected_thread'] = None  # Clear selected thread
         st.success("All threads have been deleted.")
+        st.rerun()
 
 # -- Main Layout
 persona = st.session_state.get("persona", "tenant")
 
 st.title(f"{persona.capitalize()} Dashboard")
 
-# Main execution flow
-if "email" not in st.session_state:
-    run_login()
-elif "persona" not in st.session_state:
-    run_router()
+# Add a scrollable container for the chat window
+if st.session_state.get('selected_thread'):
+    st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
+    thread_messages = [t for t in threads if t['thread_id'] == st.session_state['selected_thread']]
+    st.markdown("""
+        <div style='height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>
+    """, unsafe_allow_html=True)
+    for message in thread_messages:
+        st.markdown(f"<p><strong>{message['role'].capitalize()}:</strong> {message['message']}</p>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-can_run_chat_core = "email" and "persona" in st.session_state
-    
+    # Ensure thread content is stored in S3
+    if st.session_state.get('chat_log'):
+        upload_thread_to_s3(st.session_state['selected_thread'], st.session_state['chat_log'])
 
 # Split layout into two halves
 col1, col2 = st.columns([2, 3])
 
 # Left column: Chat window
 with col1:
-    # Ensure chat_log is updated and messages are displayed correctly
-    if st.session_state.get('selected_thread'):
-        st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
-        thread_messages = st.session_state.get('chat_log', [])
-        logging.debug(f"Current chat_log: {thread_messages}")  # Log current chat log
-
-        st.markdown(
-            """
-            <style>
-            .scrollable-container {
-                height: 400px;
-                overflow-y: auto;
-                border: 1px solid #ccc;
-                padding: 10px;
-                background-color: #f9f9f9;
-                color: #333;
-                font-family: Arial, sans-serif;
-                font-size: 14px;
-            }
-            .message {
-                margin-bottom: 10px;
-                padding: 8px;
-                border-radius: 5px;
-                display: inline-block;
-                max-width: 80%;
-                word-wrap: break-word;
-            }
-            .user-message {
-                background-color: #d1e7dd;
-                text-align: left;
-                float: left;
-                clear: both;
-            }
-            .agent-message {
-                background-color: #f8d7da;
-                text-align: right;
-                float: right;
-                clear: both;
-            }
-            </style>
-            <div class='scrollable-container'>
-            """,
-            unsafe_allow_html=True
-        )
-        for message in thread_messages:
-            role_class = "user-message" if message['role'] == "tenant" else "agent-message"
-            st.markdown(
-                f"<div class='message {role_class}'>"
-                f"<strong>{message['role'].capitalize()}:</strong> {message['message']}"
-                f"</div>",
-                unsafe_allow_html=True
-            )
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        # Add a form to send new messages
-        with st.form("chat_form", clear_on_submit=True):
-            user_input = st.text_input("Type a message...")
-            submitted = st.form_submit_button("Send")
-
-        if submitted and user_input.strip():
-            new_message = {
-                "id": str(uuid4()),
-                "timestamp": datetime.utcnow().isoformat(),
-                "role": st.session_state.get("persona", "user"),
-                "message": user_input.strip()
-            }
-            st.session_state['chat_log'].append(new_message)
-            logging.debug(f"Appended new message: {new_message}")  # Log new message
-            upload_thread_to_s3(st.session_state['selected_thread'], st.session_state['chat_log'])
-            update_thread_timestamp_in_dynamodb(st.session_state['selected_thread'])
-            st.rerun()
-    else: 
-        st.error("Please select a thread to view messages.")   
+    st.subheader("Chat Window")
+    run_chat_core()
 
 # Right column: Persona-specific container
 with col2:

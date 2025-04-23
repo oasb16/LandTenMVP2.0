@@ -7,6 +7,10 @@ from utils.gpt_call import call_gpt_agent, call_whisper, call_gpt_vision
 from utils.incident_writer import save_incident_from_media
 import boto3
 from botocore.exceptions import ClientError
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 MEDIA_PATHS = {
     "audio": "captured_audio.wav",
@@ -29,15 +33,18 @@ dynamodb = boto3.resource('dynamodb',
 def save_message_to_dynamodb(thread_id, message):
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
     try:
+        logging.debug(f"Saving message to DynamoDB for thread_id: {thread_id}, message: {message}")
         table.put_item(Item=message)
     except ClientError as e:
-        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
-        print(f"DynamoDB Error: {e.response['Error']['Message']}")
+        logging.error(f"DynamoDB Error in save_message_to_dynamodb: {e.response['Error']['Message']}")
+        st.error(f"DynamoDB Error in save_message_to_dynamodb: {e.response['Error']['Message']}")
         return False
     return True
+
 def append_chat_log(thread_id, message):    
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
     try:
+        logging.debug(f"Appending message to chat_log for thread_id: {thread_id}, message: {message}")
         table.update_item(
             Key={'thread_id': thread_id},
             UpdateExpression="SET chat_log = list_append(if_not_exists(chat_log, :empty_list), :message)",
@@ -47,10 +54,11 @@ def append_chat_log(thread_id, message):
             }
         )
     except ClientError as e:
-        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
-        print(f"DynamoDB Error: {e.response['Error']['Message']}")
+        logging.error(f"DynamoDB Error in append_chat_log: {e.response['Error']['Message']}")
+        st.error(f"DynamoDB Error in append_chat_log: {e.response['Error']['Message']}")
         return False
     return True
+
 def save_incident_from_media(chat_log, persona, thread_id):
     incident = {
         "id": f"incident_{uuid4()}",
@@ -67,23 +75,26 @@ def save_incident_from_media(chat_log, persona, thread_id):
     try:
         table.put_item(Item=incident)
     except ClientError as e:
-        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
+        st.error(f"DynamoDB Error in save_incident_from_media: {e.response['Error']['Message']}")
         print(f"DynamoDB Error: {e.response['Error']['Message']}")
         return False
     return True
+
 def get_chat_log(thread_id):
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
     try:
         response = table.get_item(Key={'thread_id': thread_id})
         return response.get("Item", {}).get("chat_log", [])
     except ClientError as e:
-        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
+        st.error(f"DynamoDB Error in get_chat_log: {e.response['Error']['Message']}")
         print(f"DynamoDB Error: {e.response['Error']['Message']}")
         return []
+
 def get_thread_id():
     if "thread_id" not in st.session_state:
         st.session_state["thread_id"] = str(uuid4())
     return st.session_state["thread_id"]
+
 def get_user_profile():
     if "user_profile" not in st.session_state:
         st.session_state["user_profile"] = {
@@ -93,12 +104,14 @@ def get_user_profile():
             "timestamp": datetime.utcnow().isoformat()
         }
     return st.session_state["user_profile"]
+
 def enforce_word_limit(user_input, max_words):
     word_count = len(user_input.split())
     if word_count > max_words:
         st.warning(f"Please limit your message to {max_words} words.")
         return False
     return True
+
 def run_chat_core():
     thread_id = get_thread_id()
     chat_log = get_chat_log(thread_id)
@@ -168,17 +181,16 @@ def run_chat_core():
             st.session_state.last_action = "text_input"
             st.session_state.chat_log.append(agent_msg)
 
-
-
-
 def get_all_threads_from_dynamodb():
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
     try:
+        logging.debug("Fetching all threads from DynamoDB")
         response = table.scan()
+        logging.debug(f"Fetched threads: {response.get('Items', [])}")
         return response.get("Items", [])
     except ClientError as e:
-        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
-        print(f"DynamoDB Error: {e.response['Error']['Message']}")
+        logging.error(f"DynamoDB Error in get_all_threads_from_dynamodb: {e.response['Error']['Message']}")
+        st.error(f"DynamoDB Error in get_all_threads_from_dynamodb: {e.response['Error']['Message']}")
         return []
 
 def delete_all_threads_from_dynamodb():
@@ -193,19 +205,24 @@ def delete_all_threads_from_dynamodb():
                     "id": item["id"]
                 })
     except ClientError as e:
-        st.error(f"DynamoDB Error: {e.response['Error']['Message']}")
+        st.error(f"DynamoDB Error in delete_all_threads_from_dynamodb: {e.response['Error']['Message']}")
 
 def upload_media_to_s3(file, thread_id):
     try:
         file_key = f"media/{thread_id}/{file.name}"
+        logging.debug(f"Uploading media to S3 for thread_id: {thread_id}, file_key: {file_key}")
         s3_client.upload_fileobj(file, st.secrets["S3_BUCKET"], file_key)
-        return f"https://{st.secrets['S3_BUCKET']}.s3.amazonaws.com/{file_key}"
+        media_url = f"https://{st.secrets['S3_BUCKET']}.s3.amazonaws.com/{file_key}"
+        logging.debug(f"Media uploaded to S3 at URL: {media_url}")
+        return media_url
     except ClientError as e:
+        logging.error(f"S3 Upload Error: {e.response['Error']['Message']}")
         st.error(f"S3 Upload Error: {e.response['Error']['Message']}")
         return None
 
 def upload_thread_to_s3(thread_id, chat_log):
     try:
+        logging.debug(f"Uploading thread to S3 for thread_id: {thread_id}, chat_log: {chat_log}")
         file_key = f"threads/{thread_id}.json"
         s3_client.put_object(
             Bucket=st.secrets["S3_BUCKET"],
@@ -213,18 +230,25 @@ def upload_thread_to_s3(thread_id, chat_log):
             Body=json.dumps(chat_log, indent=2),
             ContentType="application/json"
         )
-        return f"https://{st.secrets['S3_BUCKET']}.s3.amazonaws.com/{file_key}"
+        s3_url = f"https://{st.secrets['S3_BUCKET']}.s3.amazonaws.com/{file_key}"
+        logging.debug(f"Thread uploaded to S3 at URL: {s3_url}")
+        st.success("Thread uploaded to S3. To view click [here](%s)" % s3_url)
+        return s3_url
     except ClientError as e:
+        logging.error(f"S3 Upload Error: {e.response['Error']['Message']}")
         st.error(f"S3 Upload Error: {e.response['Error']['Message']}")
         return None
 
 def get_thread_from_s3(thread_id):
     try:
+        logging.debug(f"Fetching thread from S3 for thread_id: {thread_id}")
         file_key = f"threads/{thread_id}.json"
         response = s3_client.get_object(Bucket=st.secrets["S3_BUCKET"], Key=file_key)
         thread_data = json.loads(response['Body'].read().decode('utf-8'))
+        logging.debug(f"Fetched thread data: {thread_data}")
         return thread_data
     except ClientError as e:
+        logging.error(f"S3 Fetch Error: {e.response['Error']['Message']}")
         st.error(f"S3 Fetch Error: {e.response['Error']['Message']}")
         return []
 
@@ -279,3 +303,14 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
     upload_thread_to_s3(thread_id, chat_log)
 
     st.success("💡 Agent updated with media context.")
+
+def update_thread_timestamp_in_dynamodb(thread_id):
+    table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
+    try:
+        table.update_item(
+            Key={"thread_id": thread_id},
+            UpdateExpression="SET last_updated = :timestamp",
+            ExpressionAttributeValues={":timestamp": datetime.utcnow().isoformat()}
+        )
+    except ClientError as e:
+        st.error(f"DynamoDB Error in update_thread_timestamp_in_dynamodb: {e.response['Error']['Message']}")
