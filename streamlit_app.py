@@ -19,6 +19,7 @@ from urllib.parse import quote
 from superstructures.ss5_summonengine.summon_engine import get_all_threads_from_dynamodb, delete_all_threads_from_dynamodb, upload_thread_to_s3, get_thread_from_s3, update_thread_timestamp_in_dynamodb
 from uuid import uuid4
 from datetime import datetime
+import logging
 
 # Verify secrets configuration
 try:
@@ -47,10 +48,19 @@ with st.sidebar:
 
     # Fetch all threads
     threads = get_all_threads_from_dynamodb()
+    logging.debug(f"Fetched threads from DynamoDB: {threads}")  # Log fetched threads
 
     # Display threads in a sidebar
     st.subheader("Available Threads")
-    thread_options = ["Select a Thread"] + ["New Thread"] + [t['thread_id'] for t in threads]
+    thread_options = ["Select a Thread", "New Thread"]
+
+    # Add threads with valid 'thread_id' to the options
+    for t in threads:
+        if 'thread_id' in t:
+            thread_options.append(t['thread_id'])
+        else:
+            logging.warning(f"Thread missing 'thread_id': {t}")  # Log missing 'thread_id'
+
     selected_thread = st.selectbox("Select a thread", options=thread_options)
 
     # Ensure chat_log is initialized in session state
