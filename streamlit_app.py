@@ -16,8 +16,10 @@ from superstructures.ss3_trichatcore.tri_chat_core import run_chat_core
 # -- Optional logout logic in sidebar
 from urllib.parse import quote
 
-from superstructures.ss5_summonengine.summon_engine import get_all_threads_from_dynamodb, delete_all_threads_from_dynamodb, upload_thread_to_s3
+from superstructures.ss5_summonengine.summon_engine import get_all_threads_from_dynamodb, delete_all_threads_from_dynamodb, upload_thread_to_s3, save_message_to_dynamodb
 from uuid import uuid4
+from datetime import datetime
+import logging
 
 # Verify secrets configuration
 try:
@@ -44,14 +46,21 @@ with st.sidebar:
         except Exception as e:
             st.error(f"Error during logout: {str(e)}")
 
-    # Fetch all threads
+    # Fetch all threads, including dummy threads, on initial page load
     threads = get_all_threads_from_dynamodb()
+    logging.debug(f"Fetched threads on page load: {threads}")  # Log fetched threads
 
     # Display threads in a sidebar
     st.subheader("Available Threads")
-    thread_options = ["New Thread"]
-    # if threads:
-    #     thread_options =+ [t['thread_id'] for t in threads]
+    thread_options = ["Select a Thread", "New Thread"]
+
+    # Add threads with valid 'thread_id' to the options
+    for t in threads:
+        if 'thread_id' in t:
+            thread_options.append(t['thread_id'])
+        else:
+            logging.warning(f"Thread missing 'thread_id': {t}")  # Log missing 'thread_id'
+
     selected_thread = st.selectbox("Select a thread", options=thread_options)
 
     if selected_thread == "New Thread":
@@ -67,6 +76,26 @@ with st.sidebar:
         st.session_state['selected_thread'] = None  # Clear selected thread
         st.success("All threads have been deleted.")
 
+    # Add a button to generate 5 dummy threads
+    if st.button("Generate Dummy Threads"):
+        dummy_threads = []
+        for i in range(5):
+            thread_id = str(uuid4())
+            dummy_data = {
+                "thread_id": thread_id,
+                "chat_log": [
+                    {"role": "tenant", "message": f"Dummy message {i+1} from tenant."},
+                    {"role": "agent", "message": f"Dummy reply {i+1} from agent."}
+                ]
+            }
+            # Save thread_id to DynamoDB
+            save_message_to_dynamodb(thread_id, {"thread_id": thread_id, "last_updated": datetime.utcnow().isoformat()})
+            # Save dummy data to S3
+            upload_thread_to_s3(thread_id, dummy_data["chat_log"])
+            dummy_threads.append(thread_id)
+
+        st.success(f"Generated 5 dummy threads: {', '.join(dummy_threads)}")
+
 # -- Main Layout
 persona = st.session_state.get("persona", "tenant")
 
@@ -75,9 +104,9 @@ st.title(f"{persona.capitalize()} Dashboard")
 # Display messages for the selected thread
 if st.session_state.get('selected_thread'):
     st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
-    # thread_messages = [t for t in threads if t['thread_id'] == st.session_state['selected_thread']]
-    # for message in thread_messages:
-    #     st.markdown(f"**{message['role'].capitalize()}**: {message['message']}")
+    thread_messages = [t for t in threads if t['thread_id'] == st.session_state['selected_thread']]
+    for message in thread_messages:
+        st.markdown(f"**{message['role'].capitalize()}**: {message['message']}")
 
     # Ensure thread content is stored in S3
     if st.session_state.get('chat_log'):
