@@ -88,8 +88,12 @@ with st.sidebar:
                     {"role": "agent", "message": f"Dummy reply {i+1} from agent."}
                 ]
             }
-            # Save thread_id to DynamoDB
-            save_message_to_dynamodb(thread_id, {"thread_id": thread_id, "last_updated": datetime.utcnow().isoformat()})
+            # Save thread_id to DynamoDB with a default email
+            save_message_to_dynamodb(thread_id, {
+                "thread_id": thread_id,
+                "email": "dummy@example.com",  # Default email
+                "last_updated": datetime.utcnow().isoformat()
+            })
             # Save dummy data to S3
             upload_thread_to_s3(thread_id, dummy_data["chat_log"])
             dummy_threads.append(thread_id)
