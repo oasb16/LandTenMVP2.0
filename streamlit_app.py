@@ -75,9 +75,9 @@ st.title(f"{persona.capitalize()} Dashboard")
 # Display messages for the selected thread
 if st.session_state.get('selected_thread'):
     st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
-    thread_messages = [t for t in threads if t['thread_id'] == st.session_state['selected_thread']]
-    for message in thread_messages:
-        st.markdown(f"**{message['role'].capitalize()}**: {message['message']}")
+    # thread_messages = [t for t in threads if t['thread_id'] == st.session_state['selected_thread']]
+    # for message in thread_messages:
+    #     st.markdown(f"**{message['role'].capitalize()}**: {message['message']}")
 
     # Ensure thread content is stored in S3
     if st.session_state.get('chat_log'):
