@@ -32,8 +32,8 @@ dynamodb = boto3.resource('dynamodb',
 
 def save_message_to_dynamodb(thread_id, message):
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
-    st.error(f"thread_id: {thread_id}")
-    st.error(f"message: {message}")
+    st.error(f"This is from def save_message_to_dynamodb: {thread_id}")
+    st.error(f"This is from def save_message_to_dynamodb message: {message}")
     try:
         logging.debug(f"Saving message to DynamoDB for thread_id: {thread_id}, message: {message}")
         table.put_item(Item=message)
@@ -43,7 +43,9 @@ def save_message_to_dynamodb(thread_id, message):
         return False
     return True
 
-def append_chat_log(thread_id, message):    
+def append_chat_log(thread_id, message):
+    st.error(f"This is from def append_chat_log thread_id: {thread_id}")
+    st.error(f"This is from def append_chat_log message: {message}")    
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
     try:
         logging.debug(f"Appending message to chat_log for thread_id: {thread_id}, message: {message}")
@@ -73,6 +75,8 @@ def save_incident_from_media(chat_log, persona, thread_id):
     }
 
     # Save incident to DynamoDB
+    st.error(f"This is from def save_incident_from_media thread_id: {thread_id}")
+    st.error(f"This is from def save_incident_from_media message: {incident}")      
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
     try:
         table.put_item(Item=incident)
@@ -83,6 +87,7 @@ def save_incident_from_media(chat_log, persona, thread_id):
     return True
 
 def get_chat_log(thread_id):
+    st.error(f"This is from def save_incident_from_media thread_id: {thread_id}")
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
     try:
         response = table.get_item(Key={'thread_id': thread_id})
