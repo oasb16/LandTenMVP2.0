@@ -43,8 +43,8 @@ def save_message_to_dynamodb(thread_id, message):
         logging.debug(f"Saving message to DynamoDB for thread_id: {thread_id}, message: {message}")
         table.put_item(Item=message)
     except ValueError as ve:
-        logging.error(f"Schema validation error: {ve}")
-        st.error(f"Schema validation error: {ve}")
+        logging.error(f"Schema validation error: {ve} message to DynamoDB for thread_id: {thread_id}, message: {message}")
+        st.error(f"Schema validation error: {ve} message to DynamoDB for thread_id: {thread_id}, message: {message}")
         return False
     except ClientError as e:
         logging.error(f"DynamoDB Error in save_message_to_dynamodb: {e.response['Error']['Message']}")
