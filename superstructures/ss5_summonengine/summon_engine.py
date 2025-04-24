@@ -32,6 +32,8 @@ dynamodb = boto3.resource('dynamodb',
 
 def save_message_to_dynamodb(thread_id, message):
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
+    st.error(f"thread_id: {thread_id}")
+    st.error(f"message: {message}")
     try:
         logging.debug(f"Saving message to DynamoDB for thread_id: {thread_id}, message: {message}")
         table.put_item(Item=message)
