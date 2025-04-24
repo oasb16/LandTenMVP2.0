@@ -222,22 +222,32 @@ def upload_media_to_s3(file, thread_id):
 
 def upload_thread_to_s3(thread_id, chat_log):
     try:
-        logging.debug(f"Uploading thread to S3 for thread_id: {thread_id}, chat_log: {chat_log}")
         file_key = f"threads/{thread_id}.json"
+
+        # Upload the object
         s3_client.put_object(
             Bucket=st.secrets["S3_BUCKET"],
             Key=file_key,
             Body=json.dumps(chat_log, indent=2),
             ContentType="application/json"
         )
-        s3_url = f"https://{st.secrets['S3_BUCKET']}.s3.amazonaws.com/{file_key}"
-        logging.debug(f"Thread uploaded to S3 at URL: {s3_url}")
-        st.success("Thread uploaded to S3. To view click [here](%s)" % s3_url)
-        return s3_url
+
+        # Generate a pre-signed URL valid for 5 minutes (300 seconds)
+        presigned_url = s3_client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": st.secrets["S3_BUCKET"], "Key": file_key},
+            ExpiresIn=300,
+            HttpMethod="GET"
+        )
+
+        st.success(f"Thread uploaded to S3. To view click [here]({presigned_url})")
+        return presigned_url
+
     except ClientError as e:
         logging.error(f"S3 Upload Error: {e.response['Error']['Message']}")
         st.error(f"S3 Upload Error: {e.response['Error']['Message']}")
         return None
+
 
 def get_thread_from_s3(thread_id):
     try:
