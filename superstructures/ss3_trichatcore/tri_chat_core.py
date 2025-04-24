@@ -4,6 +4,7 @@ from datetime import datetime
 from uuid import uuid4
 from streamlit_elements import elements
 import logging
+import traceback
 
 # Configure logging
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -13,15 +14,11 @@ from superstructures.ss7_mediastream import run_media_interface
 from superstructures.ss8_canvascard.canvascard import create_canvas_card
 from utils.chat_log_writer import load_chat_log, append_chat_log
 
-def run_chat_core():
-    st.title("Tenant Chat Interface")
-    st.subheader("TriChat – Unified Chat Interface")
-
+def initialize_session_state():
     if "persona" not in st.session_state:
         st.session_state["persona"] = "tenant"
     if "thread_id" not in st.session_state:
         st.session_state["thread_id"] = str(uuid4())
-        # Save the new thread_id to DynamoDB with an initial message
         initial_message = {
             "id": str(uuid4()),
             "timestamp": datetime.utcnow().isoformat(),
@@ -32,10 +29,19 @@ def run_chat_core():
             "email": st.session_state.get("email", "unknown"),
             "thread_id": st.session_state["thread_id"]
         }
-        save_message_to_dynamodb(st.session_state["thread_id"], initial_message)
+        try:
+            save_message_to_dynamodb(st.session_state["thread_id"], initial_message)
+        except Exception as e:
+            logging.error(f"Failed to save initial message to DynamoDB: {e}")
+            logging.error(traceback.format_exc())
         st.session_state.chat_log = [initial_message]
     if "chat_log" not in st.session_state:
-        st.session_state.chat_log = load_chat_log(st.session_state["thread_id"])
+        try:
+            st.session_state.chat_log = load_chat_log(st.session_state["thread_id"])
+        except Exception as e:
+            logging.error(f"Failed to load chat log: {e}")
+            logging.error(traceback.format_exc())
+            st.session_state.chat_log = []
     if "last_action" not in st.session_state:
         st.session_state.last_action = None
     if "show_upload" not in st.session_state:
@@ -43,10 +49,7 @@ def run_chat_core():
     if "show_capture" not in st.session_state:
         st.session_state.show_capture = False
 
-    thread_id = st.session_state["thread_id"]
-    chat_log = st.session_state.chat_log
-    persona = st.session_state["persona"]
-
+def render_chat_log(chat_log):
     st.markdown("### 💬 Conversation")
     with st.container():
         st.markdown("<div style='height: 400px; overflow-y: auto;'>", unsafe_allow_html=True)
@@ -73,6 +76,18 @@ def run_chat_core():
                     </div>
                 """, unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
+
+def run_chat_core():
+    st.title("Tenant Chat Interface")
+    st.subheader("TriChat – Unified Chat Interface")
+
+    initialize_session_state()
+
+    thread_id = st.session_state["thread_id"]
+    chat_log = st.session_state.chat_log
+    persona = st.session_state["persona"]
+
+    render_chat_log(chat_log)
 
     with st.sidebar:
         st.markdown("### 🧭 Media Controls")
@@ -124,7 +139,11 @@ def run_chat_core():
         }
         st.session_state.chat_log.append(user_msg)
         append_chat_log(thread_id, user_msg)
-        save_message_to_dynamodb(thread_id, user_msg)
+        try:
+            save_message_to_dynamodb(thread_id, user_msg)
+        except Exception as e:
+            logging.error(f"Failed to save user message to DynamoDB: {e}")
+            logging.error(traceback.format_exc())
         st.session_state.last_action = "text_input"
 
         try:
@@ -136,6 +155,7 @@ def run_chat_core():
             )
         except Exception as e:
             logging.error(f"Error in run_summon_engine: {e}")
+            logging.error(traceback.format_exc())
             agent_reply = f"[Agent error: {str(e)}]"
 
         if agent_reply:
