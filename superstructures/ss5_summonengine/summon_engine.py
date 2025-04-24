@@ -80,7 +80,9 @@ def save_incident_from_media(chat_log, persona, thread_id):
         "keywords": [],
         "persona": persona,
         "priority": "medium",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
+        "thread_id": thread_id,  # Ensure thread_id is included
+        "email": st.session_state.get("email", "unknown")  # Ensure email is included
     }
 
     # Save incident to DynamoDB
