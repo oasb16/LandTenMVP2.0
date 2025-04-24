@@ -38,19 +38,13 @@ def generate_dummy_threads():
         dummy_data = {
             "thread_id": thread_id,
             "chat_log": [
-                {"role": "tenant", "message": f"Dummy message {i+1} from tenant."},
-                {"role": "agent", "message": f"Dummy reply {i+1} from agent."}
+                {"id": str(uuid4()), "timestamp": datetime.utcnow().isoformat(), "role": "tenant", "message": f"Dummy message {i+1} from tenant.", "thread_id": thread_id, "email": "dummy@example.com"},
+                {"id": str(uuid4()), "timestamp": datetime.utcnow().isoformat(), "role": "agent", "message": f"Dummy reply {i+1} from agent.", "thread_id": thread_id, "email": "dummy@example.com"}
             ]
         }
         try:
-            # Save thread_id to DynamoDB with a default email and unique id
-            save_message_to_dynamodb(thread_id, {
-                "id": thread_id,  # Unique id
-                "thread_id": thread_id,
-                "email": "dummy@example.com",  # Default email
-                "last_updated": datetime.utcnow().isoformat()
-            })
-            # Save dummy data to S3
+            save_message_to_dynamodb(thread_id, dummy_data["chat_log"][0])
+            save_message_to_dynamodb(thread_id, dummy_data["chat_log"][1])
             upload_thread_to_s3(thread_id, dummy_data["chat_log"])
             dummy_threads.append(thread_id)
         except Exception as e:

@@ -30,13 +30,22 @@ dynamodb = boto3.resource('dynamodb',
                           aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"],
                           region_name=st.secrets["AWS_REGION"])
 
+def validate_message_schema(message):
+    required_fields = ["id", "timestamp", "role", "message", "thread_id", "email"]
+    missing_fields = [field for field in required_fields if field not in message]
+    if missing_fields:
+        raise ValueError(f"Message is missing required fields: {missing_fields}")
+
 def save_message_to_dynamodb(thread_id, message):
-    table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
-    st.error(f"This is from def save_message_to_dynamodb: {thread_id}")
-    st.error(f"This is from def save_message_to_dynamodb message: {message}")
     try:
+        validate_message_schema(message)
+        table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
         logging.debug(f"Saving message to DynamoDB for thread_id: {thread_id}, message: {message}")
         table.put_item(Item=message)
+    except ValueError as ve:
+        logging.error(f"Schema validation error: {ve}")
+        st.error(f"Schema validation error: {ve}")
+        return False
     except ClientError as e:
         logging.error(f"DynamoDB Error in save_message_to_dynamodb: {e.response['Error']['Message']}")
         st.error(f"DynamoDB Error in save_message_to_dynamodb: {e.response['Error']['Message']}")
