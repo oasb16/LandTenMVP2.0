@@ -311,7 +311,9 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
         "id": str(uuid4()),
         "timestamp": datetime.utcnow().isoformat(),
         "role": "agent",
-        "message": combined_reply
+        "message": combined_reply,
+        "thread_id": thread_id,
+        "email": st.session_state.get("email", "unknown")
     }
     chat_log.append(agent_msg)
 
