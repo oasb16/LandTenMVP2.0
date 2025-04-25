@@ -10,7 +10,7 @@ import streamlit.components.v1 as components
 # Configure logging
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
-from superstructures.ss5_summonengine.summon_engine import run_summon_engine, save_message_to_dynamodb
+from superstructures.ss5_summonengine.summon_engine import run_summon_engine, save_message_to_dynamodb, upload_thread_to_s3
 from superstructures.ss7_mediastream import run_media_interface
 from superstructures.ss8_canvascard.canvascard import create_canvas_card
 from utils.chat_log_writer import load_chat_log, append_chat_log
