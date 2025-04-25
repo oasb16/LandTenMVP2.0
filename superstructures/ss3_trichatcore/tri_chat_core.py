@@ -124,6 +124,7 @@ def run_chat_core():
             if media_msg:
                 st.session_state.chat_log.append(media_msg)
                 append_chat_log(thread_id, media_msg)
+                upload_thread_to_s3(thread_id, st.session_state.chat_log)  # Ensure thread is saved to S3
                 st.session_state.last_action = "media_upload"
 
     if st.session_state.show_capture:
@@ -132,6 +133,7 @@ def run_chat_core():
             if media_msg:
                 st.session_state.chat_log.append(media_msg)
                 append_chat_log(thread_id, media_msg)
+                upload_thread_to_s3(thread_id, st.session_state.chat_log)  # Ensure thread is saved to S3
                 st.session_state.last_action = "media_capture"
 
     # 🧠 Actual chat form
