@@ -121,7 +121,7 @@ st.title(f"{persona.capitalize()} Dashboard")
 
 # Display messages for the selected thread
 if st.session_state.get('selected_thread'):
-    st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
+    st.expander(f"Messages in Thread: {st.session_state['selected_thread']}")
     for message in st.session_state['chat_log']:
         # Validate message object and handle missing keys
         role = message.get('role', 'Unknown').capitalize()
