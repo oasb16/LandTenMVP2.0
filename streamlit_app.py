@@ -131,6 +131,8 @@ if st.session_state.get('selected_thread'):
         # Validate message object and handle missing keys
         role = message.get('role', 'Unknown').capitalize()
         content = message.get('message', '[No content available]')
+        if role == 'Agent' and 'Agent error' in content:
+            content = '[Agent encountered an error while processing the message.]'
         st.markdown(f"**{role}**: {content}")
 
     # Ensure thread content is stored in S3
