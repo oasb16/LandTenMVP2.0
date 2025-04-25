@@ -110,16 +110,13 @@ def run_chat_core():
         if st.button("📁 Toggle Upload"):
             st.session_state.show_upload = not st.session_state.show_upload
             st.session_state.last_action = "toggle_upload"
-            st.rerun()
         if st.button("📷 Toggle Capture"):
             st.session_state.show_capture = not st.session_state.show_capture
             st.session_state.last_action = "toggle_capture"
-            st.rerun()
         if st.button("🔄 Close All Panels"):
             st.session_state.show_upload = False
             st.session_state.show_capture = False
             st.session_state.last_action = "close_panels"
-            st.rerun()
 
     if st.session_state.show_upload:
         with st.expander("📎 Upload Media", expanded=True):
@@ -128,7 +125,6 @@ def run_chat_core():
                 st.session_state.chat_log.append(media_msg)
                 append_chat_log(thread_id, media_msg)
                 st.session_state.last_action = "media_upload"
-                st.rerun()
 
     if st.session_state.show_capture:
         with st.expander("📹 Record Media", expanded=True):
@@ -137,7 +133,6 @@ def run_chat_core():
                 st.session_state.chat_log.append(media_msg)
                 append_chat_log(thread_id, media_msg)
                 st.session_state.last_action = "media_capture"
-                st.rerun()
 
     # 🧠 Actual chat form
     with st.form("chat_form", clear_on_submit=True):

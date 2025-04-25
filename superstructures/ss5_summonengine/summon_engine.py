@@ -162,7 +162,6 @@ def run_chat_core():
                 append_chat_log(thread_id, media_msg)
                 upload_thread_to_s3(thread_id, get_chat_log(thread_id))
                 st.session_state.last_action = "media_upload"
-                st.rerun()
 
     if st.session_state.get("show_capture", False):
         # Placeholder for media capture logic
