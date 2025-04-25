@@ -350,26 +350,26 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
         upload_thread_to_s3(thread_id, chat_log)
 
         st.success("💡 Agent updated with media context.")
-    # else:
-    #     # Save user reply to S3 when agent is not engaged
-    #     user_msg = {
-    #         "id": str(uuid4()),
-    #         "timestamp": datetime.utcnow().isoformat(),
-    #         "role": persona,
-    #         "message": user_input.strip(),
-    #         "thread_id": thread_id,
-    #         "email": st.session_state.get("email", "unknown")
-    #     }
-    #     chat_log.append(user_msg)
+    else:
+        # Save user reply to S3 when agent is not engaged
+        user_msg = {
+            "id": str(uuid4()),
+            "timestamp": datetime.utcnow().isoformat(),
+            "role": persona,
+            "message": user_input.strip(),
+            "thread_id": thread_id,
+            "email": st.session_state.get("email", "unknown")
+        }
+        chat_log.append(user_msg)
 
-    #     with open(LOG_PATH, "w") as f:
-    #         json.dump(chat_log, f, indent=2)
+        with open(LOG_PATH, "w") as f:
+            json.dump(chat_log, f, indent=2)
 
-    #     # Save message to DynamoDB
-    #     save_message_to_dynamodb(thread_id, user_msg)
+        # Save message to DynamoDB
+        save_message_to_dynamodb(thread_id, user_msg)
 
-    #     # Upload thread to S3
-    #     upload_thread_to_s3(thread_id, chat_log)
+        # Upload thread to S3
+        upload_thread_to_s3(thread_id, chat_log)
 
 def update_thread_timestamp_in_dynamodb(thread_id):
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])

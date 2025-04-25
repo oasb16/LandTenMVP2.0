@@ -145,22 +145,22 @@ def run_chat_core():
         submitted = st.form_submit_button("Send")
 
     if submitted and user_input.strip():
-        user_msg = {
-            "id": str(uuid4()),
-            "timestamp": datetime.utcnow().isoformat(),
-            "role": persona,
-            "message": user_input.strip(),
-            "thread_id": thread_id,
-            "email": st.session_state.get("email", "unknown")
-        }
-        st.session_state.chat_log.append(user_msg)
-        append_chat_log(thread_id, user_msg)
-        try:
-            save_message_to_dynamodb(thread_id, user_msg)
-        except Exception as e:
-            logging.error(f"Failed to save user message to DynamoDB: {e}")
-            logging.error(traceback.format_exc())
-        st.session_state.last_action = "text_input"
+        # user_msg = {
+        #     "id": str(uuid4()),
+        #     "timestamp": datetime.utcnow().isoformat(),
+        #     "role": persona,
+        #     "message": user_input.strip(),
+        #     "thread_id": thread_id,
+        #     "email": st.session_state.get("email", "unknown")
+        # }
+        # st.session_state.chat_log.append(user_msg)
+        # append_chat_log(thread_id, user_msg)
+        # try:
+        #     save_message_to_dynamodb(thread_id, user_msg)
+        # except Exception as e:
+        #     logging.error(f"Failed to save user message to DynamoDB: {e}")
+        #     logging.error(traceback.format_exc())
+        # st.session_state.last_action = "text_input"
 
         try:
             agent_reply = run_summon_engine(
