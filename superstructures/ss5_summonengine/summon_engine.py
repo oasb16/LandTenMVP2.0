@@ -235,9 +235,32 @@ def upload_media_to_s3(file, thread_id):
         file_key = f"media/{thread_id}/{file.name}"
         logging.debug(f"Uploading media to S3 for thread_id: {thread_id}, file_key: {file_key}")
         s3_client.upload_fileobj(file, st.secrets["S3_BUCKET"], file_key)
-        media_url = f"https://{st.secrets['S3_BUCKET']}.s3.amazonaws.com/{file_key}"
-        logging.debug(f"Media uploaded to S3 at URL: {media_url}")
-        return media_url
+
+        # Generate a presigned URL for the uploaded media
+        presigned_url = s3_client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": st.secrets["S3_BUCKET"], "Key": file_key},
+            ExpiresIn=3600  # URL valid for 1 hour
+        )
+
+        logging.debug(f"Media uploaded to S3 at URL: {presigned_url}")
+
+        # Create a user message with the presigned URL
+        user_msg = {
+            "id": str(uuid4()),
+            "timestamp": datetime.utcnow().isoformat(),
+            "role": st.session_state.get("persona", "unknown"),
+            "media": presigned_url,
+            "thread_id": thread_id,
+            "email": st.session_state.get("email", "unknown")
+        }
+
+        # Append the message to the chat log and upload the thread to S3
+        append_chat_log(thread_id, user_msg)
+        upload_thread_to_s3(thread_id, get_chat_log(thread_id))
+
+        return presigned_url
+
     except ClientError as e:
         logging.error(f"S3 Upload Error: {e.response['Error']['Message']}")
         st.error(f"S3 Upload Error: {e.response['Error']['Message']}")
