@@ -68,7 +68,7 @@ def fetch_and_display_threads():
     # Sort threads by timestamp (latest first) if available
     sorted_threads = sorted(unique_threads.values(), key=lambda x: x.get('timestamp', ''), reverse=True)
 
-    thread_options = ["Select a Thread", "New Thread"] + [t['thread_id'] for t in sorted_threads]
+    thread_options = ["New Thread", "Select a Thread"] + [t['thread_id'] for t in sorted_threads]
     return thread_options
 
 # -- Sidebar
