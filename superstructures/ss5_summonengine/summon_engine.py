@@ -92,7 +92,7 @@ def save_incident_from_media(chat_log, persona, thread_id):
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
     try:
         table.put_item(Item=incident)
-        st.success(f"This is from def save_incident_from_media incident: {incident} updated")
+        # st.success(f"This is from def save_incident_from_media incident: {incident} updated")
     except ClientError as e:
         st.error(f"DynamoDB Error in save_incident_from_media: {e.response['Error']['Message']}")
         print(f"DynamoDB Error: {e.response['Error']['Message']}")
