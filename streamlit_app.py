@@ -89,15 +89,12 @@ with st.sidebar:
 
     # Fetch and display threads
     thread_options = fetch_and_display_threads()
-    selected_thread = st.selectbox("Select a thread", options=thread_options)
+    selected_thread = st.selectbox("New Thread", options=thread_options)
 
     if selected_thread == "New Thread":
-        new_thread_id = str(uuid4())
-        st.session_state['selected_thread'] = new_thread_id
+        st.session_state['selected_thread'] = str(uuid4())
         st.session_state['chat_log'] = []
-        thread_options.append(new_thread_id)  # Add the new thread to thread_options
         st.success("Started a new thread.")
-        st.rerun()
     elif selected_thread != "Select a Thread":
         if st.session_state.get('selected_thread') != selected_thread:
             st.session_state['selected_thread'] = selected_thread
