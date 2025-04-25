@@ -230,6 +230,36 @@ def delete_all_threads_from_dynamodb():
     except ClientError as e:
         st.error(f"DynamoDB Error in delete_all_threads_from_dynamodb: {e.response['Error']['Message']}")
 
+
+def upload_thread_to_s3(thread_id, chat_log):
+    try:
+        file_key = f"threads/{thread_id}.json"
+
+        # Upload the object
+        s3_client.put_object(
+            Bucket=st.secrets["S3_BUCKET"],
+            Key=file_key,
+            Body=json.dumps(chat_log, indent=2),
+            ContentType="application/json"
+        )
+
+        # Generate a pre-signed URL valid for 5 minutes (300 seconds)
+        presigned_url = s3_client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": st.secrets["S3_BUCKET"], "Key": file_key},
+            ExpiresIn=300,
+            HttpMethod="GET"
+        )
+
+        st.success(f"Thread uploaded to S3. To view click [here]({presigned_url})")
+        return presigned_url
+
+    except ClientError as e:
+        logging.error(f"S3 Upload Error: {e.response['Error']['Message']}")
+        st.error(f"S3 Upload Error: {e.response['Error']['Message']}")
+        return None
+
+
 def upload_media_to_s3(file, thread_id):
     try:
         file_key = f"media/{thread_id}/{file.name}"
@@ -261,34 +291,6 @@ def upload_media_to_s3(file, thread_id):
 
         st.success(f"Media uploaded to S3. To view click [here]({presigned_url})")
 
-        return presigned_url
-
-    except ClientError as e:
-        logging.error(f"S3 Upload Error: {e.response['Error']['Message']}")
-        st.error(f"S3 Upload Error: {e.response['Error']['Message']}")
-        return None
-
-def upload_thread_to_s3(thread_id, chat_log):
-    try:
-        file_key = f"threads/{thread_id}.json"
-
-        # Upload the object
-        s3_client.put_object(
-            Bucket=st.secrets["S3_BUCKET"],
-            Key=file_key,
-            Body=json.dumps(chat_log, indent=2),
-            ContentType="application/json"
-        )
-
-        # Generate a pre-signed URL valid for 5 minutes (300 seconds)
-        presigned_url = s3_client.generate_presigned_url(
-            "get_object",
-            Params={"Bucket": st.secrets["S3_BUCKET"], "Key": file_key},
-            ExpiresIn=300,
-            HttpMethod="GET"
-        )
-
-        st.success(f"Thread uploaded to S3. To view click [here]({presigned_url})")
         return presigned_url
 
     except ClientError as e:
