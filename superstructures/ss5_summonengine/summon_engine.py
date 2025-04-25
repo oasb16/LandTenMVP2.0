@@ -100,15 +100,17 @@ def save_incident_from_media(chat_log, persona, thread_id):
     return True
 
 def get_chat_log(thread_id):
-    # st.error(f"This is from def save_incident_from_media thread_id: {thread_id}")
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
     try:
         response = table.get_item(Key={'thread_id': thread_id})
-        st.success(f"This is from def get_chat_log getting message: {response}. sucecssfully retrieved")
-        return response.get("Item", {}).get("chat_log", [])
+        chat_log = response.get("Item", {}).get("chat_log", [])
+        # Validate and set default values for missing keys
+        for message in chat_log:
+            message.setdefault("role", "Unknown")
+            message.setdefault("message", "[No content available]")
+        return chat_log
     except ClientError as e:
         st.error(f"DynamoDB Error in get_chat_log: {e.response['Error']['Message']}")
-        print(f"DynamoDB Error: {e.response['Error']['Message']}")
         return []
 
 def get_thread_id():
@@ -313,7 +315,7 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
     agent_msg = {
         "id": str(uuid4()),
         "timestamp": datetime.utcnow().isoformat(),
-        "role": "agent",
+        "role": "agent",  # Ensure role is set
         "message": combined_reply,
         "thread_id": thread_id,
         "email": st.session_state.get("email", "unknown")
