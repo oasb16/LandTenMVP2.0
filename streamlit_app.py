@@ -68,7 +68,7 @@ def fetch_and_display_threads():
     # Sort threads by timestamp (latest first) if available
     sorted_threads = sorted(unique_threads.values(), key=lambda x: x.get('timestamp', ''), reverse=True)
 
-    thread_options = ["New Thread", "Select a Thread"] + [t['thread_id'] for t in sorted_threads]
+    thread_options = ["Select a Thread"] + [t['thread_id'] for t in sorted_threads]
     return thread_options
 
 # -- Sidebar
@@ -89,13 +89,9 @@ with st.sidebar:
 
     # Fetch and display threads
     thread_options = fetch_and_display_threads()
-    selected_thread = st.selectbox("New Thread", options=thread_options)
+    selected_thread = st.selectbox("Select a Thread", options=thread_options)
 
-    if selected_thread == "New Thread":
-        st.session_state['selected_thread'] = str(uuid4())
-        st.session_state['chat_log'] = []
-        st.success("Started a new thread.")
-    elif selected_thread != "Select a Thread":
+    if selected_thread != "Select a Thread":
         if st.session_state.get('selected_thread') != selected_thread:
             st.session_state['selected_thread'] = selected_thread
             # Load the chat log for the selected thread
