@@ -121,18 +121,19 @@ st.title(f"{persona.capitalize()} Dashboard")
 
 # Display messages for the selected thread
 if st.session_state.get('selected_thread'):
-    st.expander(f"Messages in Thread: {st.session_state['selected_thread']}")
-    for message in st.session_state['chat_log']:
-        # Validate message object and handle missing keys
-        role = message.get('role', 'Unknown').capitalize()
-        content = message.get('message', '[No content available]')
-        if role == 'Agent' and 'Agent error' in content:
-            content = '[Agent encountered an error while processing the message.]'
-        st.markdown(f"**{role}**: {content}")
+    with st.expander("Messages in Current Thread", expanded=False):
+        st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
+        for message in st.session_state['chat_log']:
+            # Validate message object and handle missing keys
+            role = message.get('role', 'Unknown').capitalize()
+            content = message.get('message', '[No content available]')
+            if role == 'Agent' and 'Agent error' in content:
+                content = '[Agent encountered an error while processing the message.]'
+            st.markdown(f"**{role}**: {content}")
 
-    # Ensure thread content is stored in S3
-    if st.session_state.get('chat_log'):
-        upload_thread_to_s3(st.session_state['selected_thread'], st.session_state['chat_log'])
+        # Ensure thread content is stored in S3
+        if st.session_state.get('chat_log'):
+            upload_thread_to_s3(st.session_state['selected_thread'], st.session_state['chat_log'])
 
 # Split layout into two halves
 col1, col2 = st.columns([2, 3])
