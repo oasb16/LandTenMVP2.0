@@ -95,6 +95,7 @@ with st.sidebar:
         st.session_state['selected_thread'] = str(uuid4())
         st.session_state['chat_log'] = []
         st.success("Started a new thread.")
+        selected_thread = st.session_state['selected_thread']        
     elif selected_thread != "Select a Thread":
         if st.session_state.get('selected_thread') != selected_thread:
             st.session_state['selected_thread'] = selected_thread
