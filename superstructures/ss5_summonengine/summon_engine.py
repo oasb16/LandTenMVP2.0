@@ -334,22 +334,22 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
         }
         chat_log.append(agent_msg)
 
-        with open(LOG_PATH, "w") as f:
-            json.dump(chat_log, f, indent=2)
+    with open(LOG_PATH, "w") as f:
+        json.dump(chat_log, f, indent=2)
 
-        # Save message to DynamoDB
-        save_message_to_dynamodb(thread_id, agent_msg)
+    # Save message to DynamoDB
+    save_message_to_dynamodb(thread_id, agent_msg)
 
-        # 4. Trigger Incident Detection
-        try:
-            save_incident_from_media(chat_log, persona, thread_id)
-        except Exception as e:
-            st.warning(f"Incident detection failed: {e}")
+    # 4. Trigger Incident Detection
+    try:
+        save_incident_from_media(chat_log, persona, thread_id)
+    except Exception as e:
+        st.warning(f"Incident detection failed: {e}")
 
-        # 5. Upload thread to S3
-        upload_thread_to_s3(thread_id, chat_log)
+    # 5. Upload thread to S3
+    upload_thread_to_s3(thread_id, chat_log)
 
-        st.success("💡 Agent updated with media context.")
+    st.success("💡 Agent updated with media context.")
 
 def update_thread_timestamp_in_dynamodb(thread_id):
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
