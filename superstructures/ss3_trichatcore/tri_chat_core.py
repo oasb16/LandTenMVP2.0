@@ -5,6 +5,7 @@ from uuid import uuid4
 from streamlit_elements import elements
 import logging
 import traceback
+import streamlit.components.v1 as components
 
 # Configure logging
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -51,29 +52,48 @@ def initialize_session_state():
 
 def render_chat_log(chat_log):
     st.markdown("### 💬 Conversation")
-    with st.container():
-        for msg in chat_log[-30:]:
-            role = msg.get("role", "").capitalize()
-            content = msg.get("message", "")
-            word_count = len(content.split()) if isinstance(content, str) else 0
-            use_canvas = word_count > 100 or any(
-                kw in content.lower() for kw in ["summary", "inference", "incident", "description", "transcription"]
-            ) if isinstance(content, str) else False
 
-            if use_canvas:
-                with elements(f"canvas_{msg['id']}"):
-                    create_canvas_card(
-                        title=f"{role} - Media Summary" if "📎" in content else f"{role} - Long Message",
-                        content=content,
-                        actions=[]
-                    )
-            else:
-                st.markdown(f"""
-                    <div style='background-color:#1e1e1e; padding:10px; margin:8px 0;
-                                border-radius:10px; color:#eee;'>
-                        <strong>{role}:</strong><br>{content}
-                    </div>
-                """, unsafe_allow_html=True)
+    chat_html = ""
+    for msg in chat_log[-30:]:
+        role = msg.get("role", "").capitalize()
+        content = msg.get("message", "")
+        word_count = len(content.split()) if isinstance(content, str) else 0
+        use_canvas = word_count > 100 or any(
+            kw in content.lower() for kw in ["summary", "inference", "incident", "description", "transcription"]
+        ) if isinstance(content, str) else False
+
+        if use_canvas:
+            chat_html += f"""
+                <div style='background-color:#2b2b2b; padding:12px; margin:12px 0; border-left:4px solid #00c9a7;
+                            border-radius:8px; color:#eee;'>
+                    <strong>{role} - Summary:</strong><br>{content}
+                </div>
+            """
+        else:
+            chat_html += f"""
+                <div style='background-color:#1e1e1e; padding:10px; margin:8px 0;
+                            border-radius:10px; color:#eee;'>
+                    <strong>{role}:</strong><br>{content}
+                </div>
+            """
+
+    # Full scrollable div with consistent styling
+    scrollable_box = f"""
+    <div style='height:500px; overflow-y: auto; background-color: #111; 
+                padding: 16px; border-radius: 10px; border: 1px solid #333;
+                font-family: "Segoe UI", sans-serif; font-size: 14px;'>
+        {chat_html}
+    </div>
+    """
+
+    components.html(scrollable_box, height=520, scrolling=True)
+
+    components.html("""
+        <script>
+            const container = window.parent.document.querySelector('iframe').parentNode;
+            container.scrollTop = container.scrollHeight;
+        </script>
+    """, height=0)
 
 def run_chat_core():
     st.title("Tenant Chat Interface")
