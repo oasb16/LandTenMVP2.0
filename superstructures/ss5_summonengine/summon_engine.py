@@ -53,8 +53,8 @@ def save_message_to_dynamodb(thread_id, message):
     return True
 
 def append_chat_log(thread_id, message):
-    st.error(f"This is from def append_chat_log thread_id: {thread_id}")
-    st.error(f"This is from def append_chat_log message: {message}")    
+    # st.error(f"This is from def append_chat_log thread_id: {thread_id}")
+    # st.error(f"This is from def append_chat_log message: {message}")    
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
     try:
         logging.debug(f"Appending message to chat_log for thread_id: {thread_id}, message: {message}")
@@ -66,6 +66,7 @@ def append_chat_log(thread_id, message):
                 ':empty_list': []
             }
         )
+        st.success(f"This is from def append_chat_log thread_id: {thread_id} updated")
     except ClientError as e:
         logging.error(f"DynamoDB Error in append_chat_log: {e.response['Error']['Message']}")
         st.error(f"DynamoDB Error in append_chat_log: {e.response['Error']['Message']}")
@@ -86,11 +87,12 @@ def save_incident_from_media(chat_log, persona, thread_id):
     }
 
     # Save incident to DynamoDB
-    st.error(f"This is from def save_incident_from_media thread_id: {thread_id}")
-    st.error(f"This is from def save_incident_from_media message: {incident}")      
+    # st.error(f"This is from def save_incident_from_media thread_id: {thread_id}")
+    # st.error(f"This is from def save_incident_from_media message: {incident}")      
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
     try:
         table.put_item(Item=incident)
+        st.success(f"This is from def save_incident_from_media incident: {incident} updated")
     except ClientError as e:
         st.error(f"DynamoDB Error in save_incident_from_media: {e.response['Error']['Message']}")
         print(f"DynamoDB Error: {e.response['Error']['Message']}")
@@ -98,10 +100,11 @@ def save_incident_from_media(chat_log, persona, thread_id):
     return True
 
 def get_chat_log(thread_id):
-    st.error(f"This is from def save_incident_from_media thread_id: {thread_id}")
+    # st.error(f"This is from def save_incident_from_media thread_id: {thread_id}")
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
     try:
         response = table.get_item(Key={'thread_id': thread_id})
+        st.success(f"This is from def get_chat_log getting message: {response}. sucecssfully retrieved")
         return response.get("Item", {}).get("chat_log", [])
     except ClientError as e:
         st.error(f"DynamoDB Error in get_chat_log: {e.response['Error']['Message']}")
