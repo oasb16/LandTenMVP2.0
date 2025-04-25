@@ -52,7 +52,6 @@ def initialize_session_state():
 def render_chat_log(chat_log):
     st.markdown("### 💬 Conversation")
     with st.container():
-        st.markdown("<div style='height: 400px; overflow-y: auto;'>", unsafe_allow_html=True)
         for msg in chat_log[-30:]:
             role = msg.get("role", "").capitalize()
             content = msg.get("message", "")
@@ -75,7 +74,6 @@ def render_chat_log(chat_log):
                         <strong>{role}:</strong><br>{content}
                     </div>
                 """, unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
 
 def run_chat_core():
     st.title("Tenant Chat Interface")
