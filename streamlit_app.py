@@ -52,16 +52,23 @@ def generate_dummy_threads():
             st.error(f"Failed to generate thread {thread_id}: {e}")
     return dummy_threads
 
-# Function to fetch and display threads
+# Update thread_options to remove redundancy and show the latest content
 def fetch_and_display_threads():
     threads = get_all_threads_from_dynamodb()
     logging.debug(f"Fetched threads: {threads}")
-    thread_options = ["Select a Thread", "New Thread"]
+
+    # Use a dictionary to ensure unique thread_ids and keep the latest content
+    unique_threads = {}
     for t in threads:
         if 'thread_id' in t:
-            thread_options.append(t['thread_id'])
+            unique_threads[t['thread_id']] = t
         else:
             logging.warning(f"Thread missing 'thread_id': {t}")
+
+    # Sort threads by timestamp (latest first) if available
+    sorted_threads = sorted(unique_threads.values(), key=lambda x: x.get('timestamp', ''), reverse=True)
+
+    thread_options = ["Select a Thread", "New Thread"] + [t['thread_id'] for t in sorted_threads]
     return thread_options
 
 # -- Sidebar
@@ -88,8 +95,11 @@ with st.sidebar:
         st.session_state['selected_thread'] = str(uuid4())
         st.session_state['chat_log'] = []
         st.success("Started a new thread.")
-    else:
+        st.rerun()
+    elif selected_thread != "Select a Thread":
         st.session_state['selected_thread'] = selected_thread
+        # Load the chat log for the selected thread
+        st.session_state['chat_log'] = [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == selected_thread]
 
     # Add a button to delete all threads
     if st.button("Delete All Threads"):
@@ -116,9 +126,7 @@ st.title(f"{persona.capitalize()} Dashboard")
 # Display messages for the selected thread
 if st.session_state.get('selected_thread'):
     st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
-    threads = get_all_threads_from_dynamodb()
-    thread_messages = [t for t in threads if t['thread_id'] == st.session_state['selected_thread']]
-    for message in thread_messages:
+    for message in st.session_state['chat_log']:
         st.markdown(f"**{message['role'].capitalize()}**: {message['message']}")
 
     # Ensure thread content is stored in S3

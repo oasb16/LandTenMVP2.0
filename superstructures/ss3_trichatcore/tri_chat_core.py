@@ -103,7 +103,6 @@ def run_chat_core():
     persona = st.session_state["persona"]
 
     # st.success(chat_log)
-
     # render_chat_log(chat_log)
 
     with st.sidebar:
