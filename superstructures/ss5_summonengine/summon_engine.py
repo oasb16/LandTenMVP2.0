@@ -272,7 +272,7 @@ def upload_media_to_s3(file, thread_id):
             ExpiresIn=3600  # URL valid for 1 hour
         )
 
-        st.success(f"Media uploaded to S3 at URL: {presigned_url}")
+        logging.debug(f"Media uploaded to S3 at URL: {presigned_url}")
 
         # Create a user message with the presigned URL
         user_msg = {
@@ -284,13 +284,12 @@ def upload_media_to_s3(file, thread_id):
             "email": st.session_state.get("email", "unknown")
         }
 
-        st.success(f"Media uploaded to S3. To view click [here]({presigned_url})")
-        
         # Append the message to the chat log and upload the thread to S3
         append_chat_log(thread_id, user_msg)
         upload_thread_to_s3(thread_id, get_chat_log(thread_id))
 
-        st.success(f"Media uploaded to S3. To view click [here]({presigned_url})")
+        # Display success message with the presigned URL
+        st.success(f"Media uploaded successfully! Access it [here]({presigned_url})")
 
         return presigned_url
 
