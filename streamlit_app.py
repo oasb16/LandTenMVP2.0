@@ -97,9 +97,10 @@ with st.sidebar:
         st.success("Started a new thread.")
         st.rerun()
     elif selected_thread != "Select a Thread":
-        st.session_state['selected_thread'] = selected_thread
-        # Load the chat log for the selected thread
-        st.session_state['chat_log'] = [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == selected_thread]
+        if st.session_state.get('selected_thread') != selected_thread:
+            st.session_state['selected_thread'] = selected_thread
+            # Load the chat log for the selected thread
+            st.session_state['chat_log'] = [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == selected_thread]
 
     # Add a button to delete all threads
     if st.button("Delete All Threads"):
@@ -127,7 +128,10 @@ st.title(f"{persona.capitalize()} Dashboard")
 if st.session_state.get('selected_thread'):
     st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
     for message in st.session_state['chat_log']:
-        st.markdown(f"**{message['role'].capitalize()}**: {message['message']}")
+        # Validate message object and handle missing keys
+        role = message.get('role', 'Unknown').capitalize()
+        content = message.get('message', '[No content available]')
+        st.markdown(f"**{role}**: {content}")
 
     # Ensure thread content is stored in S3
     if st.session_state.get('chat_log'):
