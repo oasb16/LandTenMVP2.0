@@ -180,9 +180,15 @@ def run_chat_core():
                 "id": str(uuid4()),
                 "timestamp": datetime.utcnow().isoformat(),
                 "role": "agent",
-                "message": agent_reply
+                "message": agent_reply,
+                "thread_id": thread_id,
+                "email": st.session_state.get("email", "unknown")
             }
             st.session_state.chat_log.append(agent_msg)
             append_chat_log(thread_id, agent_msg)
 
-        # st.rerun()
+        # Dynamically update the chat log without rerunning the entire page
+        render_chat_log(st.session_state.chat_log)
+
+    # Ensure the chat log is rendered dynamically
+    render_chat_log(st.session_state.chat_log)

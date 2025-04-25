@@ -287,7 +287,7 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
     if not st.session_state.get("agent_active", True):
         return
 
-    st.info("🤖 Agent analyzing...")
+    st.info("🤖 Agent engaged")
 
     # 1. GPT on user input
     reply = call_gpt_agent(chat_log)
