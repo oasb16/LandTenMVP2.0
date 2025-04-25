@@ -88,7 +88,6 @@ with st.sidebar:
         st.session_state['selected_thread'] = str(uuid4())
         st.session_state['chat_log'] = []
         st.success("Started a new thread.")
-        st.rerun()
     else:
         st.session_state['selected_thread'] = selected_thread
 

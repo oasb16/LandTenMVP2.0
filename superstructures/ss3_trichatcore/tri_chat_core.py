@@ -185,4 +185,4 @@ def run_chat_core():
             st.session_state.chat_log.append(agent_msg)
             append_chat_log(thread_id, agent_msg)
 
-        st.rerun()
+        # st.rerun()
