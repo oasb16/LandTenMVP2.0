@@ -89,7 +89,7 @@ with st.sidebar:
 
     # Fetch and display threads
     thread_options = fetch_and_display_threads()
-    selected_thread = st.selectbox("Select a thread", options=thread_options)
+    selected_thread = st.selectbox("New Thread", options=thread_options)
 
     if selected_thread == "New Thread":
         st.session_state['selected_thread'] = str(uuid4())
