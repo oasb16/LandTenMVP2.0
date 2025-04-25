@@ -289,6 +289,11 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
     if not st.session_state.get("agent_active", True):
         return
 
+    # Check if @agent is mentioned in the user input
+    if "@agent" not in user_input:
+        st.info("No agent engagement as @agent is not mentioned.")
+        return
+
     st.info("🤖 Agent engaged")
 
     # Validate chat_log to ensure all messages have the 'role' key
