@@ -104,9 +104,7 @@ def run_chat_core():
 
     # st.success(chat_log)
 
-    if "chat_log_rendered" not in st.session_state:
-        render_chat_log(chat_log)
-        st.session_state["chat_log_rendered"] = True
+    render_chat_log(chat_log)
 
     with st.sidebar:
         st.markdown("### 🧭 Media Controls")
@@ -189,7 +187,5 @@ def run_chat_core():
             st.session_state.chat_log.append(agent_msg)
             append_chat_log(thread_id, agent_msg)
 
-    # Ensure only one chat log is rendered dynamically
-    if "chat_log_rendered" not in st.session_state:
-        render_chat_log(st.session_state.chat_log)
-        st.session_state["chat_log_rendered"] = True
+    # Always render the chat log to ensure it is displayed
+    render_chat_log(st.session_state.chat_log)
