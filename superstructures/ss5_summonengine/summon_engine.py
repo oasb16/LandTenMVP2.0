@@ -259,6 +259,8 @@ def upload_media_to_s3(file, thread_id):
         append_chat_log(thread_id, user_msg)
         upload_thread_to_s3(thread_id, get_chat_log(thread_id))
 
+        st.success(f"Media uploaded to S3. To view click [here]({presigned_url})")
+
         return presigned_url
 
     except ClientError as e:
