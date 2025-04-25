@@ -96,9 +96,6 @@ def render_chat_log(chat_log):
 """, height=0)
 
 def run_chat_core():
-    st.title("Tenant Chat Interface")
-    st.subheader("TriChat – Unified Chat Interface")
-
     initialize_session_state()
 
     thread_id = st.session_state["thread_id"]

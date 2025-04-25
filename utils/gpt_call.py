@@ -8,18 +8,14 @@ import streamlit as st
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 def call_gpt_agent(chat_log):
-    messages = [{
-        "role": "system",
-        "content": (
+    messages = [{"role": "system","content": (
             "You are a helpful assistant for property issues. Respond in 30 words max. "
             "Do not offer random solutions. Only help the user troubleshoot within their control. "
             "If more info is needed, ask clearly. "
             "If media is useful, ask for upload. "
             "Check for 5 key issue signals. "
             "Once enough info is gathered, confirm if user wants to file an incident. "
-            "You are responsible for preparing a clean report that the landlord can act on easily, including job creation if needed. "
-        )
-    }]
+            "You are responsible for preparing a clean report that the landlord can act on easily, including job creation if needed. ")}]
 
     for msg in chat_log:
         if msg["role"] in ["tenant", "landlord", "contractor"]:
