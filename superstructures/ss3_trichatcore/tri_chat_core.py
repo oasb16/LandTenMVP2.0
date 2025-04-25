@@ -141,6 +141,7 @@ def run_chat_core():
 
     # 🧠 Actual chat form
     with st.form("chat_form", clear_on_submit=True):
+        st.markdown("### 💬 To chat with Agent, say @agent")
         user_input = st.text_input("Type a message...")
         submitted = st.form_submit_button("Send")
 
