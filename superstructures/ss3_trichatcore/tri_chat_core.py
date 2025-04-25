@@ -89,11 +89,11 @@ def render_chat_log(chat_log):
     components.html(scrollable_box, height=520, scrolling=True)
 
     components.html("""
-        <script>
-            const container = window.parent.document.querySelector('iframe').parentNode;
-            container.scrollTop = container.scrollHeight;
-        </script>
-    """, height=0)
+    <script>
+        const container = window.parent.document.querySelector('iframe').parentNode;
+        container.scrollTop = container.scrollHeight;
+    </script>
+""", height=0)
 
 def run_chat_core():
     st.title("Tenant Chat Interface")
@@ -105,7 +105,7 @@ def run_chat_core():
     chat_log = st.session_state.chat_log
     persona = st.session_state["persona"]
 
-    st.success(chat_log)
+    # st.success(chat_log)
 
     render_chat_log(chat_log)
 
