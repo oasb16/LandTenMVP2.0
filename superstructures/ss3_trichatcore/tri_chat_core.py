@@ -187,8 +187,5 @@ def run_chat_core():
             st.session_state.chat_log.append(agent_msg)
             append_chat_log(thread_id, agent_msg)
 
-        # Dynamically update the chat log without rerunning the entire page
-        render_chat_log(st.session_state.chat_log)
-
-    # Ensure the chat log is rendered dynamically
+    # Ensure only one chat log is rendered dynamically
     render_chat_log(st.session_state.chat_log)
