@@ -290,19 +290,20 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
         return
 
     # Check if @agent is mentioned in the user input
-    if "@agent" not in user_input:
-        st.info("No agent engagement as @agent is not mentioned.")
-        return
+    engage_agent = "@agent" in user_input
 
-    st.info("🤖 Agent engaged")
+    if engage_agent:
+        st.info("🤖 Agent engaged")
 
     # Validate chat_log to ensure all messages have the 'role' key
     for message in chat_log:
         message.setdefault("role", "Unknown")
         message.setdefault("message", "[No content available]")
 
-    # 1. GPT on user input
-    reply = call_gpt_agent(chat_log)
+    # 1. GPT on user input (only if @agent is mentioned)
+    reply = ""
+    if engage_agent:
+        reply = call_gpt_agent(chat_log)
 
     # 2. Media Checks
     media_summary = ""
@@ -322,32 +323,33 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
 
     # 3. Append to chat
     combined_reply = reply + media_summary
-    agent_msg = {
-        "id": str(uuid4()),
-        "timestamp": datetime.utcnow().isoformat(),
-        "role": "agent",  # Ensure role is set
-        "message": combined_reply,
-        "thread_id": thread_id,
-        "email": st.session_state.get("email", "unknown")
-    }
-    chat_log.append(agent_msg)
+    if engage_agent:
+        agent_msg = {
+            "id": str(uuid4()),
+            "timestamp": datetime.utcnow().isoformat(),
+            "role": "agent",  # Ensure role is set
+            "message": combined_reply,
+            "thread_id": thread_id,
+            "email": st.session_state.get("email", "unknown")
+        }
+        chat_log.append(agent_msg)
 
-    with open(LOG_PATH, "w") as f:
-        json.dump(chat_log, f, indent=2)
+        with open(LOG_PATH, "w") as f:
+            json.dump(chat_log, f, indent=2)
 
-    # Save message to DynamoDB
-    save_message_to_dynamodb(thread_id, agent_msg)
+        # Save message to DynamoDB
+        save_message_to_dynamodb(thread_id, agent_msg)
 
-    # 4. Trigger Incident Detection
-    try:
-        save_incident_from_media(chat_log, persona, thread_id)
-    except Exception as e:
-        st.warning(f"Incident detection failed: {e}")
+        # 4. Trigger Incident Detection
+        try:
+            save_incident_from_media(chat_log, persona, thread_id)
+        except Exception as e:
+            st.warning(f"Incident detection failed: {e}")
 
-    # 5. Upload thread to S3
-    upload_thread_to_s3(thread_id, chat_log)
+        # 5. Upload thread to S3
+        upload_thread_to_s3(thread_id, chat_log)
 
-    st.success("💡 Agent updated with media context.")
+        st.success("💡 Agent updated with media context.")
 
 def update_thread_timestamp_in_dynamodb(thread_id):
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
