@@ -6,6 +6,8 @@ from streamlit_elements import elements
 import logging
 import traceback
 import streamlit.components.v1 as components
+import boto3
+from botocore.exceptions import ClientError
 
 # Configure logging
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -99,15 +101,23 @@ def render_chat_log(chat_log):
 
 def prune_empty_threads():
     """Delete threads that only contain the default 'New conversation started.' message."""
-    if len(st.session_state.chat_log) == 1 and st.session_state.chat_log[0]["message"] == "New conversation started.":
-        thread_id = st.session_state.chat_log[0]["thread_id"]
-        try:
-            # Delete the thread from DynamoDB
-            save_message_to_dynamodb(thread_id, None)  # Assuming this deletes the thread
-            logging.info(f"Pruned empty thread with thread_id: {thread_id}")
-            st.success(f"Pruned empty thread with thread_id: {thread_id}")
-        except Exception as e:
-            logging.error(f"Failed to prune empty thread with thread_id {thread_id}: {e}")
+    dynamodb = boto3.resource('dynamodb',
+                          aws_access_key_id=st.secrets["AWS_ACCESS_KEY"],
+                          aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"],
+                          region_name=st.secrets["AWS_REGION"])
+    table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
+    try:
+        response = table.scan()
+        with table.batch_writer() as batch:
+            for item in response.get("Items", []):
+                if item.get("message") == "New conversation started.":
+                    batch.delete_item(Key={
+                        "email": item["email"],
+                        "id": item["id"]
+                    })
+        st.success("Empty threads have been deleted successfully.")
+    except ClientError as e:
+        st.error(f"DynamoDB Error in prune_empty_threads: {e.response['Error']['Message']}")
 
 def run_chat_core():
     initialize_session_state()
@@ -135,6 +145,11 @@ def run_chat_core():
             st.session_state.show_upload = False
             st.session_state.show_capture = False
             st.session_state.last_action = "close_panels"
+
+    with st.sidebar:
+        st.markdown("### 🗑️ Thread Management")
+        if st.button("Delete Empty Threads"):
+            prune_empty_threads()
 
     if st.session_state.show_upload:
         with st.expander("📎 Upload Media", expanded=True):
