@@ -190,7 +190,7 @@ def send_message_and_update_thread(thread_id, message):
 #             "email": st.session_state.get('email', 'unknown')
 #         })
 # Call the run_chat_core function to render the chat interface and sidebar controls
-# run_chat_core()
+run_chat_core()
 
 # Right column: Persona-specific container
 
