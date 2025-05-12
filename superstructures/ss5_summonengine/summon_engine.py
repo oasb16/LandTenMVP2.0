@@ -57,21 +57,23 @@ def append_chat_log(thread_id, message):
     try:
         # If the message contains media, store only the media_key
         if "media" in message:
-            st.success(f"if media in message : {message}")
             media_key = message.pop("media")
             message["media_key"] = media_key
 
         logging.debug(f"Appending message to chat_log for thread_id: {thread_id}, message: {message}")
-        st.success(f"Appending message to chat_log for thread_id: {thread_id}, message: {message}")
-        table.update_item(
-            Key={'thread_id': thread_id},
-            UpdateExpression="SET chat_log = list_append(if_not_exists(chat_log, :empty_list), :message)",
-            ExpressionAttributeValues={
-                ':message': [message],
-                ':empty_list': []
-            }
-        )
-        st.success(f"Chat log updated for thread_id: {thread_id}")
+        try:
+            table.update_item(
+                Key={'thread_id': thread_id},
+                UpdateExpression="SET chat_log = list_append(if_not_exists(chat_log, :empty_list), :message)",
+                ExpressionAttributeValues={
+                    ':message': [message],
+                    ':empty_list': []
+                }
+            )
+            st.success(f"Chat log updated for thread_id: {thread_id}")
+        except ClientError as e:
+            logging.error(f"Error appending to chat_log: {e.response['Error']['Message']}")
+            st.error(f"Error appending to chat_log: {e.response['Error']['Message']}")
     except ClientError as e:
         logging.error(f"DynamoDB Error in append_chat_log: {e.response['Error']['Message']}")
         st.error(f"DynamoDB Error in append_chat_log: {e.response['Error']['Message']}")
