@@ -143,9 +143,10 @@ def run_chat_core():
                 if thread_id not in st.session_state["thread_media"]:
                     st.session_state["thread_media"][thread_id] = []
                 st.session_state["thread_media"][thread_id].append(media_msg)
-                st.session_state.chat_log.append(media_msg)
-                append_chat_log(thread_id, media_msg)
-                upload_thread_to_s3(thread_id, st.session_state.chat_log)  # Ensure thread is saved to S3
+                if media_msg not in st.session_state.chat_log:
+                    st.session_state.chat_log.append(media_msg)
+                    append_chat_log(thread_id, media_msg)
+                    upload_thread_to_s3(thread_id, st.session_state.chat_log)  # Ensure thread is saved to S3
                 st.session_state.last_action = "media_upload"
 
     if st.session_state.show_capture:
@@ -155,9 +156,10 @@ def run_chat_core():
                 if thread_id not in st.session_state["thread_media"]:
                     st.session_state["thread_media"][thread_id] = []
                 st.session_state["thread_media"][thread_id].append(media_msg)
-                st.session_state.chat_log.append(media_msg)
-                append_chat_log(thread_id, media_msg)
-                upload_thread_to_s3(thread_id, st.session_state.chat_log)  # Ensure thread is saved to S3
+                if media_msg not in st.session_state.chat_log:
+                    st.session_state.chat_log.append(media_msg)
+                    append_chat_log(thread_id, media_msg)
+                    upload_thread_to_s3(thread_id, st.session_state.chat_log)  # Ensure thread is saved to S3
                 st.session_state.last_action = "media_capture"
 
     with st.form("chat_form", clear_on_submit=True):
@@ -174,14 +176,15 @@ def run_chat_core():
             "thread_id": thread_id,
             "email": st.session_state.get("email", "unknown")
         }
-        st.session_state.chat_log.append(user_msg)
-        append_chat_log(thread_id, user_msg)
-        try:
-            save_message_to_dynamodb(thread_id, user_msg)
-        except Exception as e:
-            logging.error(f"Failed to save user message to DynamoDB: {e}")
-            logging.error(traceback.format_exc())
-        st.session_state.last_action = "text_input"
+        if user_msg not in st.session_state.chat_log:
+            st.session_state.chat_log.append(user_msg)
+            append_chat_log(thread_id, user_msg)
+            try:
+                save_message_to_dynamodb(thread_id, user_msg)
+            except Exception as e:
+                logging.error(f"Failed to save user message to DynamoDB: {e}")
+                logging.error(traceback.format_exc())
+            st.session_state.last_action = "text_input"
 
         try:
             agent_reply = run_summon_engine(
@@ -204,8 +207,9 @@ def run_chat_core():
                 "thread_id": thread_id,
                 "email": st.session_state.get("email", "unknown")
             }
-            st.session_state.chat_log.append(agent_msg)
-            append_chat_log(thread_id, agent_msg)
+            if agent_msg not in st.session_state.chat_log:
+                st.session_state.chat_log.append(agent_msg)
+                append_chat_log(thread_id, agent_msg)
 
     render_chat_log(st.session_state.chat_log)
 
