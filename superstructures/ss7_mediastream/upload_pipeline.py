@@ -65,8 +65,9 @@ def handle_uploaded_media():
             "role": "tenant",
             "message": f"""
                 <div style='background:#111;padding:10px;border-radius:10px;'>
-                    <strong>📎 Media Uploaded:</strong> <a href="{presigned_url}" target="_blank">{uploaded_file.name}</a><br>
-                    {file_display}<br><br>
+                    <strong>📎 Media Uploaded:</strong><br>
+                    <a href="{presigned_url}" target="_blank">{uploaded_file.name}</a><br>
+                    {file_display}<br>
                     <strong>🧠 Inference:</strong><br>{result}
                 </div>
             """

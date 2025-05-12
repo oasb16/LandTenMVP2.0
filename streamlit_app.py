@@ -156,7 +156,7 @@ if st.session_state.get('selected_thread'):
         for message in st.session_state['chat_log']:
             # Validate message object and handle missing keys
             role = message.get('role', 'Unknown').capitalize()
-            content = message.get('message', '[No content available]')
+            content = message.get('message', '[No content available (Display)]')
             if role == 'Agent' and 'Agent error' in content:
                 content = '[Agent encountered an error while processing the message.]'
             st.markdown(f"**{role}**: {content}")
