@@ -399,17 +399,18 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
             "thread_id": thread_id,
             "email": st.session_state.get("email", "unknown")
         }
-        chat_log.append(user_msg)
+        st.success(f"If this is printed and now duplicate msg, this was the culprit {user_msg}")
+        # chat_log.append(user_msg)
 
-        with open(LOG_PATH, "w") as f:
-            json.dump(chat_log, f, indent=2)
+        # with open(LOG_PATH, "w") as f:
+        #     json.dump(chat_log, f, indent=2)
 
-        # Save message to DynamoDB
-        save_message_to_dynamodb(thread_id, user_msg)
+        # # Save message to DynamoDB
+        # save_message_to_dynamodb(thread_id, user_msg)
 
-        # Upload thread to S3
-        st.success(f"Engaged upload_thread_to_s3 from run_summon_engine: else engage_agent: {chat_log}")
-        upload_thread_to_s3(thread_id, chat_log)
+        # # Upload thread to S3
+        # st.success(f"Engaged upload_thread_to_s3 from run_summon_engine: else engage_agent: {chat_log}")
+        # upload_thread_to_s3(thread_id, chat_log)
 
 def update_thread_timestamp_in_dynamodb(thread_id):
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
