@@ -49,7 +49,7 @@ def handle_uploaded_media():
                 result = call_gpt_vision(file_bytes)
                 #b64_img = base64.b64encode(file_bytes).decode("utf-8")
                 #file_display = f"<img src='data:{content_type};base64,{b64_img}' width='300'/>"
-                file_display = f"<div>Refer the image in this link for now. Need to find a way to show the image here eventually<div>"
+                file_display = f"<div>Refer the image in this link for now. Need to find a way to show the image here eventually</div>"
                 presigned_url = s3.generate_presigned_url(
                     "get_object",
                     Params={"Bucket": st.secrets["S3_BUCKET"], "Key": filename},
