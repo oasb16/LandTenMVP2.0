@@ -121,6 +121,7 @@ with st.sidebar:
     thread_options = fetch_and_display_threads()
     selected_thread = st.selectbox("Select a Thread", options=thread_options)
 
+    # Ensure the selected thread state is updated correctly
     if selected_thread != "Select a Thread":
         if st.session_state.get('selected_thread') != selected_thread:
             st.session_state['selected_thread'] = selected_thread
@@ -168,10 +169,31 @@ if st.session_state.get('selected_thread'):
 # Split layout into two halves
 col1, col2 = st.columns([2, 3])
 
+# Function to send a message and update the selected thread state
+def send_message_and_update_thread(thread_id, message):
+    # Send the message to the backend (DynamoDB and S3)
+    save_message_to_dynamodb(thread_id, message)
+    upload_thread_to_s3(thread_id, st.session_state['chat_log'])
+
+    # Re-fetch the updated thread messages from S3
+    updated_thread = [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == thread_id]
+    st.session_state['chat_log'] = updated_thread
+    st.experimental_rerun()  # Trigger UI update
+
 # Left column: Chat window
 with col1:
     st.subheader("Chat Window")
-    run_chat_core()
+    if st.session_state.get('selected_thread'):
+        message = st.text_input("Type your message here...")
+        if st.button("Send"):
+            send_message_and_update_thread(st.session_state['selected_thread'], {
+                "id": str(uuid4()),
+                "timestamp": datetime.utcnow().isoformat(),
+                "role": "tenant",
+                "message": message,
+                "thread_id": st.session_state['selected_thread'],
+                "email": st.session_state.get('email', 'unknown')
+            })
 
 # Right column: Persona-specific container
 with col2:
