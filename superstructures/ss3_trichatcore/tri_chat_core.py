@@ -49,6 +49,8 @@ def initialize_session_state():
         st.session_state.show_upload = False
     if "show_capture" not in st.session_state:
         st.session_state.show_capture = False
+    if "thread_media" not in st.session_state:
+        st.session_state["thread_media"] = {}  # Map thread_id to associated media
 
 def render_chat_log(chat_log):
     st.markdown("### 💬 Conversation")
@@ -103,6 +105,7 @@ def prune_empty_threads():
             # Delete the thread from DynamoDB
             save_message_to_dynamodb(thread_id, None)  # Assuming this deletes the thread
             logging.info(f"Pruned empty thread with thread_id: {thread_id}")
+            st.success(f"Pruned empty thread with thread_id: {thread_id}")
         except Exception as e:
             logging.error(f"Failed to prune empty thread with thread_id {thread_id}: {e}")
 
@@ -112,6 +115,13 @@ def run_chat_core():
     thread_id = st.session_state["selected_thread"] if "selected_thread" in st.session_state else st.session_state["thread_id"]
     chat_log = st.session_state.chat_log
     persona = st.session_state["persona"]
+
+    # Clear media when toggling threads
+    if "current_thread" in st.session_state and st.session_state["current_thread"] != thread_id:
+        st.session_state["current_thread"] = thread_id
+        st.session_state["thread_media"].pop(thread_id, None)  # Clear media for the new thread
+    else:
+        st.session_state["current_thread"] = thread_id
 
     with st.sidebar:
         st.markdown("### 🧭 Media Controls")
@@ -130,6 +140,9 @@ def run_chat_core():
         with st.expander("📎 Upload Media", expanded=True):
             media_msg = run_media_interface(mode="upload")
             if media_msg:
+                if thread_id not in st.session_state["thread_media"]:
+                    st.session_state["thread_media"][thread_id] = []
+                st.session_state["thread_media"][thread_id].append(media_msg)
                 st.session_state.chat_log.append(media_msg)
                 append_chat_log(thread_id, media_msg)
                 upload_thread_to_s3(thread_id, st.session_state.chat_log)  # Ensure thread is saved to S3
@@ -139,6 +152,9 @@ def run_chat_core():
         with st.expander("📹 Record Media", expanded=True):
             media_msg = run_media_interface(mode="capture")
             if media_msg:
+                if thread_id not in st.session_state["thread_media"]:
+                    st.session_state["thread_media"][thread_id] = []
+                st.session_state["thread_media"][thread_id].append(media_msg)
                 st.session_state.chat_log.append(media_msg)
                 append_chat_log(thread_id, media_msg)
                 upload_thread_to_s3(thread_id, st.session_state.chat_log)  # Ensure thread is saved to S3
