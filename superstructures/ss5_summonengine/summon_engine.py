@@ -332,7 +332,7 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
     # Validate chat_log to ensure all messages have the 'role' key
     for message in chat_log:
         message.setdefault("role", "Unknown")
-        message.setdefault("message", "[No content available]")
+        message.setdefault("message", "[No content available (Validated)]")
 
     # 1. GPT on user input (only if @agent is mentioned)
     reply = ""
