@@ -142,11 +142,11 @@ with st.sidebar:
         if st.button("Delete Empty Threads"):
             prune_empty_threads()
 
-    # Add a button to generate 5 dummy threads
-    if st.button("Generate Dummy Threads"):
-        dummy_threads = generate_dummy_threads()
-        st.success(f"Generated 5 dummy threads: {', '.join(dummy_threads)}")
-        st.rerun()
+        # Add a button to generate 5 dummy threads
+        if st.button("Generate Dummy Threads"):
+            dummy_threads = generate_dummy_threads()
+            st.success(f"Generated 5 dummy threads: {', '.join(dummy_threads)}")
+            st.rerun()
 
 # -- Main Layout
 persona = st.session_state.get("persona", "tenant")
