@@ -145,6 +145,7 @@ def run_chat_core():
                 st.session_state["thread_media"][thread_id].append(media_msg)
                 if media_msg not in st.session_state.chat_log:
                     st.session_state.chat_log.append(media_msg)
+                    st.success(f"Coming in from agent_reply sending show_upload : {media_msg}")
                     append_chat_log(thread_id, media_msg)
                     upload_thread_to_s3(thread_id, st.session_state.chat_log)  # Ensure thread is saved to S3
                 st.session_state["thread_media"].pop(thread_id, None)  # Clear media after upload
@@ -160,6 +161,7 @@ def run_chat_core():
                 st.session_state["thread_media"][thread_id].append(media_msg)
                 if media_msg not in st.session_state.chat_log:
                     st.session_state.chat_log.append(media_msg)
+                    st.success(f"Coming in from agent_reply sending show_capture : {media_msg}")
                     append_chat_log(thread_id, media_msg)
                     upload_thread_to_s3(thread_id, st.session_state.chat_log)  # Ensure thread is saved to S3
                 st.session_state["thread_media"].pop(thread_id, None)  # Clear media after capture
@@ -181,6 +183,7 @@ def run_chat_core():
         }
         if user_msg not in st.session_state.chat_log:
             st.session_state.chat_log.append(user_msg)
+            st.success(f"Coming in from agent_reply sending if submitted and user_input.strip with user_msg : {user_msg}")
             append_chat_log(thread_id, user_msg)
             try:
                 save_message_to_dynamodb(thread_id, user_msg)
@@ -212,6 +215,7 @@ def run_chat_core():
             }
             if agent_msg not in st.session_state.chat_log:
                 st.session_state.chat_log.append(agent_msg)
+                st.success(f"Coming in from agent_reply sending agent_msg : {agent_msg}")
                 append_chat_log(thread_id, agent_msg)
 
     render_chat_log(st.session_state.chat_log)
