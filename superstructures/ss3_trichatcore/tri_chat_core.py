@@ -119,7 +119,7 @@ def run_chat_core():
     # Clear media when toggling threads
     if "current_thread" in st.session_state and st.session_state["current_thread"] != thread_id:
         st.session_state["current_thread"] = thread_id
-        st.session_state["thread_media"].pop(thread_id, None)  # Clear media for the new thread
+        st.session_state["thread_media"].pop(st.session_state["current_thread"], None)  # Clear media for the previous thread
     else:
         st.session_state["current_thread"] = thread_id
 
@@ -147,6 +147,7 @@ def run_chat_core():
                     st.session_state.chat_log.append(media_msg)
                     append_chat_log(thread_id, media_msg)
                     upload_thread_to_s3(thread_id, st.session_state.chat_log)  # Ensure thread is saved to S3
+                st.session_state["thread_media"].pop(thread_id, None)  # Clear media after upload
                 st.session_state.last_action = "media_upload"
 
     if st.session_state.show_capture:
@@ -160,6 +161,7 @@ def run_chat_core():
                     st.session_state.chat_log.append(media_msg)
                     append_chat_log(thread_id, media_msg)
                     upload_thread_to_s3(thread_id, st.session_state.chat_log)  # Ensure thread is saved to S3
+                st.session_state["thread_media"].pop(thread_id, None)  # Clear media after capture
                 st.session_state.last_action = "media_capture"
 
     with st.form("chat_form", clear_on_submit=True):
