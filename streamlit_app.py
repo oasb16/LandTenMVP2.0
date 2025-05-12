@@ -210,5 +210,8 @@ with col2:
     else:
         st.error("Invalid persona. Please contact support.")
 
+# Call the run_chat_core function to render the chat interface and sidebar controls
+run_chat_core()
+
 # -- Mobile Compatibility
 html("<style>@media (max-width: 768px) { .css-1lcbmhc { flex-direction: column; } }</style>")
