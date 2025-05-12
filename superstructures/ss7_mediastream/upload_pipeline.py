@@ -58,7 +58,7 @@ def handle_uploaded_media():
             "message": f"""
                 <div style='background:#111;padding:10px;border-radius:10px;'>
                     <strong>📎 Media Uploaded:</strong> <a href="{s3_url}" target="_blank">{uploaded_file.name}</a><br>
-                    {file_display}<br><br>
+                    <br><br>
                     <strong>🧠 Inference:</strong><br>{result}
                 </div>
             """
