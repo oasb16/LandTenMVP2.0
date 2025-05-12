@@ -184,9 +184,10 @@ def run_chat_core():
         }
         if user_msg not in st.session_state.chat_log:
             st.session_state.chat_log.append(user_msg)
-            append_chat_log(thread_id, user_msg)
             try:
+                append_chat_log(thread_id, user_msg)
                 save_message_to_dynamodb(thread_id, user_msg)
+                st.success(f"tri_chat_core's Engaged append_chat_log amd save_message_to_dynamodb from if submitted and user_input.strip() : {media_msg}")
             except Exception as e:
                 logging.error(f"Failed to save user message to DynamoDB: {e}")
                 logging.error(traceback.format_exc())
