@@ -95,6 +95,17 @@ def render_chat_log(chat_log):
     </script>
 """, height=0)
 
+def prune_empty_threads():
+    """Delete threads that only contain the default 'New conversation started.' message."""
+    if len(st.session_state.chat_log) == 1 and st.session_state.chat_log[0]["message"] == "New conversation started.":
+        thread_id = st.session_state.chat_log[0]["thread_id"]
+        try:
+            # Delete the thread from DynamoDB
+            save_message_to_dynamodb(thread_id, None)  # Assuming this deletes the thread
+            logging.info(f"Pruned empty thread with thread_id: {thread_id}")
+        except Exception as e:
+            logging.error(f"Failed to prune empty thread with thread_id {thread_id}: {e}")
+
 def run_chat_core():
     initialize_session_state()
 
@@ -181,3 +192,6 @@ def run_chat_core():
             append_chat_log(thread_id, agent_msg)
 
     render_chat_log(st.session_state.chat_log)
+
+    # Prune empty threads at the end of the session
+    prune_empty_threads()
