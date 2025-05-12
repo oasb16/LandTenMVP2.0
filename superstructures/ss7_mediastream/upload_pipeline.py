@@ -42,14 +42,12 @@ def handle_uploaded_media():
         if "audio" in content_type:
             with st.spinner("Transcribing..."):
                 result = call_whisper(file_bytes)
-                b64_audio = base64.b64encode(file_bytes).decode("utf-8")
-                file_display = f"<audio controls><source src='data:{content_type};base64,{b64_audio}'></audio>"
+                file_display = f"<audio controls><source src='{s3_url}' type='{content_type}'></audio>"
 
         elif "image" in content_type:
             with st.spinner("Analyzing image..."):
                 result = call_gpt_vision(file_bytes)
-                b64_img = base64.b64encode(file_bytes).decode("utf-8")
-                file_display = f"<img src='data:{content_type};base64,{b64_img}' width='300'/>"
+                file_display = f"<img src='{s3_url}' width='300'/>"
 
         save_incident_from_media(filename, result, content_type)
 
