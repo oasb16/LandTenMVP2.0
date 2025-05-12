@@ -269,7 +269,7 @@ def upload_thread_to_s3(thread_id, chat_log):
 def upload_media_to_s3(file, thread_id):
     try:
         file_key = f"media/{thread_id}/{file.name}"
-        logging.debug(f"Uploading media to S3 for thread_id: {thread_id}, file_key: {file_key}")
+        st.success(f"Uploading media to S3 for thread_id: {thread_id}, file_key: {file_key}")
         s3_client.upload_fileobj(file, st.secrets["S3_BUCKET"], file_key)
 
         # Generate a presigned URL for the uploaded media
