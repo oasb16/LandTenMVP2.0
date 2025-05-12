@@ -48,7 +48,13 @@ def handle_uploaded_media():
             with st.spinner("Analyzing image..."):
                 result = call_gpt_vision(file_bytes)
                 #file_display = f"<img src='{s3_url}' width='300'/>"
-                file_display = f"<div>Refer the image in this link<div>"
+                file_display = f"<div>Refer the image in this link for now. Need to find a way to show the image here eventually<div>"
+                presigned_url = s3.generate_presigned_url(
+                    "get_object",
+                    Params={"Bucket": st.secrets["S3_BUCKET"], "Key": filename},
+                    ExpiresIn=300,
+                    HttpMethod="GET"
+                )
 
         save_incident_from_media(filename, result, content_type)
 
@@ -58,7 +64,7 @@ def handle_uploaded_media():
             "role": "tenant",
             "message": f"""
                 <div style='background:#111;padding:10px;border-radius:10px;'>
-                    <strong>📎 Media Uploaded:</strong> <a href="{s3_url}" target="_blank">{uploaded_file.name}</a><br>
+                    <strong>📎 Media Uploaded:</strong> <a href="{presigned_url}" target="_blank">{uploaded_file.name}</a><br>
                     {file_display}<br><br>
                     <strong>🧠 Inference:</strong><br>{result}
                 </div>
