@@ -47,7 +47,8 @@ def handle_uploaded_media():
         elif "image" in content_type:
             with st.spinner("Analyzing image..."):
                 result = call_gpt_vision(file_bytes)
-                file_display = f"<img src='{s3_url}' width='300'/>"
+                #file_display = f"<img src='{s3_url}' width='300'/>"
+                file_display = f"<div>Refer the image in this link<div>"
 
         save_incident_from_media(filename, result, content_type)
 
