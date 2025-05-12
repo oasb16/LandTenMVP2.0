@@ -149,6 +149,7 @@ def run_chat_core():
                     upload_thread_to_s3(thread_id, st.session_state.chat_log)  # Ensure thread is saved to S3
                 st.session_state["thread_media"].pop(thread_id, None)  # Clear media after upload
                 st.session_state.last_action = "media_upload"
+                st.session_state.show_upload = False
 
     if st.session_state.show_capture:
         with st.expander("📹 Record Media", expanded=True):
