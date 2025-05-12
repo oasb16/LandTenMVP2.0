@@ -181,19 +181,21 @@ col1, col2 = st.columns([2, 3])
 
 # Left column: Chat window
 with col1:
-    st.subheader("Chat Window")
-    if st.session_state.get('selected_thread'):
-        message = st.text_input("Type your message here...")
-        if st.button("Send"):
-            send_message_and_update_thread(st.session_state['selected_thread'], {
-                "id": str(uuid4()),
-                "timestamp": datetime.utcnow().isoformat(),
-                "role": "tenant",
-                "message": message,
-                "thread_id": st.session_state['selected_thread'],
-                "email": st.session_state.get('email', 'unknown')
-            })
-
+    # st.subheader("Chat Window")
+    # if st.session_state.get('selected_thread'):
+    #     message = st.text_input("Type your message here...")
+    #     if st.button("Send"):
+    #         send_message_and_update_thread(st.session_state['selected_thread'], {
+    #             "id": str(uuid4()),
+    #             "timestamp": datetime.utcnow().isoformat(),
+    #             "role": "tenant",
+    #             "message": message,
+    #             "thread_id": st.session_state['selected_thread'],
+    #             "email": st.session_state.get('email', 'unknown')
+    #         })
+    # Call the run_chat_core function to render the chat interface and sidebar controls
+    run_chat_core()
+    
 # Right column: Persona-specific container
 with col2:
     st.subheader("Details")
@@ -210,8 +212,7 @@ with col2:
     else:
         st.error("Invalid persona. Please contact support.")
 
-# Call the run_chat_core function to render the chat interface and sidebar controls
-run_chat_core()
+
 
 # -- Mobile Compatibility
 html("<style>@media (max-width: 768px) { .css-1lcbmhc { flex-direction: column; } }</style>")
