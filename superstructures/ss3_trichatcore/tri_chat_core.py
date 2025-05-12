@@ -98,12 +98,9 @@ def render_chat_log(chat_log):
 def run_chat_core():
     initialize_session_state()
 
-    thread_id = st.session_state["thread_id"]
+    thread_id = st.session_state["selected_thread"] if "selected_thread" in st.session_state else st.session_state["thread_id"]
     chat_log = st.session_state.chat_log
     persona = st.session_state["persona"]
-
-    # st.success(chat_log)
-    # render_chat_log(chat_log)
 
     with st.sidebar:
         st.markdown("### 🧭 Media Controls")
@@ -136,29 +133,28 @@ def run_chat_core():
                 upload_thread_to_s3(thread_id, st.session_state.chat_log)  # Ensure thread is saved to S3
                 st.session_state.last_action = "media_capture"
 
-    # 🧠 Actual chat form
     with st.form("chat_form", clear_on_submit=True):
         st.markdown("💬 To chat with Agent, say @agent")
         user_input = st.text_input("Type a message...")
         submitted = st.form_submit_button("Send")
 
     if submitted and user_input.strip():
-        # user_msg = {
-        #     "id": str(uuid4()),
-        #     "timestamp": datetime.utcnow().isoformat(),
-        #     "role": persona,
-        #     "message": user_input.strip(),
-        #     "thread_id": thread_id,
-        #     "email": st.session_state.get("email", "unknown")
-        # }
-        # st.session_state.chat_log.append(user_msg)
-        # append_chat_log(thread_id, user_msg)
-        # try:
-        #     save_message_to_dynamodb(thread_id, user_msg)
-        # except Exception as e:
-        #     logging.error(f"Failed to save user message to DynamoDB: {e}")
-        #     logging.error(traceback.format_exc())
-        # st.session_state.last_action = "text_input"
+        user_msg = {
+            "id": str(uuid4()),
+            "timestamp": datetime.utcnow().isoformat(),
+            "role": persona,
+            "message": user_input.strip(),
+            "thread_id": thread_id,
+            "email": st.session_state.get("email", "unknown")
+        }
+        st.session_state.chat_log.append(user_msg)
+        append_chat_log(thread_id, user_msg)
+        try:
+            save_message_to_dynamodb(thread_id, user_msg)
+        except Exception as e:
+            logging.error(f"Failed to save user message to DynamoDB: {e}")
+            logging.error(traceback.format_exc())
+        st.session_state.last_action = "text_input"
 
         try:
             agent_reply = run_summon_engine(
@@ -184,5 +180,4 @@ def run_chat_core():
             st.session_state.chat_log.append(agent_msg)
             append_chat_log(thread_id, agent_msg)
 
-    # Always render the chat log to ensure it is displayed
     render_chat_log(st.session_state.chat_log)
