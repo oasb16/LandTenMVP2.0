@@ -292,7 +292,6 @@ def upload_media_to_s3(file, thread_id):
         }
 
         # Append the message to the chat log and upload the thread to S3
-        st.success(f"This is from upload_media_to_s3: {user_msg}")
         append_chat_log(thread_id, user_msg)
         upload_thread_to_s3(thread_id, get_chat_log(thread_id))
 

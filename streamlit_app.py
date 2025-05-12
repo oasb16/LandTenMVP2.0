@@ -176,41 +176,37 @@ def send_message_and_update_thread(thread_id, message):
     st.session_state['chat_log'] = updated_thread
     st.rerun()  # Trigger UI update
 
-# Split layout into two halves
-col1, col2 = st.columns([2, 3])
 
-# Left column: Chat window
-with col1:
-    # st.subheader("Chat Window")
-    # if st.session_state.get('selected_thread'):
-    #     message = st.text_input("Type your message here...")
-    #     if st.button("Send"):
-    #         send_message_and_update_thread(st.session_state['selected_thread'], {
-    #             "id": str(uuid4()),
-    #             "timestamp": datetime.utcnow().isoformat(),
-    #             "role": "tenant",
-    #             "message": message,
-    #             "thread_id": st.session_state['selected_thread'],
-    #             "email": st.session_state.get('email', 'unknown')
-    #         })
-    # Call the run_chat_core function to render the chat interface and sidebar controls
-    run_chat_core()
-    
+# st.subheader("Chat Window")
+# if st.session_state.get('selected_thread'):
+#     message = st.text_input("Type your message here...")
+#     if st.button("Send"):
+#         send_message_and_update_thread(st.session_state['selected_thread'], {
+#             "id": str(uuid4()),
+#             "timestamp": datetime.utcnow().isoformat(),
+#             "role": "tenant",
+#             "message": message,
+#             "thread_id": st.session_state['selected_thread'],
+#             "email": st.session_state.get('email', 'unknown')
+#         })
+# Call the run_chat_core function to render the chat interface and sidebar controls
+run_chat_core()
+
 # Right column: Persona-specific container
-with col2:
-    st.subheader("Details")
-    if persona == "tenant":
-        st.markdown("### Incidents")
-        st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Incident details will appear here.</div>", unsafe_allow_html=True)
-    elif persona == "landlord":
-        st.markdown("### Jobs")
-        st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Job details will appear here.</div>", unsafe_allow_html=True)
-    elif persona == "contractor":
-        st.markdown("### Jobs and Schedule")
-        st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Job details will appear here.</div>", unsafe_allow_html=True)
-        st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Schedule details will appear here.</div>", unsafe_allow_html=True)
-    else:
-        st.error("Invalid persona. Please contact support.")
+
+st.subheader("Details")
+if persona == "tenant":
+    st.markdown("### Incidents")
+    st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Incident details will appear here.</div>", unsafe_allow_html=True)
+elif persona == "landlord":
+    st.markdown("### Jobs")
+    st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Job details will appear here.</div>", unsafe_allow_html=True)
+elif persona == "contractor":
+    st.markdown("### Jobs and Schedule")
+    st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Job details will appear here.</div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Schedule details will appear here.</div>", unsafe_allow_html=True)
+else:
+    st.error("Invalid persona. Please contact support.")
 
 
 
