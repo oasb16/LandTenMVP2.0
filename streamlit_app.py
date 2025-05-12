@@ -73,7 +73,7 @@ def generate_dummy_threads():
             ]
         }
         try:
-            st.success(f"streamlit_app's Engaged upload_thread_to_s3 from  generate_dummy_threads: {thread_id}")
+            st.success(f"streamlit_app's Engaged upload_thread_to_s3 from  generate_dummy_threads: {message}")
             save_message_to_dynamodb(thread_id, dummy_data["chat_log"][0])
             save_message_to_dynamodb(thread_id, dummy_data["chat_log"][1])
             upload_thread_to_s3(thread_id, dummy_data["chat_log"])
