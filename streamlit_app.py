@@ -162,10 +162,10 @@ if st.session_state.get('selected_thread'):
                 content = '[Agent encountered an error while processing the message.]'
             st.markdown(f"**{role}**: {content}")
 
-        # Ensure thread content is stored in S3
-        if st.session_state.get('chat_log'):
-            st.success(f"streamlit_app's Engaged upload_thread_to_s3 from  if st.session_state.get(chat_log): {st.session_state.get('chat_log')}")
-            upload_thread_to_s3(st.session_state['selected_thread'], st.session_state['chat_log'])
+        # # Ensure thread content is stored in S3
+        # if st.session_state.get('chat_log'):
+        #     st.success(f"streamlit_app's Engaged upload_thread_to_s3 from  if st.session_state.get(chat_log): {st.session_state.get('chat_log')}")
+        #     upload_thread_to_s3(st.session_state['selected_thread'], st.session_state['chat_log'])
 
 # Function to send a message and update the selected thread state
 def send_message_and_update_thread(thread_id, message):
