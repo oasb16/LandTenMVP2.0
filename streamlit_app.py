@@ -174,7 +174,7 @@ def send_message_and_update_thread(thread_id, message):
     # Re-fetch the updated thread messages from S3
     updated_thread = [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == thread_id]
     st.session_state['chat_log'] = updated_thread
-    st.experimental_rerun()  # Trigger UI update
+    st.rerun()  # Trigger UI update
 
 # Split layout into two halves
 col1, col2 = st.columns([2, 3])
