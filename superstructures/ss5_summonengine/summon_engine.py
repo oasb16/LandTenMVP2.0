@@ -53,10 +53,13 @@ def save_message_to_dynamodb(thread_id, message):
     return True
 
 def append_chat_log(thread_id, message):
-    # st.error(f"This is from def append_chat_log thread_id: {thread_id}")
-    # st.error(f"This is from def append_chat_log message: {message}")    
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
     try:
+        # If the message contains media, store only the media_key
+        if "media" in message:
+            media_key = message.pop("media")
+            message["media_key"] = media_key
+
         logging.debug(f"Appending message to chat_log for thread_id: {thread_id}, message: {message}")
         table.update_item(
             Key={'thread_id': thread_id},
@@ -66,7 +69,7 @@ def append_chat_log(thread_id, message):
                 ':empty_list': []
             }
         )
-        st.success(f"This is from def append_chat_log thread_id: {thread_id} updated")
+        st.success(f"Chat log updated for thread_id: {thread_id}")
     except ClientError as e:
         logging.error(f"DynamoDB Error in append_chat_log: {e.response['Error']['Message']}")
         st.error(f"DynamoDB Error in append_chat_log: {e.response['Error']['Message']}")
@@ -87,12 +90,9 @@ def save_incident_from_media(chat_log, persona, thread_id):
     }
 
     # Save incident to DynamoDB
-    # st.error(f"This is from def save_incident_from_media thread_id: {thread_id}")
-    # st.error(f"This is from def save_incident_from_media message: {incident}")      
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
     try:
         table.put_item(Item=incident)
-        # st.success(f"This is from def save_incident_from_media incident: {incident} updated")
     except ClientError as e:
         st.error(f"DynamoDB Error in save_incident_from_media: {e.response['Error']['Message']}")
         print(f"DynamoDB Error: {e.response['Error']['Message']}")
@@ -104,10 +104,13 @@ def get_chat_log(thread_id):
     try:
         response = table.get_item(Key={'thread_id': thread_id})
         chat_log = response.get("Item", {}).get("chat_log", [])
-        # Validate and set default values for missing keys
         for message in chat_log:
-            message.setdefault("role", "Unknown")
-            message.setdefault("message", "[No content available]")
+            if "media_key" in message:  # Check if media_key exists
+                message["media"] = s3_client.generate_presigned_url(
+                    "get_object",
+                    Params={"Bucket": st.secrets["S3_BUCKET"], "Key": message["media_key"]},
+                    ExpiresIn=3600  # URL valid for 1 hour
+                )
         return chat_log
     except ClientError as e:
         st.error(f"DynamoDB Error in get_chat_log: {e.response['Error']['Message']}")

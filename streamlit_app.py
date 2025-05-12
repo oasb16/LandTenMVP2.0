@@ -1,4 +1,9 @@
 import streamlit as st
+import asyncio
+import websockets
+import threading
+import subprocess
+import json
 
 st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")
 
@@ -29,6 +34,31 @@ try:
 except KeyError as e:
     st.error(f"Missing required secret: {e.args[0]}")
     st.stop()
+
+# WebSocket server URL
+WEBSOCKET_SERVER_URL = "ws://localhost:8765"
+
+# Start the WebSocket server as a separate process
+def start_websocket_server():
+    subprocess.Popen(["python", "websocket_server.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+# Start the WebSocket server
+start_websocket_server()
+
+# WebSocket client to receive real-time notifications
+def start_websocket_client():
+    async def listen():
+        async with websockets.connect(WEBSOCKET_SERVER_URL) as websocket:
+            while True:
+                message = await websocket.recv()
+                notification = json.loads(message)
+                if notification.get("type") == "notification":
+                    st.toast(notification.get("message"))  # Display notification using Streamlit's toast
+
+    asyncio.run(listen())
+
+# Start WebSocket client in a separate thread
+threading.Thread(target=start_websocket_client, daemon=True).start()
 
 # Function to generate dummy threads
 def generate_dummy_threads():
