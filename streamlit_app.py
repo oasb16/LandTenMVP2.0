@@ -16,7 +16,7 @@ from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
 from superstructures.ss2_pulse.ss2_pulse_app import run_router
 
 # -- SS3: Chat core
-from superstructures.ss3_trichatcore.tri_chat_core import run_chat_core
+from superstructures.ss3_trichatcore.tri_chat_core import run_chat_core, prune_empty_threads
 
 # -- Optional logout logic in sidebar
 from urllib.parse import quote
@@ -127,16 +127,20 @@ with st.sidebar:
             # Load the chat log for the selected thread
             st.session_state['chat_log'] = [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == selected_thread]
 
-    # Add a button to delete all threads
-    if st.button("Delete All Threads"):
-        try:
-            delete_all_threads_from_dynamodb()
-            st.session_state['selected_thread'] = None  # Clear selected thread
-            st.success("All threads have been deleted.")
-            st.rerun()
-        except Exception as e:
-            logging.error(f"Error deleting threads: {e}")
-            st.error(f"Failed to delete threads: {e}")
+    with st.expander("### 🗑️ Thread Management", expanded=False):
+        # Add a button to delete all threads
+        if st.button("Delete All Threads"):
+            try:
+                delete_all_threads_from_dynamodb()
+                st.session_state['selected_thread'] = None  # Clear selected thread
+                st.success("All threads have been deleted.")
+                st.rerun()
+            except Exception as e:
+                logging.error(f"Error deleting threads: {e}")
+                st.error(f"Failed to delete threads: {e}")
+
+        if st.button("Delete Empty Threads"):
+            prune_empty_threads()
 
     # Add a button to generate 5 dummy threads
     if st.button("Generate Dummy Threads"):

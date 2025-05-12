@@ -146,10 +146,7 @@ def run_chat_core():
             st.session_state.show_capture = False
             st.session_state.last_action = "close_panels"
 
-    with st.sidebar:
-        st.markdown("### 🗑️ Thread Management")
-        if st.button("Delete Empty Threads"):
-            prune_empty_threads()
+
 
     if st.session_state.show_upload:
         with st.expander("📎 Upload Media", expanded=True):
