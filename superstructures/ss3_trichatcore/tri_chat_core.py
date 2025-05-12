@@ -145,7 +145,6 @@ def run_chat_core():
                 st.session_state["thread_media"][thread_id].append(media_msg)
                 if media_msg not in st.session_state.chat_log:
                     st.session_state.chat_log.append(media_msg)
-                    st.success(f"tri_chat_core's Engaged upload_thread_to_s3 from run_chat_core: show_upload: {media_msg}")
                     append_chat_log(thread_id, media_msg)
                     upload_thread_to_s3(thread_id, st.session_state.chat_log)  # Ensure thread is saved to S3
                 st.session_state["thread_media"].pop(thread_id, None)  # Clear media after upload
@@ -161,7 +160,6 @@ def run_chat_core():
                 st.session_state["thread_media"][thread_id].append(media_msg)
                 if media_msg not in st.session_state.chat_log:
                     st.session_state.chat_log.append(media_msg)
-                    st.success(f"tri_chat_core's Engaged upload_thread_to_s3 from run_chat_core: show_capture: {media_msg}")
                     append_chat_log(thread_id, media_msg)
                     upload_thread_to_s3(thread_id, st.session_state.chat_log)  # Ensure thread is saved to S3
                 st.session_state["thread_media"].pop(thread_id, None)  # Clear media after capture

@@ -73,7 +73,6 @@ def generate_dummy_threads():
             ]
         }
         try:
-            st.success(f"streamlit_app's Engaged upload_thread_to_s3 from  generate_dummy_threads: {message}")
             save_message_to_dynamodb(thread_id, dummy_data["chat_log"][0])
             save_message_to_dynamodb(thread_id, dummy_data["chat_log"][1])
             upload_thread_to_s3(thread_id, dummy_data["chat_log"])
@@ -164,13 +163,11 @@ if st.session_state.get('selected_thread'):
 
         # # Ensure thread content is stored in S3
         # if st.session_state.get('chat_log'):
-        #     st.success(f"streamlit_app's Engaged upload_thread_to_s3 from  if st.session_state.get(chat_log): {st.session_state.get('chat_log')}")
         #     upload_thread_to_s3(st.session_state['selected_thread'], st.session_state['chat_log'])
 
 # Function to send a message and update the selected thread state
 def send_message_and_update_thread(thread_id, message):
     # Send the message to the backend (DynamoDB and S3)
-    st.success(f"streamlit_app's Engaged upload_thread_to_s3 from  send_message_and_update_thread(): {message}")
     save_message_to_dynamodb(thread_id, message)
     upload_thread_to_s3(thread_id, st.session_state['chat_log'])
 
