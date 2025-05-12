@@ -167,6 +167,7 @@ def run_chat_core():
                     "message": f"[Media uploaded]({media_url})"
                 }
                 append_chat_log(thread_id, media_msg)
+                st.success(f"Engaged upload_thread_to_s3 from run_chat_core: if st.session_state.get(show_upload, False): {media_msg}")
                 upload_thread_to_s3(thread_id, get_chat_log(thread_id))
                 st.session_state.last_action = "media_upload"
 
@@ -185,6 +186,7 @@ def run_chat_core():
             "role": persona,
             "message": user_input.strip()
         }
+        st.success(f"Engaged upload_thread_to_s3 from run_chat_core: if submitted and user_input.strip(): {media_msg}")
         append_chat_log(thread_id, user_msg)
         upload_thread_to_s3(thread_id, get_chat_log(thread_id))
         st.session_state.last_action = "text_input"
@@ -205,6 +207,7 @@ def run_chat_core():
                 "role": "agent",
                 "message": agent_reply
             }
+            st.success(f"Engaged upload_thread_to_s3 from run_chat_core: if agent_reply: {media_msg}")
             append_chat_log(thread_id, agent_msg)
             upload_thread_to_s3(thread_id, get_chat_log(thread_id))
             st.session_state.last_action = "text_input"
@@ -292,6 +295,7 @@ def upload_media_to_s3(file, thread_id):
         }
 
         # Append the message to the chat log and upload the thread to S3
+        st.success(f"This is from upload_media_to_s3: {user_msg}")
         append_chat_log(thread_id, user_msg)
         upload_thread_to_s3(thread_id, get_chat_log(thread_id))
 
@@ -381,6 +385,7 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
             st.warning(f"Incident detection failed: {e}")
 
         # 5. Upload thread to S3
+        st.success(f"Engaged upload_thread_to_s3 from run_summon_engine:  if engage_agent: {chat_log}")
         upload_thread_to_s3(thread_id, chat_log)
 
         st.success("💡 Agent updated with media context.")
@@ -403,6 +408,7 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
         save_message_to_dynamodb(thread_id, user_msg)
 
         # Upload thread to S3
+        st.success(f"Engaged upload_thread_to_s3 from run_summon_engine: else engage_agent: {chat_log}")
         upload_thread_to_s3(thread_id, chat_log)
 
 def update_thread_timestamp_in_dynamodb(thread_id):
