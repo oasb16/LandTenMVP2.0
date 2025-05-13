@@ -119,6 +119,6 @@ def run_login():
         )
 
         st.link_button(
-            "🔐 Login with Google SSO",
+            "🔐 Login with GOOOOGLE SSO",
             "http://landten-login-redirect.s3-website-us-east-1.amazonaws.com/login-redirect.html"
         )
