@@ -15,14 +15,13 @@ except KeyError as e:
 
 # === Utility: Persona → Page Router
 def handle_persona_routing():
-    persona = extract_persona()
-    st.session_state["persona"] = persona
+
     page_map = {
         "tenant": "tenant_dashboard",
         "contractor": "contractor_dashboard",
         "landlord": "landlord_dashboard"
     }
-    page = page_map.get(persona)
+    page = page_map.get(st.session_state["persona"], "non")
     if page:
         st.session_state["page"] = page
         st.rerun()
