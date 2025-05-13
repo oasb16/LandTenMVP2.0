@@ -40,7 +40,12 @@ def initialize_session_state():
         st.session_state.chat_log = [initial_message]
     if "chat_log" not in st.session_state:
         try:
-            st.session_state.chat_log = load_chat_log(st.session_state["thread_id"])
+            st.session_state['chat_log'] = list({
+                t['id']: t for t in sorted(
+                    [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == selected_thread],
+                    key=lambda x: x['timestamp']
+                )
+            }.values())
         except Exception as e:
             logging.error(f"Failed to load chat log: {e}")
             logging.error(traceback.format_exc())
