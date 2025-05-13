@@ -35,9 +35,12 @@ def handle_persona_routing():
 
 # Main application logic
 if "logged_in" not in st.session_state:
+    st.success("Welcome to LandTen MVP 2.0! Please log in.")
     st.session_state["logged_in"] = False
 
 if not st.session_state["logged_in"]:
+    st.success("Welcome to LandTen MVP 2.0! Please log in.")
+    st.session_state["logged_in"] = True
     run_login()
     if "user_profile" in st.session_state:
         # save_user_profile(st.session_state["user_profile"])
@@ -45,8 +48,13 @@ if not st.session_state["logged_in"]:
 else:
     # Route to the appropriate persona page
     page = st.query_params.get("page", [None])[0]
-
-    if page == "tenant_dashboard":
+    st.success(f"Page : {page}")
+    if page is None:
+        st.error("No page specified. Please log in again.")
+        st.stop()
+    elif page == "pulse":
+        run_router()
+    elif page == "tenant_dashboard":
         from superstructures.ss1_gate.streamlit_frontend.tenant_dashboard import run_tenant_dashboard
         run_tenant_dashboard()
     elif page == "contractor_dashboard":
