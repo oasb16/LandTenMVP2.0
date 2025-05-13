@@ -34,14 +34,20 @@ def run_login():
     
     query_params = st.query_params
     code = query_params.get("code", None)
+    st.success(f"Query params: {query_params}")
+    st.success(f"Code: {code}")
     state_raw = query_params.get("state", None)
+    st.success(f"State: {state_raw}")
 
     # Step 2: Decode state param (persona)
     try:
         decoded_state = json.loads(unquote(state_raw)) if state_raw else {}
         persona = decoded_state.get("persona", st.session_state.get("persona", "none"))
+        st.success(f"Decoded state: {decoded_state}")
+        st.success(f"Decoded persona: {persona}")
     except:
         persona = st.session_state.get("persona", "none")
+        st.success(f"Failed to decode state. Using default persona: {persona}")
 
     # Step 3: Handle OAuth2 code exchange
     if code:
@@ -62,6 +68,8 @@ def run_login():
             "code": code,
             "redirect_uri": REDIRECT_URI
         }
+
+        st.success(f"Payload: {payload}")
 
         try:
             res = requests.post(TOKEN_ENDPOINT, data=payload, headers=headers)
