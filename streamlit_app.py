@@ -30,7 +30,7 @@ def handle_persona_routing():
     page = page_map.get(persona)
     if page:
         st.session_state["page"] = page
-        # st.rerun()
+        st.rerun()
     else:
         st.error("Unknown persona. Please contact support.")
 
@@ -60,6 +60,7 @@ if not st.session_state["logged_in"]:
         st.session_state["logged_in"] = True
         handle_persona_routing()
     else:
+        st.error("Login failed. Please try again. Stopping ...")
         st.stop()
 
 # === Recovery routing after redirect / rerun
