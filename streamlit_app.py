@@ -21,7 +21,10 @@ def handle_persona_routing():
         "contractor": "contractor_dashboard",
         "landlord": "landlord_dashboard"
     }
-    page = page_map.get(st.session_state["persona"], "non")
+    page = page_map.get(st.session_state["persona"], "none")
+    st.success(f"Decoded persona: {st.session_state['persona']}")
+    st.success(f"Page mapping: {page_map}")
+    st.success(f"Page: {page}")
     if page:
         st.session_state["page"] = page
         st.rerun()
