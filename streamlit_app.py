@@ -44,6 +44,7 @@ if not st.session_state["logged_in"]:
     st.success(f"showing st.session_state[logged_in] : {st.session_state["logged_in"]}")
     run_login()
     if "user_profile" in st.session_state:
+        st.success(f"Now st.session_state : {st.session_state}")
         # save_user_profile(st.session_state["user_profile"])
         handle_persona_routing()
 else:
