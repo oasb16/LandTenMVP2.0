@@ -125,7 +125,13 @@ with st.sidebar:
         if st.session_state.get('selected_thread') != selected_thread:
             st.session_state['selected_thread'] = selected_thread
             # Load the chat log for the selected thread
-            st.session_state['chat_log'] = [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == selected_thread]
+            # st.session_state['chat_log'] = [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == selected_thread]
+            st.session_state['chat_log'] = list({
+                t['id']: t for t in sorted(
+                    [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == st.session_state["selected_thread"]],
+                    key=lambda x: x['timestamp']
+                )
+            }.values())
 
     with st.expander("### 🗑️ Thread Management", expanded=False):
         # Add a button to delete all threads
