@@ -99,7 +99,7 @@ def run_login():
         except Exception as e:
             st.error(f"Unexpected error during login: {e}")
 
-    # Step 4: Show login button if not authenticated
+# Step 4: Show login button if not authenticated
     else:
         from urllib.parse import quote
         import json
@@ -118,4 +118,10 @@ def run_login():
             f"&scope=email+openid+phone"
         )
 
-        st.markdown(f"[🔐 Login with Google SSO]({login_url})")
+        # ✅ Fix: Use target="_self" to force same-tab login
+        st.markdown(
+            f"""<a href="{login_url}" target="_self" style="text-decoration: none; font-size: 16px;">
+                    🔐 Login with Google SSO
+            </a>""",
+            unsafe_allow_html=True
+        )
