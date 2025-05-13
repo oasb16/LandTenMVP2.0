@@ -52,7 +52,7 @@ if not st.session_state["logged_in"]:
         handle_persona_routing()
     else:
         st.error("Login failed. Please try again.")
-        st.stop()
+        # st.stop()
 
 # === Fallback Recovery
 if st.session_state.get("logged_in") and "page" not in st.session_state:
