@@ -59,9 +59,9 @@ if not st.session_state["logged_in"]:
     if "user_profile" in st.session_state:
         st.session_state["logged_in"] = True
         handle_persona_routing()
-    else:
-        st.error("Login failed. Please try again. Stopping ...")
-        st.stop()
+    # else:
+    #     st.error("Login failed. Please try again. Stopping ...")
+    #     st.stop()
 
 # === Recovery routing after redirect / rerun
 if st.session_state.get("logged_in") and "page" not in st.session_state:
