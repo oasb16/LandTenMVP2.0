@@ -22,13 +22,13 @@ def handle_persona_routing():
     persona = extract_persona()
     st.session_state["persona"] = persona
     if persona == "tenant":
-        st.query_params(page="tenant_dashboard")
+        st.query_params = {"page": "tenant_dashboard"}
         st.rerun()
     elif persona == "contractor":
-        st.query_params(page="contractor_dashboard")
+        st.query_params = {"page": "contractor_dashboard"}
         st.rerun()
     elif persona == "landlord":
-        st.query_params(page="landlord_dashboard")
+        st.query_params = {"page": "landlord_dashboard"}
         st.rerun()
     else:
         st.error("Unknown persona. Please contact support.")
@@ -41,7 +41,7 @@ if "logged_in" not in st.session_state:
 
 if not st.session_state["logged_in"]:
     st.success(f"Now st.session_state : {st.session_state}")
-    st.success(f"showing st.session_state[logged_in] : {st.session_state["logged_in"]}")
+    st.success(f"showing st.session_state['logged_in'] : {st.session_state['logged_in']}")
     run_login()
     if "user_profile" in st.session_state:
         st.success(f"Now st.session_state : {st.session_state}")
@@ -49,7 +49,7 @@ if not st.session_state["logged_in"]:
         handle_persona_routing()
 else:
     # Route to the appropriate persona page
-    page = st.query_params.get("page", [None])[0]
+    page = st.query_params.get("page", None)
     st.success(f"Page : {page}")
     if page is None:
         st.error("No page specified. Please log in again.")
