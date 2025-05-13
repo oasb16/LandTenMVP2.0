@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 import jwt
 from urllib.parse import quote, unquote
-from superstructures.ss1_gate.shared.dynamodb import write_user_profile
+from superstructures.ss1_gate.shared.dynamodb import save_user_profile
 
 # === Secrets
 try:
@@ -32,16 +32,17 @@ def run_login():
         state_json = json.dumps({"persona": persona})
         encoded_state = quote(state_json)
         st.session_state["oauth_state"] = encoded_state  # Track for later
+        st.success(f"Selected state_json: {persona} {state_json} {encoded_state}")   
 
-        login_url = (
-            f"https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com/oauth2/authorize"
-            f"?identity_provider=Google"
-            f"&redirect_uri={REDIRECT_URI}"
-            f"&response_type=CODE"
-            f"&client_id={CLIENT_ID}"
-            f"&state={encoded_state}"
-            f"&scope=email+openid+phone"
-        )
+        # login_url = (
+        #     f"https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com/oauth2/authorize"
+        #     f"?identity_provider=Google"
+        #     f"&redirect_uri={REDIRECT_URI}"
+        #     f"&response_type=CODE"
+        #     f"&client_id={CLIENT_ID}"
+        #     f"&state={encoded_state}"
+        #     f"&scope=email+openid+phone"
+        # )
 
         st.link_button(
             "🔐 Login with GOOOOGLE SSO",
@@ -91,12 +92,13 @@ def run_login():
                 st.session_state["user_profile"] = user_info  # Now it exists!
                 
                 try:
-                    write_user_profile({
+                    save_user_profile({
                         "email": user_info.get("email", ""),
                         "persona": persona,
                         "login_source": "GoogleSSO",
                         "timestamp": datetime.utcnow().isoformat()
                     })
+                    st.success("User profile written to DB successfully.")
                 except Exception as db_error:
                     st.error(f"DB write failed: {db_error}")
 
