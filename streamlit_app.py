@@ -1,7 +1,7 @@
 import streamlit as st
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
 from superstructures.ss1_gate.persona_extractor import extract_persona
-from superstructures.ss1_gate.shared.dynamodb import save_user_profile
+# from superstructures.ss1_gate.shared.dynamodb import save_user_profile
 from superstructures.ss2_pulse.ss2_pulse_app import run_router
 from uuid import uuid4
 from datetime import datetime
@@ -40,7 +40,7 @@ if "logged_in" not in st.session_state:
 if not st.session_state["logged_in"]:
     run_login()
     if "user_profile" in st.session_state:
-        save_user_profile(st.session_state["user_profile"])
+        # save_user_profile(st.session_state["user_profile"])
         handle_persona_routing()
 else:
     # Route to the appropriate persona page
