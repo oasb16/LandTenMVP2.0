@@ -18,12 +18,16 @@ except KeyError as e:
 
 # Function to handle persona-based routing
 def handle_persona_routing():
+    st.success("Login successful! Redirecting...")
     persona = extract_persona()
     st.session_state["persona"] = persona
     if persona == "tenant":
+        st.success("Welcome, Tenant!")
         st.experimental_set_query_params(page="tenant_dashboard")
         st.rerun()
+        st.success("Welcome, Tenant!")
     elif persona == "contractor":
+        
         st.experimental_set_query_params(page="contractor_dashboard")
         st.rerun()
     elif persona == "landlord":
