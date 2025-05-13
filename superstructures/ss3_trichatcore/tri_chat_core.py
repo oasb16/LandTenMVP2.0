@@ -55,10 +55,14 @@ def initialize_session_state():
         st.session_state["thread_media"] = {}  # Map thread_id to associated media
 
 def render_chat_log(chat_log):
+    """Render the chat log in a consistent and unique order."""
+    # Remove duplicates and sort messages by timestamp
+    unique_chat_log = {msg["id"]: msg for msg in sorted(chat_log, key=lambda x: x["timestamp"])}.values()
+
     st.markdown("### 💬 Conversation")
 
     chat_html = ""
-    for msg in chat_log[-30:]:
+    for msg in unique_chat_log:
         role = msg.get("role", "").capitalize()
         content = msg.get("message", "")
         word_count = len(content.split()) if isinstance(content, str) else 0
