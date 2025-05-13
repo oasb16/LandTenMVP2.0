@@ -22,13 +22,13 @@ def handle_persona_routing():
     persona = extract_persona()
     st.session_state["persona"] = persona
     if persona == "tenant":
-        st.experimental_set_query_params(page="tenant_dashboard")
+        st.query_params(page="tenant_dashboard")
         st.rerun()
     elif persona == "contractor":
-        st.experimental_set_query_params(page="contractor_dashboard")
+        st.query_params(page="contractor_dashboard")
         st.rerun()
     elif persona == "landlord":
-        st.experimental_set_query_params(page="landlord_dashboard")
+        st.query_params(page="landlord_dashboard")
         st.rerun()
     else:
         st.error("Unknown persona. Please contact support.")
@@ -44,7 +44,7 @@ if not st.session_state["logged_in"]:
         handle_persona_routing()
 else:
     # Route to the appropriate persona page
-    query_params = st.experimental_get_query_params()
+    query_params = st.query_params()
     page = query_params.get("page", [None])[0]
 
     if page == "tenant_dashboard":
