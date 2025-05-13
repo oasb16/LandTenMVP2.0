@@ -54,6 +54,7 @@ if "logged_in" not in st.session_state:
 # === Login flow
 if not st.session_state["logged_in"]:
     run_login()
+    st.success(f"st.session_state: {st.session_state}")
     if "user_profile" in st.session_state:
         st.session_state["logged_in"] = True
         handle_persona_routing()
