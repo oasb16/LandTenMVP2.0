@@ -12,7 +12,7 @@ from botocore.exceptions import ClientError
 # Configure logging
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 
-from superstructures.ss5_summonengine.summon_engine import run_summon_engine, save_message_to_dynamodb, upload_thread_to_s3
+from superstructures.ss5_summonengine.summon_engine import run_summon_engine, save_message_to_dynamodb, upload_thread_to_s3, get_all_threads_from_dynamodb
 from superstructures.ss7_mediastream import run_media_interface
 from superstructures.ss8_canvascard.canvascard import create_canvas_card
 from utils.chat_log_writer import load_chat_log, append_chat_log
@@ -42,7 +42,7 @@ def initialize_session_state():
         try:
             st.session_state['chat_log'] = list({
                 t['id']: t for t in sorted(
-                    [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == selected_thread],
+                    [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == st.session_state["selected_thread"]],
                     key=lambda x: x['timestamp']
                 )
             }.values())
