@@ -101,9 +101,9 @@ def run_login():
 
     # Step 4: Show login button if not authenticated
     else:
-        from urllib.parse import quote
-        import json
         import streamlit as st
+        import json
+        from urllib.parse import quote
 
         persona = st.session_state.get("persona", "tenant")
         state_json = json.dumps({"persona": persona})
@@ -119,9 +119,6 @@ def run_login():
             f"&scope=email+openid+phone"
         )
 
-        # Use JS redirect to avoid iframe issues
+        # ✅ Force full-page redirect using JS — avoids iframe issues
         if st.button("🔐 Login with Google SSO"):
-            st.markdown(
-                f"<script>window.location.href = '{login_url}'</script>",
-                unsafe_allow_html=True
-            )
+            st.write(f"""<script>window.top.location.href = "{login_url}"</script>""", unsafe_allow_html=True)
