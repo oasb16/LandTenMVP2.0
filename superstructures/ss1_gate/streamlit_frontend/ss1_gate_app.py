@@ -32,8 +32,8 @@ def run_login():
         state_json = json.dumps({"persona": persona})
         encoded_state = quote(state_json)
         st.session_state["oauth_state"] = encoded_state  # Track for later
-        st.success(f"Selected role: {st.session_state['persona']}") 
-        
+        st.success(f"session_state {st.session_state['persona']}") 
+
         login_url = (
             f"https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com/oauth2/authorize"
             f"?identity_provider=Google"
@@ -52,6 +52,7 @@ def run_login():
 
     code = st.session_state.get("oauth_code")
     state_raw = st.session_state.get("oauth_state")
+    st.success(f"session_state {st.session_state['persona']}") 
 
     # Step 3: Decode persona from state
     try:
