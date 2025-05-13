@@ -36,10 +36,11 @@ def handle_persona_routing():
 # Main application logic
 if "logged_in" not in st.session_state:
     st.success("Welcome to LandTen MVP 2.0! Please log in.")
+    st.success(f"st.session_state : {st.session_state}")
     st.session_state["logged_in"] = False
 
 if not st.session_state["logged_in"]:
-    st.success("Welcome to LandTen MVP 2.0! Please log in.")
+    st.success(f"Welcome to LandTen MVP 2.0! Logged in? : {st.session_state["logged_in"]} Please log in.")
     st.session_state["logged_in"] = True
     run_login()
     if "user_profile" in st.session_state:
