@@ -44,8 +44,7 @@ if not st.session_state["logged_in"]:
         handle_persona_routing()
 else:
     # Route to the appropriate persona page
-    query_params = st.query_params()
-    page = query_params.get("page", [None])[0]
+    page = st.query_params.get("page", [None])[0]
 
     if page == "tenant_dashboard":
         from superstructures.ss1_gate.streamlit_frontend.tenant_dashboard import run_tenant_dashboard
