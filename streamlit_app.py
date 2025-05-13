@@ -2,7 +2,7 @@ import streamlit as st
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
 from superstructures.ss1_gate.persona_extractor import extract_persona
 # from superstructures.ss1_gate.shared.dynamodb import save_user_profile
-from superstructures.ss2_pulse.ss2_pulse_app import run_router
+# from superstructures.ss2_pulse.ss2_pulse_app import run_router
 from uuid import uuid4
 from datetime import datetime
 import logging
@@ -54,8 +54,8 @@ else:
     if page is None:
         st.error("No page specified. Please log in again.")
         st.stop()
-    elif page == "pulse":
-        run_router()
+    # elif page == "pulse":
+    #     run_router()
     elif page == "tenant_dashboard":
         from superstructures.ss1_gate.streamlit_frontend.tenant_dashboard import run_tenant_dashboard
         run_tenant_dashboard()
