@@ -30,7 +30,8 @@ def run_login():
     # Step 1: Persona Picker
     if "persona" not in st.session_state:
         st.session_state["persona"] = st.selectbox("Choose your role", ["tenant", "landlord", "contractor"])
-
+        st.success(f"Selected role: {st.session_state['persona']}") 
+    
     query_params = st.query_params
     code = query_params.get("code", None)
     state_raw = query_params.get("state", None)
