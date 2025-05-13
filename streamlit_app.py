@@ -41,7 +41,7 @@ if "logged_in" not in st.session_state:
 
 if not st.session_state["logged_in"]:
     st.success(f"Now st.session_state : {st.session_state}")
-    st.success(f"Welcome to LandTen MVP 2.0! Logged in? : {st.session_state["logged_in"]} Please log in.")
+    st.success(f"Welcome to LandTen MVP 2.0! \n showing st.session_state[logged_in] : {st.session_state["logged_in"]}. \n Please log in.")
     run_login()
     if "user_profile" in st.session_state:
         # save_user_profile(st.session_state["user_profile"])
