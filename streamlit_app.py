@@ -176,8 +176,14 @@ def send_message_and_update_thread(thread_id, message):
     upload_thread_to_s3(thread_id, st.session_state['chat_log'])
 
     # Re-fetch the updated thread messages from S3
-    updated_thread = [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == thread_id]
-    st.session_state['chat_log'] = updated_thread
+    # updated_thread = [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == thread_id]
+    # st.session_state['chat_log'] = updated_thread
+    st.session_state['chat_log'] = list({
+            t['id']: t for t in sorted(
+                [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == st.session_state["selected_thread"]],
+                key=lambda x: x['timestamp']
+            )
+        }.values())
     st.rerun()  # Trigger UI update
 
 
