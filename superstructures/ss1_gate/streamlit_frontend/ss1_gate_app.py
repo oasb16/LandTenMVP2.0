@@ -39,9 +39,9 @@ def run_login():
     # Step 2: Decode state param (persona)
     try:
         decoded_state = json.loads(unquote(state_raw)) if state_raw else {}
-        persona = decoded_state.get("persona", st.session_state.get("persona", "tenant"))
+        persona = decoded_state.get("persona", st.session_state.get("persona", "none"))
     except:
-        persona = st.session_state.get("persona", "tenant")
+        persona = st.session_state.get("persona", "none")
 
     # Step 3: Handle OAuth2 code exchange
     if code:
@@ -105,7 +105,7 @@ def run_login():
         from urllib.parse import quote
         import json
 
-        persona = st.session_state.get("persona", "tenant")
+        persona = st.session_state.get("persona", "none")
         state_json = json.dumps({"persona": persona})
         encoded_state = quote(state_json)
 
