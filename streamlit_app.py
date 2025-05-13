@@ -16,9 +16,8 @@ except KeyError as e:
     st.error(f"Missing required secret: {e.args[0]}")
     st.stop()
 
-# === Handle persona & page routing ===
+# === Utility: Route by persona
 def handle_persona_routing():
-    st.success("Login successful! Redirecting...")
     persona = extract_persona()
     st.session_state["persona"] = persona
 
@@ -35,40 +34,44 @@ def handle_persona_routing():
     else:
         st.error("Unknown persona. Please contact support.")
 
-# === Main logic ===
-# Clear redirect garbage from SSO (e.g., ?code=xyz)
+# === Utility: Logout handler
+def logout():
+    for key in ["logged_in", "user_profile", "persona", "page"]:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.rerun()
+
+# === Clear garbage from redirect (e.g., ?code=xyz)
 if "code" in st.query_params or "state" in st.query_params:
     st.query_params.clear()
     st.rerun()
 
-# First-time state init
+# === Session Init
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
     st.success("Welcome to LandTen MVP 2.0! Please log in.")
 
-# Login process
+# === Login flow
 if not st.session_state["logged_in"]:
     run_login()
     if "user_profile" in st.session_state:
         st.session_state["logged_in"] = True
-        # Optionally: save_user_profile(st.session_state["user_profile"])
         handle_persona_routing()
     else:
         st.stop()
 
-# === Routing after login ===
-# Recover from SSO redirect without losing page intent
-if "page" not in st.session_state and "persona" in st.session_state:
-    persona = st.session_state["persona"]
+# === Recovery routing after redirect / rerun
+if st.session_state.get("logged_in") and "page" not in st.session_state:
     handle_persona_routing()
 
+# === Routing
 page = st.session_state.get("page", None)
 
 if page is None:
     st.error("No page specified. Please log in again.")
     st.stop()
 
-# === Route to active dashboard ===
+# === Dashboard Routes
 if page == "tenant_dashboard":
     from superstructures.ss1_gate.streamlit_frontend.tenant_dashboard import run_tenant_dashboard
     run_tenant_dashboard()
