@@ -103,6 +103,7 @@ def run_login():
     else:
         from urllib.parse import quote
         import json
+        import streamlit as st
 
         persona = st.session_state.get("persona", "tenant")
         state_json = json.dumps({"persona": persona})
@@ -118,4 +119,9 @@ def run_login():
             f"&scope=email+openid+phone"
         )
 
-        st.markdown(f"[🔐 Login with Google SSO]({login_url})")
+        # Use JS redirect to avoid iframe issues
+        if st.button("🔐 Login with Google SSO"):
+            st.markdown(
+                f"<script>window.location.href = '{login_url}'</script>",
+                unsafe_allow_html=True
+            )
