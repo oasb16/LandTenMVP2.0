@@ -87,6 +87,14 @@ def handle_persona_routing():
         st.success(f"st.session_state: {st.session_state}")
     with st.expander("### user_profile", expanded=False):
         st.success(f"st.session_state: {st.session_state["user_profile"]}")
+        st.success(f"st.session_state: {st.session_state["user_profile"]['email']}")
+        st.success(f"st.session_state: {st.session_state["user_profile"]['name']}")
+        st.success(f"st.session_state: {st.session_state["user_profile"]['persona']}")
+        st.success(f"st.session_state: {st.session_state["user_profile"]['login_source']}")
+        st.success(f"st.session_state: {st.session_state["user_profile"]['timestamp']}")
+        st.success(f"st.session_state: {st.session_state["user_profile"]['user_id']}")
+        st.success(f"st.session_state: {st.session_state["user_profile"]['userId']}")
+        st.success(f"st.session_state: {st.session_state["user_profile"]['cognito:username']}")
     if page:
         st.session_state["page"] = page
         # st.rerun()
@@ -142,7 +150,7 @@ if st.session_state["oauth_code"]:
             try:
                 save_user_profile({
                     "user_id": user_info.get("userId", ""),
-                    "name": user_info.get("username", ""),
+                    "name": user_info.get("cognito:username", ""),
                     "email": user_info.get("email", ""),
                     "persona": st.session_state['persona'],
                     "login_source": "GoogleSSO",
