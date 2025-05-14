@@ -63,6 +63,8 @@ if "logged_in" not in st.session_state:
         st.success(f"OAuth code: {st.session_state['oauth_code']}")
     if 'oauth_state' in st.session_state:
         st.success(f"OAuth state: {st.session_state['oauth_state']}")
+    else:
+        st.success(f"session_state: {st.session_state}")
 
 # === LOGIN FLOW
 if not st.session_state["logged_in"]:
