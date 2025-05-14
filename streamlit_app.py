@@ -85,6 +85,8 @@ def handle_persona_routing():
     st.success(f"Page: {page}")
     with st.expander("### session_state", expanded=False):
         st.success(f"st.session_state: {st.session_state}")
+    with st.expander("### user_profile", expanded=False):
+        st.success(f"st.session_state: {st.session_state["user_profile"]}")
     if page:
         st.session_state["page"] = page
         # st.rerun()
