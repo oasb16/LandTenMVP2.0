@@ -22,33 +22,11 @@ except KeyError as e:
     st.error(f"Missing required secret: {e.args[0]}")
     st.stop()
 
-# === Try restore session from localStorage
-def try_restore_session():
-    result = st_javascript("""
-        async () => {
-            const profile = localStorage.getItem("user_profile");
-            const expires = localStorage.getItem("expires_at");
-            if (!profile || !expires) return null;
-            const now = Math.floor(Date.now() / 1000);
-            if (parseInt(expires) < now) {
-                localStorage.removeItem("user_profile");
-                localStorage.removeItem("expires_at");
-                return null;
-            }
-            return {
-                user_profile: JSON.parse(profile),
-                expires_at: parseInt(expires)
-            };
-        }
-    """)
-    if result:
-        st.session_state["user_profile"] = result["user_profile"]
-        st.session_state["email"] = result["user_profile"].get("email")
-        st.session_state["expires_at"] = result["expires_at"]
-        st.session_state["logged_in"] = True
-        st.session_state["persona"] = st.session_state["user_profile"].get("persona", "tenant")
+from utils.session_persistence import try_restore_session, store_session
 
-try_restore_session()
+# Attempt to restore session before anything else
+if "logged_in" not in st.session_state:
+    try_restore_session()
 
 # === Query param extraction
 params = st.query_params
@@ -123,6 +101,9 @@ if "oauth_code" in st.session_state and "user_profile" not in st.session_state:
             st.session_state["logged_in"] = True
             st.session_state["persona"] = st.session_state.get("persona", "tenant")
             st.session_state["expires_at"] = user_info["exp"]
+
+            # 🔐 Persist in browser
+            store_session(user_info)
 
             try:
                 save_user_profile({
