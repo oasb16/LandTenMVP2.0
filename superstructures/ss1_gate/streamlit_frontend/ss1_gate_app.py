@@ -46,7 +46,7 @@ def run_login():
 
         st.link_button(
             "🔐 Login with GOOOOGLE SSO",
-            f"https://landten-login-redirect.s3-website-us-east-1.amazonaws.com/login-redirect.html?state={encoded_state}"
+            f"https://landten-login-redirect.s3-website-us-east-1.amazonaws.com/login-redirect.html?state={st.session_state["persona"]}"
         )
         st.stop()
 
