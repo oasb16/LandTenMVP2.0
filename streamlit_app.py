@@ -56,7 +56,7 @@ if "code" in params:
 
     # Step 1: Role Picker
     if "persona" not in st.session_state:
-        st.session_state["persona"] = st.selectbox("Choose your role", ["tenant", "landlord", "contractor"])
+        st.session_state['persona'] = st.selectbox("Choose your role", ["tenant", "landlord", "contractor"])
         st.success(f"Selected role: {st.session_state['persona']}") 
 
     st.session_state["logged_in"] = True
