@@ -4,59 +4,13 @@ from superstructures.ss1_gate.persona_extractor import extract_persona
 from datetime import datetime
 import requests
 import base64
-import json, time
+import json
 from datetime import datetime
 import jwt
 from urllib.parse import quote, unquote
 from superstructures.ss1_gate.shared.dynamodb import save_user_profile
-import streamlit.components.v1 as components
 
 st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")  # MUST be first
-
-
-
-# Attempt to restore session
-components.html("""
-    <script>
-    const userProfile = localStorage.getItem("user_profile");
-    const expiresAt = localStorage.getItem("expires_at");
-    if (userProfile && expiresAt) {{
-        const now = Math.floor(Date.now() / 1000);
-        if (now < parseInt(expiresAt)) {{
-            window.parent.postMessage({{
-                type: 'RESTORE_SESSION',
-                user_profile: JSON.parse(userProfile),
-                expires_at: parseInt(expiresAt)
-            }}, "*");
-        }} else {{
-            localStorage.removeItem("user_profile");
-            localStorage.removeItem("expires_at");
-        }}
-    }}
-    </script>
-""", height=0)
-
-# Catch message from JS
-def inject_restore_listener():
-    from streamlit.runtime.scriptrunner import get_script_run_ctx
-    from streamlit.runtime.runtime import Runtime
-
-    ctx = get_script_run_ctx()
-    if not ctx:
-        return
-
-    def on_custom_msg(msg):
-        if msg["type"] == "RESTORE_SESSION":
-            st.session_state["user_profile"] = msg["user_profile"]
-            st.session_state["email"] = msg["user_profile"]["email"]
-            st.session_state["expires_at"] = msg["expires_at"]
-            st.session_state["logged_in"] = True
-            st.experimental_rerun()
-
-    Runtime.get_instance()._message_mgr.register_custom_message_listener(ctx.session_id, on_custom_msg)
-
-inject_restore_listener()
-
 
 # === Secrets
 try:
@@ -162,12 +116,6 @@ def handle_persona_routing():
 # === Utility: Logout Handler
 def logout():
     for key in ["logged_in", "user_profile", "persona", "page"]:
-        components.html("""
-            <script>
-            localStorage.removeItem("user_profile");
-            localStorage.removeItem("expires_at");
-            </script>
-        """, height=0)
         st.session_state.pop(key, None)
     st.rerun()
 
@@ -183,7 +131,7 @@ if not st.session_state["logged_in"]:
     st.success(f"After run_login st.session_state: {st.session_state}")
 
 # Handle token exchange
-st.success(f"Does Query params exist before oauth_code check?: {params} {st.session_state["oauth_code"]}")
+st.success(f"Does Query params exist before oauth_code check?: {params} {st.session_state}")
 if st.session_state["oauth_code"]:
     code = st.session_state["oauth_code"]
     if st.session_state.get("last_code") == code:
@@ -207,21 +155,11 @@ if st.session_state["oauth_code"]:
             tokens = res.json()
             id_token = tokens.get("id_token", "")
             user_info = jwt.decode(id_token, options={"verify_signature": False})
+
             st.session_state["logged_in"] = True
             st.session_state["email"] = user_info.get("email", "")
             st.session_state["user_profile"] = user_info  # Now it exists!
-            if "user_profile" in st.session_state:
-                import streamlit.components.v1 as components
-                components.html(f"""
-                    <script>
-                    const userProfile = {json.dumps(st.session_state['user_profile'])};
-                    const expiresAt = {st.session_state['user_profile']['exp']};
-
-                    localStorage.setItem("user_profile", JSON.stringify(userProfile));
-                    localStorage.setItem("expires_at", expiresAt);
-                    </script>
-                """, height=0)
-
+            
             try:
                 save_user_profile({
                     "user_id": user_info.get("userId", ""),
