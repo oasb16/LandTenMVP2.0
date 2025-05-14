@@ -24,12 +24,12 @@ if "code" in params:
     st.success(f"OAuth state: {st.session_state['oauth_state']}")
 
     # ✅ Simulate "clearing" by redirecting to same page with clean URL
-    st.markdown(
-        """
-        <meta http-equiv="refresh" content="0; url='/'" />
-        """,
-        unsafe_allow_html=True
-    )
+    # st.markdown(
+    #     """
+    #     <meta http-equiv="refresh" content="0; url='/'" />
+    #     """,
+    #     unsafe_allow_html=True
+    # )
     st.stop()
 
 # === Utility: Persona → Page Router
