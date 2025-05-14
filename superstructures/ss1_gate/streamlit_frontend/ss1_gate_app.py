@@ -23,11 +23,11 @@ def run_login():
     # Step 2: OAuth code/state injection
     if "oauth_code" not in st.session_state and "oauth_state" not in st.session_state:
         # Show login button that redirects to external launcher
-        persona = st.session_state["persona"]
-        state_json = json.dumps({"persona": persona})
-        encoded_state = quote(state_json)
-        st.session_state["oauth_state"] = encoded_state  # Track for later
-        st.success(f"Selected state_json: {persona} {state_json} {encoded_state}")   
+        # persona = st.session_state["persona"]
+        # state_json = json.dumps({"persona": persona})
+        # encoded_state = quote(state_json)
+        # st.session_state["oauth_state"] = encoded_state  # Track for later
+        # st.success(f"Selected state_json: {persona} {state_json} {encoded_state}")   
 
         # login_url = (
         #     f"https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com/oauth2/authorize"
