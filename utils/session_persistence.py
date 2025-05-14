@@ -26,6 +26,7 @@ def try_restore_session():
     """)
 
     if result:
+        st.success("Session restored from local storage.")
         st.session_state["user_profile"] = result["user_profile"]
         st.session_state["email"] = result["user_profile"].get("email")
         st.session_state["expires_at"] = result["expires_at"]
