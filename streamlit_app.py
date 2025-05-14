@@ -2,6 +2,8 @@ import streamlit as st
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
 from superstructures.ss1_gate.persona_extractor import extract_persona
 from datetime import datetime
+import json
+from urllib.parse import quote, unquote
 
 st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")  # MUST be first
 
