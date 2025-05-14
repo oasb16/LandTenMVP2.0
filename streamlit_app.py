@@ -78,6 +78,7 @@ if "oauth_code" in st.session_state and "user_profile" not in st.session_state:
     code = st.session_state["oauth_code"]
     if st.session_state.get("last_code") == code:
         st.warning("⚠️ Duplicate login attempt. Refresh if stuck.")
+        try_restore_session()
     st.session_state["last_code"] = code
 
     basic_auth = base64.b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
@@ -128,7 +129,7 @@ if "oauth_code" in st.session_state and "user_profile" not in st.session_state:
                 </script>
             """, height=0)
 
-            st.rerun()
+            # st.rerun()
         else:
             st.error(f"OAuth token request failed: {res.status_code} {res.text}")
     except Exception as e:
