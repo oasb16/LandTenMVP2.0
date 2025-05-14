@@ -34,23 +34,19 @@ def run_login():
         st.session_state["oauth_state"] = encoded_state  # Track for later
         st.success(f"Selected state_json: {persona} {state_json} {encoded_state}")   
 
-        login_url = (
-            f"{COGNITO_DOMAIN}/oauth2/authorize"
-            f"?identity_provider=Google"
-            f"&redirect_uri={REDIRECT_URI}"
-            f"&response_type=CODE"
-            f"&client_id={CLIENT_ID}"
-            f"&state={encoded_state}"
-            f"&scope=email+openid+phone"
-        )
+        # login_url = (
+        #     f"https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com/oauth2/authorize"
+        #     f"?identity_provider=Google"
+        #     f"&redirect_uri={REDIRECT_URI}"
+        #     f"&response_type=CODE"
+        #     f"&client_id={CLIENT_ID}"
+        #     f"&state={encoded_state}"
+        #     f"&scope=email+openid+phone"
+        # )
 
-        st.markdown(
-            f"""
-            <a href="{login_url}" target="_self" style="text-decoration:none; font-size:16px;">
-                🔐 Login with Google SSO
-            </a>
-            """,
-            unsafe_allow_html=True
+        st.link_button(
+            "🔐 Login with GOOOOGLE SSO",
+            f"https://landten-login-redirect.s3-website-us-east-1.amazonaws.com/login-redirect.html?state={encoded_state}"
         )
         st.stop()
 
