@@ -139,7 +139,7 @@ if st.session_state["oauth_code"]:
             try:
                 save_user_profile({
                     "email": user_info.get("email", ""),
-                    "persona": persona,
+                    "persona": st.session_state['persona'],
                     "login_source": "GoogleSSO",
                     "timestamp": datetime.utcnow().isoformat()
                 })
@@ -150,7 +150,7 @@ if st.session_state["oauth_code"]:
             # st.rerun()
 
         else:
-            st.error(f"OAuth token request failed: {res.text}")
+            st.error(f"OAuth token request failed: {res.status_code} {res.text}")
     except Exception as e:
         st.error(f"Token exchange error: {e}")
 
