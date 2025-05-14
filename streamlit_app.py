@@ -18,10 +18,12 @@ except KeyError as e:
 params = st.query_params
 st.success(f"Query params: {params}")
 if "code" in params:
-    st.session_state["oauth_code"] = params["code"][0]
+    st.session_state["oauth_code"] = params["code"]
     st.session_state["oauth_state"] = params.get("state", [""])[0]
     st.success(f"OAuth code: {st.session_state['oauth_code']}")
     st.success(f"OAuth state: {st.session_state['oauth_state']}")
+    st.session_state["logged_in"] = True
+    st.success("Logged in successfully!")
 
     # ✅ Simulate "clearing" by redirecting to same page with clean URL
     # st.markdown(
@@ -30,7 +32,7 @@ if "code" in params:
     #     """,
     #     unsafe_allow_html=True
     # )
-    st.stop()
+    # st.stop()
 
 # === Utility: Persona → Page Router
 def handle_persona_routing():
@@ -60,22 +62,19 @@ def logout():
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
     st.success("Welcome to LandTen MVP 2.0! Please log in.")
-    if 'oauth_code' in st.session_state:
-        st.success(f"OAuth code: {st.session_state['oauth_code']}")
-    if 'oauth_state' in st.session_state:
-        st.success(f"OAuth state: {st.session_state['oauth_state']}")
 
 # === LOGIN FLOW
 if not st.session_state["logged_in"]:
     st.success(f"Before run_login st.session_state: {st.session_state}")
     run_login()
     st.success(f"After run_login st.session_state: {st.session_state}")
-    if "user_profile" in st.session_state:
-        st.session_state["logged_in"] = True
-        handle_persona_routing()
-    else:
-        st.error("Login failed. Please try again.")
-        # st.stop()
+
+if "user_profile" in st.session_state:
+    st.session_state["logged_in"] = True
+    handle_persona_routing()
+else:
+    st.error("Login failed. Please try again.")
+    # st.stop()
 
 # === Fallback Recovery
 if st.session_state.get("logged_in") and "page" not in st.session_state:
