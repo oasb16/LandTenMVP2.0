@@ -7,6 +7,7 @@ from urllib.parse import quote, unquote
 
 st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")  # MUST be first
 
+
 # === Config Check ===
 try:
     CLIENT_ID = st.secrets["COGNITO_CLIENT_ID"]
