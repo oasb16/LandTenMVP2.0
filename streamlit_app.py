@@ -19,9 +19,22 @@ params = st.query_params
 st.success(f"Query params: {params}")
 if "code" in params:
     st.session_state["oauth_code"] = params["code"]
-    st.session_state["oauth_state"] = params.get("state", [""])[0]
-    st.success(f"OAuth code: {st.session_state['oauth_code']}")
-    st.success(f"OAuth state: {st.session_state['oauth_state']}")
+    state_raw = params.get("state", [""])[0]
+    st.session_state["oauth_state"] = state_raw
+
+    try:
+        decoded_state = json.loads(unquote(state_raw))
+        persona = decoded_state.get("persona", None)
+        if persona:
+            st.session_state["persona"] = persona
+            st.success(f"✅ Persona restored from state: {persona}")
+        else:
+            st.warning("⚠️ Persona missing in state. Defaulting to 'tenant'.")
+            st.session_state["persona"] = "tenant"
+    except Exception as e:
+        st.error(f"❌ Failed to decode state param: {e}")
+        st.session_state["persona"] = "tenant"
+
     st.session_state["logged_in"] = True
     st.success("Logged in successfully!")
 
