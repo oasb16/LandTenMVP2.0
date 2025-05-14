@@ -31,8 +31,6 @@ if "code" in params:
     )
     st.stop()
 
-
-
 # === Utility: Persona → Page Router
 def handle_persona_routing():
 
@@ -61,7 +59,9 @@ def logout():
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
     st.success("Welcome to LandTen MVP 2.0! Please log in.")
-
+    st.success(f"OAuth code: {st.session_state['oauth_code']}")
+    st.success(f"OAuth state: {st.session_state['oauth_state']}")
+    
 # === LOGIN FLOW
 if not st.session_state["logged_in"]:
     st.success(f"Before run_login st.session_state: {st.session_state}")
