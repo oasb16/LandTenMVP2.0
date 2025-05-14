@@ -57,6 +57,9 @@ if not st.session_state["logged_in"]:
 # === Fallback Recovery
 if st.session_state.get("logged_in") and "page" not in st.session_state:
     handle_persona_routing()
+else:
+    st.success(f"Skipping handle_persona_routing(). Page already set in session state: {st.session_state['page']}")
+    st.success(f"Session state: {st.session_state}")
 
 # === Page Routing
 page = st.session_state.get("page")
