@@ -5,8 +5,6 @@ import threading
 import subprocess
 import json
 
-st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")
-
 from streamlit.components.v1 import html
 
 # -- SS1: Login (Google SSO via Cognito)
