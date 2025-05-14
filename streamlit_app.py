@@ -19,6 +19,8 @@ params = st.query_params
 if "code" in params:
     st.session_state["oauth_code"] = params["code"][0]
     st.session_state["oauth_state"] = params.get("state", [""])[0]
+    st.success(f"OAuth code: {st.session_state['oauth_code']}")
+    st.success(f"OAuth state: {st.session_state['oauth_state']}")
 
     # ✅ Simulate "clearing" by redirecting to same page with clean URL
     st.markdown(
