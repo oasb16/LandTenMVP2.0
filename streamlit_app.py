@@ -138,7 +138,8 @@ if st.session_state["oauth_code"]:
             
             try:
                 save_user_profile({
-                    "user_id": user_info.get("sub", ""),
+                    "user_id": user_info.get("userId", ""),
+                    "name": user_info.get("username", ""),
                     "email": user_info.get("email", ""),
                     "persona": st.session_state['persona'],
                     "login_source": "GoogleSSO",
