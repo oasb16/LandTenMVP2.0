@@ -31,11 +31,14 @@ if "logged_in" not in st.session_state:
     st.success(f"st.session_state : {st.session_state}")
     st.success(f"st.session_state['logged_in'] : {st.session_state.get('logged_in')}")
     st.success(f"st.session_state['user_profile'] : {st.session_state.get('user_profile')}")
+    st.success(f"st.session_state['oauth_code'] : {st.session_state.get('oauth_code')}")
+    st.success(f"st.session_state['oauth_code'] : {st.session_state.get('oauth_code')}")    
 
 # === Query param extraction
 params = st.query_params
 if "code" in params:
     st.session_state["oauth_code"] = params["code"]
+    st.success(f"params[] : {params["code"]}")    
     st.session_state['persona'] = st.selectbox("Choose your role", ["tenant", "landlord", "contractor"])
     st.success(f"Selected role: {st.session_state['persona']}")
     st.session_state["logged_in"] = True
