@@ -59,9 +59,9 @@ def logout():
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
     st.success("Welcome to LandTen MVP 2.0! Please log in.")
-    if st.session_state['oauth_code']:
+    if 'oauth_code' in st.session_state:
         st.success(f"OAuth code: {st.session_state['oauth_code']}")
-    if st.session_state['oauth_state']:
+    if 'oauth_state' in st.session_state:
         st.success(f"OAuth state: {st.session_state['oauth_state']}")
 
 # === LOGIN FLOW
