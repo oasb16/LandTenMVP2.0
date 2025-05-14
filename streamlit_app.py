@@ -86,7 +86,7 @@ def handle_persona_routing():
     with st.expander("### session_state", expanded=False):
         st.success(f"st.session_state: {st.session_state}")
     with st.expander("### user_profile", expanded=False):
-        if st.session_state['user_profile']:
+        if 'user_profile' in st.session_state:
             st.success(f"st.session_state['user_profile']: {st.session_state['user_profile']}")
             st.success(f"Email: {st.session_state['user_profile']['email']}")
             st.success(f"Cognito Username: {st.session_state['user_profile']['cognito:username']}")
