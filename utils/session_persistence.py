@@ -31,6 +31,8 @@ def try_restore_session():
         st.session_state["expires_at"] = result["expires_at"]
         st.session_state["logged_in"] = True
         st.session_state["persona"] = result["user_profile"].get("persona", "tenant")
+    
+    return result
 
 
 def store_session(user_profile: dict):

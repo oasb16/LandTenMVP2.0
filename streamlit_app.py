@@ -26,7 +26,8 @@ from utils.session_persistence import try_restore_session, store_session
 
 # Attempt to restore session before anything else
 if "logged_in" not in st.session_state:
-    try_restore_session()
+    result = try_restore_session()
+    if result: st.success(f"Session restored from local storage.{result}")
 
 # === Query param extraction
 params = st.query_params
