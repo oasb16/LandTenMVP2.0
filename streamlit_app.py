@@ -2,10 +2,26 @@ import streamlit as st
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
 from superstructures.ss1_gate.persona_extractor import extract_persona
 from datetime import datetime
+import requests
+import base64
 import json
+from datetime import datetime
+import jwt
 from urllib.parse import quote, unquote
+from superstructures.ss1_gate.shared.dynamodb import save_user_profile
 
 st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")  # MUST be first
+
+# === Secrets
+try:
+    COGNITO_DOMAIN = st.secrets["COGNITO_DOMAIN"]
+    REDIRECT_URI = st.secrets["REDIRECT_URI"]
+    CLIENT_ID = st.secrets["COGNITO_CLIENT_ID"]
+    CLIENT_SECRET = st.secrets["COGNITO_CLIENT_SECRET"]
+    TOKEN_ENDPOINT = f"{COGNITO_DOMAIN}/oauth2/token"
+except KeyError as e:
+    st.error(f"Missing required secret: {e.args[0]}")
+    st.stop()
 
 
 # === Config Check ===
@@ -90,6 +106,54 @@ if not st.session_state["logged_in"]:
     # st.success(f"Before run_login st.session_state: {st.session_state}")
     run_login()
     st.success(f"After run_login st.session_state: {st.session_state}")
+
+# Handle token exchange
+if st.session_state["oauth_code"]:
+    code = st.session_state["oauth_code"]
+    if st.session_state.get("last_code") == code:
+        st.warning("⚠️ Duplicate login attempt. Refresh if stuck.")
+    st.session_state["last_code"] = code
+
+    basic_auth = base64.b64encode(f"{CLIENT_ID}:{CLIENT_SECRET}".encode()).decode()
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": f"Basic {basic_auth}"
+    }
+    payload = {
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": REDIRECT_URI
+    }
+
+    try:
+        res = requests.post(TOKEN_ENDPOINT, data=payload, headers=headers)
+        if res.status_code == 200:
+            tokens = res.json()
+            id_token = tokens.get("id_token", "")
+            user_info = jwt.decode(id_token, options={"verify_signature": False})
+
+            st.session_state["logged_in"] = True
+            st.session_state["email"] = user_info.get("email", "")
+            st.session_state["user_profile"] = user_info  # Now it exists!
+            
+            try:
+                save_user_profile({
+                    "email": user_info.get("email", ""),
+                    "persona": persona,
+                    "login_source": "GoogleSSO",
+                    "timestamp": datetime.utcnow().isoformat()
+                })
+                st.success("User profile written to DB successfully.")
+            except Exception as db_error:
+                st.error(f"DB write failed: {db_error}")
+
+            # st.rerun()
+
+        else:
+            st.error(f"OAuth token request failed: {res.text}")
+    except Exception as e:
+        st.error(f"Token exchange error: {e}")
+
 
 if "user_profile" in st.session_state:
     st.session_state["logged_in"] = True
