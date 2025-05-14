@@ -192,11 +192,13 @@ def run_chat_core():
         user_input = st.text_input("Type a message...")
         submitted = st.form_submit_button("Send")
 
+
     if submitted and user_input.strip():
+        role = st.session_state['user_profile']['email'] if st.session_state['user_profile'].get('email') else persona
         user_msg = {
             "id": str(uuid4()),
             "timestamp": datetime.utcnow().isoformat(),
-            "role": persona,
+            "role": role,
             "message": user_input.strip(),
             "thread_id": thread_id,
             "email": st.session_state.get("email", "unknown")
