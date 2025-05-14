@@ -2,7 +2,8 @@ import streamlit as st
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
 from superstructures.ss1_gate.persona_extractor import extract_persona
 from datetime import datetime
-st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")  # ✅ MUST be first
+
+st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")  # MUST be first
 
 # === Config Check ===
 try:
@@ -13,15 +14,21 @@ except KeyError as e:
     st.error(f"Missing required secret: {e.args[0]}")
     st.stop()
 
-
+# ✅ Proper query param extraction using new API (READ ONLY)
 params = st.query_params
 if "code" in params:
     st.session_state["oauth_code"] = params["code"][0]
-    if "state" in params:
-        st.session_state["oauth_state"] = params["state"][0]
+    st.session_state["oauth_state"] = params.get("state", [""])[0]
 
-    st.experimental_set_query_params()  # ✅ required for mutation
-    st.rerun()
+    # ✅ Simulate "clearing" by redirecting to same page with clean URL
+    st.markdown(
+        """
+        <meta http-equiv="refresh" content="0; url='/'" />
+        """,
+        unsafe_allow_html=True
+    )
+    st.stop()
+
 
 
 # === Utility: Persona → Page Router
