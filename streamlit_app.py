@@ -16,6 +16,7 @@ except KeyError as e:
 
 # ✅ Proper query param extraction using new API (READ ONLY)
 params = st.query_params
+st.success(f"Query params: {params}")
 if "code" in params:
     st.session_state["oauth_code"] = params["code"][0]
     st.session_state["oauth_state"] = params.get("state", [""])[0]
@@ -63,8 +64,6 @@ if "logged_in" not in st.session_state:
         st.success(f"OAuth code: {st.session_state['oauth_code']}")
     if 'oauth_state' in st.session_state:
         st.success(f"OAuth state: {st.session_state['oauth_state']}")
-    else:
-        st.success(f"session_state: {st.session_state}")
 
 # === LOGIN FLOW
 if not st.session_state["logged_in"]:
