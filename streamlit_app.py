@@ -131,7 +131,7 @@ if not st.session_state["logged_in"]:
     st.success(f"After run_login st.session_state: {st.session_state}")
 
 # Handle token exchange
-st.success(f"Does Query params exist before oauth_code check?: {params}")
+st.success(f"Does Query params exist before oauth_code check?: {params} {st.session_state["oauth_code"]}")
 if st.session_state["oauth_code"]:
     code = st.session_state["oauth_code"]
     if st.session_state.get("last_code") == code:
