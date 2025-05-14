@@ -38,6 +38,11 @@ if "code" in params:
     #     st.error(f"❌ Failed to decode state param: {e}")
     #     st.session_state["persona"] = "tenant"
 
+    # Step 1: Role Picker
+    if "persona" not in st.session_state:
+        st.session_state["persona"] = st.selectbox("Choose your role", ["tenant", "landlord", "contractor"])
+        st.success(f"Selected role: {st.session_state['persona']}") 
+
     st.session_state["logged_in"] = True
     st.success("Logged in successfully!")
 

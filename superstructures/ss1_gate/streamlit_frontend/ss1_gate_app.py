@@ -20,11 +20,6 @@ except KeyError as e:
 
 # === Run Login
 def run_login():
-    # Step 1: Role Picker
-    if "persona" not in st.session_state:
-        st.session_state["persona"] = st.selectbox("Choose your role", ["tenant", "landlord", "contractor"])
-        st.success(f"Selected role: {st.session_state['persona']}") 
-
     # Step 2: OAuth code/state injection
     if "oauth_code" not in st.session_state and "oauth_state" not in st.session_state:
         # Show login button that redirects to external launcher
