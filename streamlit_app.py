@@ -62,6 +62,7 @@ def handle_persona_routing():
     st.success(f"Decoded persona: {st.session_state['persona']}")
     st.success(f"Page mapping: {page_map}")
     st.success(f"Page: {page}")
+    st.success(f"st.session_state: {st.session_state}")
     if page:
         st.session_state["page"] = page
         # st.rerun()
