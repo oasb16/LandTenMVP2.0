@@ -2,7 +2,6 @@ import streamlit as st
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
 from superstructures.ss1_gate.persona_extractor import extract_persona
 from datetime import datetime
-import logging
 
 # === Config Check ===
 try:
@@ -12,6 +11,15 @@ try:
 except KeyError as e:
     st.error(f"Missing required secret: {e.args[0]}")
     st.stop()
+
+# ✅ Step 1: Capture Cognito OAuth redirect values
+if "code" in st.query_params:
+    st.session_state["oauth_code"] = st.query_params["code"][0]
+    if "state" in st.query_params:
+        st.session_state["oauth_state"] = st.query_params["state"][0]
+    st.experimental_set_query_params()  # Clear params
+    st.rerun()
+
 
 # === Utility: Persona → Page Router
 def handle_persona_routing():
