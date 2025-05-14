@@ -2,6 +2,7 @@ import streamlit as st
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
 from superstructures.ss1_gate.persona_extractor import extract_persona
 from datetime import datetime
+st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")  # ✅ MUST be first
 
 # === Config Check ===
 try:
@@ -12,7 +13,6 @@ except KeyError as e:
     st.error(f"Missing required secret: {e.args[0]}")
     st.stop()
 
-st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")  # ✅ MUST be first
 
 params = st.query_params
 if "code" in params:
