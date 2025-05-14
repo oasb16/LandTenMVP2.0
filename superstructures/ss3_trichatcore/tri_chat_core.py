@@ -194,7 +194,7 @@ def run_chat_core():
 
 
     if submitted and user_input.strip():
-        role = st.session_state['user_profile']['email'] if st.session_state['user_profile'].get('email') else persona
+        role = st.session_state['user_profile']['email'] if 'user_profile' in st.session_state and st.session_state['user_profile'].get('email') else persona
         user_msg = {
             "id": str(uuid4()),
             "timestamp": datetime.utcnow().isoformat(),
