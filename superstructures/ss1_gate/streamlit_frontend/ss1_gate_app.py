@@ -102,7 +102,7 @@ def run_login():
                 except Exception as db_error:
                     st.error(f"DB write failed: {db_error}")
 
-                st.rerun()
+                # st.rerun()
 
             else:
                 st.error(f"OAuth token request failed: {res.text}")

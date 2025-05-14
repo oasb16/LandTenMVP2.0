@@ -47,7 +47,7 @@ def handle_persona_routing():
     st.success(f"Page: {page}")
     if page:
         st.session_state["page"] = page
-        st.rerun()
+        # st.rerun()
     else:
         st.error("Unknown persona. Please contact support.")
 
