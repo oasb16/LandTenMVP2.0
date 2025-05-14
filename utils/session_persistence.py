@@ -27,10 +27,8 @@ def try_restore_session():
         """)
     except Exception as e:
         st.error(f"⚠️ Error restoring session: {e}")
-        return None
     if result is None:
         st.error("⚠️ No session found in local storage.")
-        return None
 
     if result:
         st.success("Session restored from local storage.")
@@ -40,8 +38,6 @@ def try_restore_session():
         st.session_state["logged_in"] = True
         st.session_state["persona"] = result["user_profile"].get("persona", "tenant")
     
-    return result
-
 
 def store_session(user_profile: dict):
     exp = user_profile.get("exp")
