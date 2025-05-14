@@ -88,11 +88,10 @@ def handle_persona_routing():
     with st.expander("### user_profile", expanded=False):
         st.success(f"st.session_state: {st.session_state["user_profile"]}")
         st.success(f"st.session_state: {st.session_state["user_profile"]['email']}")
-        st.success(f"st.session_state: {st.session_state["user_profile"]['name']}")
+        st.success(f"st.session_state: {st.session_state["user_profile"]['cognito:username']}")
         st.success(f"st.session_state: {st.session_state["user_profile"]['persona']}")
         st.success(f"st.session_state: {st.session_state["user_profile"]['login_source']}")
         st.success(f"st.session_state: {st.session_state["user_profile"]['timestamp']}")
-        st.success(f"st.session_state: {st.session_state["user_profile"]['user_id']}")
         st.success(f"st.session_state: {st.session_state["user_profile"]['userId']}")
         st.success(f"st.session_state: {st.session_state["user_profile"]['cognito:username']}")
     if page:
