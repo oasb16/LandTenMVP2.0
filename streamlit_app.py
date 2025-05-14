@@ -21,6 +21,7 @@ except KeyError as e:
 params = st.query_params
 st.success(f"Query params: {params}")
 if "code" in params:
+    st.success(f"params : {params}")
     st.session_state["oauth_code"] = params["code"]
     state_raw = params.get("state", [""])[0]
     st.session_state["oauth_state"] = state_raw
