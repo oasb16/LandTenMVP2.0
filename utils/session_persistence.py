@@ -5,25 +5,32 @@ import streamlit.components.v1 as components
 from streamlit_javascript import st_javascript
 
 def try_restore_session():
-    result = st_javascript("""
-        async () => {
-            const profile = localStorage.getItem("user_profile");
-            const expires = localStorage.getItem("expires_at");
-            if (!profile || !expires) return null;
+    try:        
+        result = st_javascript("""
+            async () => {
+                const profile = localStorage.getItem("user_profile");
+                const expires = localStorage.getItem("expires_at");
+                if (!profile || !expires) return null;
 
-            const now = Math.floor(Date.now() / 1000);
-            if (parseInt(expires) < now) {
-                localStorage.removeItem("user_profile");
-                localStorage.removeItem("expires_at");
-                return null;
+                const now = Math.floor(Date.now() / 1000);
+                if (parseInt(expires) < now) {
+                    localStorage.removeItem("user_profile");
+                    localStorage.removeItem("expires_at");
+                    return null;
+                }
+
+                return {
+                    user_profile: JSON.parse(profile),
+                    expires_at: parseInt(expires)
+                };
             }
-
-            return {
-                user_profile: JSON.parse(profile),
-                expires_at: parseInt(expires)
-            };
-        }
-    """)
+        """)
+    except Exception as e:
+        st.error(f"⚠️ Error restoring session: {e}")
+        return None
+    if result is None:
+        st.error("⚠️ No session found in local storage.")
+        return None
 
     if result:
         st.success("Session restored from local storage.")
