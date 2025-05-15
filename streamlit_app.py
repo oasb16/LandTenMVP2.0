@@ -59,16 +59,7 @@ def handle_persona_routing():
 # === Logout
 def logout():
     import streamlit.components.v1 as components
-    for key in ["logged_in", "user_profile", "persona", "page"]:
-        st.session_state.pop(key, None)
-    components.html("""
-        <script>
-        localStorage.removeItem("user_profile");
-        localStorage.removeItem("expires_at");
-        window.location.href = "https://landtenmvp20.streamlit.app/";
-        </script>
-    """, height=0)
-    st.rerun()
+    components.html('<script>window.location.href = "https://landtenmvp20.streamlit.app/";</script>', height=0)
 
 # === Init
 if "logged_in" not in st.session_state:
