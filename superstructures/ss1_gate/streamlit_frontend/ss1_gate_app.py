@@ -72,11 +72,16 @@ def run_login():
                     transform: translateY(-2px);
                 }
 
+                .a {
+                    background-color: #095bcc;
+                    transform: translateY(-2px);
+                }
+
             </style>
 
             <div class="login-wrapper">
                 <div class="login-box">
-                    <div class="login-title">🔐 Welcome to LandTen 2.0</div>
+                    <div class="login-title">Welcome to LandTen 2.0</div>
                     <div class="role-note">
                         Please log in using your Google account to access your dashboard.<br>
                         This portal supports <b>Tenants</b>, <b>Contractors</b>, and <b>Landlords</b>.
