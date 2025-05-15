@@ -26,74 +26,65 @@ def run_login():
         st.markdown(
             """
             <style>
-                .login-wrapper {
+                body {
+                    background: #f9fbfc;
+                    font-family: 'Inter', sans-serif;
+                }
+
+                .login-container {
                     display: flex;
-                    height: 80vh;
                     justify-content: center;
                     align-items: center;
-                    background: linear-gradient(135deg, #f2f8ff, #e0ecf9);
-                    font-family: 'Segoe UI', sans-serif;
+                    height: 85vh;
                 }
 
                 .login-box {
                     text-align: center;
-                    padding: 40px;
-                    border-radius: 12px;
-                    background: white;
-                    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
                 }
 
                 .login-title {
-                    font-size: 28px;
-                    margin-bottom: 20px;
-                    color: #333;
+                    font-size: 2.2rem;
+                    font-weight: 600;
+                    margin-bottom: 0.5rem;
+                    color: #222;
                 }
 
-                .role-note {
-                    font-size: 16px;
-                    margin-bottom: 30px;
-                    color: #555;
+                .login-sub {
+                    font-size: 1rem;
+                    color: #666;
+                    margin-bottom: 2.5rem;
                 }
 
                 .login-button {
-                    font-size: 20px;
-                    padding: 18px 40px;
-                    background-color: #0b72e7;
-                    color: white;
+                    background-color: #111;
+                    color: #fff;
+                    padding: 1rem 2.5rem;
+                    border-radius: 999px;
+                    font-size: 1rem;
                     text-decoration: none;
-                    border-radius: 10px;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                    transition: background-color 0.3s ease, transform 0.2s ease;
-                    display: inline-block;
+                    font-weight: 500;
+                    transition: background 0.3s ease;
+                    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
                 }
 
                 .login-button:hover {
-                    background-color: #095bb5;
-                    transform: translateY(-2px);
+                    background-color: #000;
                 }
-
-                a {
-                    background-color: #095bcc;
-                    transform: translateY(-2px);
-                }
-
             </style>
 
-            <div class="login-wrapper">
+            <div class="login-container">
                 <div class="login-box">
-                    <div class="login-title">Welcome to LandTen 2.0</div>
-                    <div class="role-note">
-                        Please log in using your Google account to access your dashboard.<br>
-                        This portal supports <b>Tenants</b>, <b>Contractors</b>, and <b>Landlords</b>.
-                    </div>
+                    <div class="login-title">LandTen 2.0</div>
+                    <div class="login-sub">One login for Landlords, Tenants & Contractors</div>
                     <a class="login-button" href="http://landten-login-redirect.s3-website-us-east-1.amazonaws.com/login-redirect.html">
-                        Login with Google SSO
+                        🔐 Login with Google
                     </a>
                 </div>
             </div>
             """,
             unsafe_allow_html=True
         )
+
 
 
         st.stop()
