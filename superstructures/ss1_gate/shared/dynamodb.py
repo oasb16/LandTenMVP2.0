@@ -5,16 +5,21 @@ import streamlit as st
 
 # === AWS Credentials from secrets.toml
 try:
-    os.environ["AWS_ACCESS_KEY"] = st.secrets["AWS_ACCESS_KEY"]
-    os.environ["AWS_SECRET_ACCESS_KEY"] = st.secrets["AWS_SECRET_ACCESS_KEY"]
-    os.environ["AWS_REGION"] = st.secrets.get("AWS_REGION", "us-east-1")
+    aws_access_key = st.secrets["AWS_ACCESS_KEY"]
+    aws_secret_key = st.secrets["AWS_SECRET_ACCESS_KEY"]
+    aws_region     = st.secrets.get("AWS_REGION", "us-east-1")
 except KeyError as e:
     st.error(f"Missing AWS credential in secrets: {e}")
     st.stop()
 
 # === Initialize DynamoDB Resource
 try:
-    dynamodb = boto3.resource("dynamodb")
+    dynamodb = boto3.resource(
+        "dynamodb",
+        region_name=aws_region,
+        aws_access_key_id=aws_access_key,
+        aws_secret_access_key=aws_secret_key
+    )
     table = dynamodb.Table("landten_users")
 except Exception as e:
     st.error(f"Failed to initialize DynamoDB: {e}")
