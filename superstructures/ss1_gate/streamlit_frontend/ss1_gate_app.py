@@ -72,7 +72,7 @@ def run_login():
                     transform: translateY(-2px);
                 }
 
-                .a {
+                a {
                     background-color: #095bcc;
                     transform: translateY(-2px);
                 }
