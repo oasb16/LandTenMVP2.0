@@ -84,7 +84,7 @@ def run_tenant_dashboard():
 
     # -- Sidebar Dashboard
     with st.sidebar:
-        st.button(f"👤 **{st.session_state.get('email', 'Unknown')}**")
+        st.header(f"👤 **{st.session_state.get('email', 'Unknown')}**")
         if st.button("Logout"):
             try:
                 st.session_state.clear()
