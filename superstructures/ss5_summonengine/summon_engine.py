@@ -320,31 +320,45 @@ def get_thread_from_s3(thread_id):
         return []
 
 def run_summon_engine(chat_log, user_input, persona, thread_id):
+    """Refactored to use symbolic state transitions."""
     if not st.session_state.get("agent_active", True):
         return
+
+    # Define symbolic states
+    states = {
+        "idle": "Agent is inactive",
+        "engaged": "Agent is processing user input",
+        "media_processing": "Agent is analyzing media",
+        "completed": "Agent has completed processing"
+    }
+
+    # Initialize state
+    current_state = "idle"
 
     # Check if @agent is mentioned in the user input
     engage_agent = "@agent" in user_input
 
     if engage_agent:
         st.info("🤖 Agent engaged")
+        current_state = "engaged"
 
     # Validate chat_log to ensure all messages have the 'role' key
     for message in chat_log:
         message.setdefault("role", "Unknown")
         message.setdefault("message", "[No content available (Validated)]")
 
-    # 1. GPT on user input (only if @agent is mentioned)
+    # Process user input if agent is engaged
     reply = ""
-    if engage_agent:
+    if current_state == "engaged":
         reply = call_gpt_agent(chat_log)
 
-    # 2. Media Checks
+    # Process media if available
     media_summary = ""
     if os.path.exists(MEDIA_PATHS["audio"]):
         try:
             transcription = call_whisper(MEDIA_PATHS["audio"])
             media_summary += f"\n📣 Whisper Transcript: {transcription}"
+            current_state = "media_processing"
         except Exception as e:
             media_summary += f"\n[Whisper error: {e}]"
 
@@ -352,16 +366,17 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
         try:
             image_desc = call_gpt_vision(MEDIA_PATHS["image"])
             media_summary += f"\n🖼️ Image Summary: {image_desc}"
+            current_state = "media_processing"
         except Exception as e:
             media_summary += f"\n[Vision error: {e}]"
 
-    # 3. Append to chat
+    # Combine replies and update state
     combined_reply = reply + media_summary
-    if engage_agent:
+    if current_state in ["engaged", "media_processing"]:
         agent_msg = {
             "id": str(uuid4()),
             "timestamp": datetime.utcnow().isoformat(),
-            "role": "agent",  # Ensure role is set
+            "role": "agent",
             "message": combined_reply,
             "thread_id": thread_id,
             "email": st.session_state.get("email", "unknown")
@@ -374,14 +389,15 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
         # Save message to DynamoDB
         save_message_to_dynamodb(thread_id, agent_msg)
 
-        # 4. Trigger Incident Detection
+        # Trigger Incident Detection
         try:
             save_incident_from_media(chat_log, persona, thread_id)
         except Exception as e:
             st.warning(f"Incident detection failed: {e}")
 
-        # 5. Upload thread to S3
+        # Upload thread to S3
         upload_thread_to_s3(thread_id, chat_log)
+        current_state = "completed"
 
         st.success("💡 Agent updated with media context.")
     else:
@@ -394,16 +410,11 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
             "thread_id": thread_id,
             "email": st.session_state.get("email", "unknown")
         }
-        # chat_log.append(user_msg)
-
-        # with open(LOG_PATH, "w") as f:
-        #     json.dump(chat_log, f, indent=2)
-
-        # Save message to DynamoDB
         save_message_to_dynamodb(thread_id, user_msg)
-
-        # Upload thread to S3
         upload_thread_to_s3(thread_id, chat_log)
+
+    # Log final state
+    logging.info(f"Final state: {states[current_state]}")
 
 def update_thread_timestamp_in_dynamodb(thread_id):
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])

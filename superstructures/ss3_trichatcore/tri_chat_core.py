@@ -155,8 +155,6 @@ def run_chat_core():
             st.session_state.show_capture = False
             st.session_state.last_action = "close_panels"
 
-
-
     if st.session_state.show_upload:
         with st.expander("📎 Upload Media", expanded=True):
             media_msg = run_media_interface(mode="upload")
@@ -192,7 +190,6 @@ def run_chat_core():
         user_input = st.text_input("Type a message...")
         submitted = st.form_submit_button("Send")
 
-
     if submitted and user_input.strip():
         role = st.session_state['user_profile']['email'] if 'user_profile' in st.session_state and st.session_state['user_profile'].get('email') else persona
         user_msg = {
@@ -208,7 +205,6 @@ def run_chat_core():
             try:
                 append_chat_log(thread_id, user_msg)
                 save_message_to_dynamodb(thread_id, user_msg)
-                st.success(f"tri_chat_core's Engaged append_chat_log amd save_message_to_dynamodb from if submitted and user_input.strip() : {media_msg}")
             except Exception as e:
                 logging.error(f"Failed to save user message to DynamoDB: {e}")
                 logging.error(traceback.format_exc())
@@ -238,6 +234,20 @@ def run_chat_core():
             if agent_msg not in st.session_state.chat_log:
                 st.session_state.chat_log.append(agent_msg)
                 append_chat_log(thread_id, agent_msg)
+
+    # Inject agent proposals dynamically
+    if st.button("📅 Inject Proposal"):
+        proposal = {
+            "id": str(uuid4()),
+            "timestamp": datetime.utcnow().isoformat(),
+            "role": "agent",
+            "message": "Would you like to schedule a meeting? Here are some available slots: [10:00 AM, 2:00 PM, 4:00 PM].",
+            "thread_id": thread_id,
+            "email": st.session_state.get("email", "unknown")
+        }
+        st.session_state.chat_log.append(proposal)
+        append_chat_log(thread_id, proposal)
+        upload_thread_to_s3(thread_id, st.session_state.chat_log)
 
     render_chat_log(st.session_state.chat_log)
 
