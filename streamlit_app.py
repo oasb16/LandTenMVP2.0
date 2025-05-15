@@ -64,7 +64,6 @@ if "logged_in" not in st.session_state:
 if not st.session_state["logged_in"]:
     run_login()
 
-
 # === Handle token
 if "oauth_code" in st.session_state and "user_profile" not in st.session_state:
     code = st.session_state["oauth_code"]
