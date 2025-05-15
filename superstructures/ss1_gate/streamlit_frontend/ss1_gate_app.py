@@ -28,8 +28,8 @@ def run_login():
             <div style="display: flex; height: 70vh; justify-content: center; align-items: center;">
                 <a href="http://landten-login-redirect.s3-website-us-east-1.amazonaws.com/login-redirect.html"
                 style="
-                    font-size: 20px;
-                    padding: 12px 24px;
+                    font-size: 30px;
+                    padding: 42px 64px;
                     background-color: #4CAF50;
                     color: white;
                     text-decoration: none;
