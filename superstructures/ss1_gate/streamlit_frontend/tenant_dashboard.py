@@ -30,7 +30,6 @@ REDIRECT_URI = "https://landtenmvp20.streamlit.app/"
 WEBSOCKET_SERVER_URL = "ws://localhost:8765"
 
 # -- Brand Overlay
-st.set_page_config(page_title="LandTen", page_icon="🏙️", layout="wide")
 html("<style>body { font-family: 'SF Pro Display', sans-serif; }</style>")
 
 # -- Start WebSocket (once per session)
