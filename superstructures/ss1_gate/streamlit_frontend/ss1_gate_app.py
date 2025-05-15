@@ -21,6 +21,7 @@ except KeyError as e:
 # === Run Login
 def run_login():
     # Step 2: OAuth code/state injection
+    st.succes(f"st.session_state: {st.session_state}")
     if "oauth_code" not in st.session_state and "oauth_state" not in st.session_state:
         # Show login button that redirects to external launcher
         # persona = st.session_state["persona"]
