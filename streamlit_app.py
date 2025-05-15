@@ -33,11 +33,11 @@ with st.sidebar:
     params = st.query_params
     if "code" in params:
         st.session_state["oauth_code"] = params["code"]
-        st.success(f"params[] : {params["code"]}")    
+        st.popover(f"params[] : {params["code"]}")    
         st.session_state['persona'] = st.selectbox("Choose your role", ["tenant", "landlord", "contractor"])
-        st.success(f"Selected role: {st.session_state['persona']}")
+        st.popover(f"Selected role: {st.session_state['persona']}")
         st.session_state["logged_in"] = True
-        st.success("Logged in successfully!")
+        st.popover("Logged in successfully!")
 
 # === Routing helper
 def handle_persona_routing():
