@@ -18,9 +18,15 @@ from superstructures.ss2_pulse.ss2_pulse_app import run_router
 from superstructures.ss3_trichatcore.tri_chat_core import run_chat_core, prune_empty_threads
 from superstructures.ss5_summonengine.summon_engine import (
     get_all_threads_from_dynamodb,
-    delete_all_threads_from_dynamodb,
-    upload_thread_to_s3,
     save_message_to_dynamodb
+)
+
+# Import the new shared service module
+from superstructures.ss1_gate.shared.thread_job_service import (
+    generate_dummy_threads,
+    fetch_and_display_threads,
+    delete_all_threads,
+    prune_empty_threads
 )
 
 # -- Config
@@ -45,39 +51,6 @@ def run_landlord_dashboard():
                     if notification.get("type") == "notification":
                         st.toast(notification.get("message"))
         threading.Thread(target=lambda: asyncio.run(listen()), daemon=True).start()
-
-    def generate_dummy_threads():
-        dummy_threads = []
-        for i in range(5):
-            thread_id = str(uuid4())
-            dummy_data = {
-                "thread_id": thread_id,
-                "chat_log": [
-                    {
-                        "id": str(uuid4()), "timestamp": datetime.utcnow().isoformat(),
-                        "role": "landlord", "message": f"Landlord note {i+1}", "thread_id": thread_id, "email": "dummy@example.com"
-                    },
-                    {
-                        "id": str(uuid4()), "timestamp": datetime.utcnow().isoformat(),
-                        "role": "agent", "message": f"Agent processed item {i+1}", "thread_id": thread_id, "email": "dummy@example.com"
-                    }
-                ]
-            }
-            try:
-                for msg in dummy_data["chat_log"]:
-                    save_message_to_dynamodb(thread_id, msg)
-                upload_thread_to_s3(thread_id, dummy_data["chat_log"])
-                dummy_threads.append(thread_id)
-            except Exception as e:
-                logging.error(f"[Thread Error] {thread_id}: {e}")
-                st.error(f"Error with thread {thread_id}: {e}")
-        return dummy_threads
-
-    def fetch_and_display_threads():
-        threads = get_all_threads_from_dynamodb()
-        unique = {t['thread_id']: t for t in threads if 'thread_id' in t}
-        sorted_threads = sorted(unique.values(), key=lambda x: x.get('timestamp', ''), reverse=True)
-        return ["Select a Thread"] + [t['thread_id'] for t in sorted_threads]
 
     # -- Sidebar
     with st.sidebar:
@@ -105,7 +78,7 @@ def run_landlord_dashboard():
 
         with st.expander("🛠️ Thread Tools", expanded=False):
             if st.button("🧹 Delete All Threads"):
-                delete_all_threads_from_dynamodb()
+                delete_all_threads()
                 st.session_state['selected_thread'] = None
                 st.success("Threads cleared.")
                 st.rerun()
