@@ -149,8 +149,8 @@ if st.session_state.get("logged_in") and "page" not in st.session_state:
 
 page = st.session_state.get("page")
 if not page:
+    st.success(f"st.session_state: {st.session_state}")
     st.error("No page specified. Please log in again.")
-    st.stop()
 
 # === Load Dashboard
 if page == "tenant_dashboard":
