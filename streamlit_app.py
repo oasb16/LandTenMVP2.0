@@ -57,15 +57,14 @@ def store_session(profile):
     import streamlit.components.v1 as components
     components.html(f"<script>{js}</script>", height=0)
 
-# === Restore session
+# === Attempt restore
 if "logged_in" not in st.session_state:
     try_restore_session()
 
-# === If query code exists AND session not restored, then try token exchange
-if "code" in st.query_params and "user_profile" not in st.session_state:
-    st.session_state["oauth_code"] = st.query_params["code"]
-    # Do NOT run token exchange immediately — wait for store_session later
-
+# === OAuth Code Handling
+params = st.query_params
+if "code" in params:
+    st.session_state["oauth_code"] = params["code"]
     st.session_state["persona"] = st.selectbox("Choose your role", ["tenant", "landlord", "contractor"])
     st.session_state["logged_in"] = True
     st.success("✅ Logged in successfully")
@@ -96,7 +95,6 @@ if st.session_state.get("oauth_code") and "user_profile" not in st.session_state
 
                 user_info["persona"] = st.session_state["persona"]
                 store_session(user_info)
-
 
                 try:
                     save_user_profile({
