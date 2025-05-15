@@ -23,27 +23,30 @@ def run_login():
     # Step 2: OAuth code/state injection
     st.success(f"st.session_state: {st.session_state}")
     if "oauth_code" not in st.session_state and "oauth_state" not in st.session_state:
-        # Show login button that redirects to external launcher
-        # persona = st.session_state["persona"]
-        # state_json = json.dumps({"persona": persona})
-        # encoded_state = quote(state_json)
-        # st.session_state["oauth_state"] = encoded_state  # Track for later
-        # st.success(f"Selected state_json: {persona} {state_json} {encoded_state}")   
-
-        # login_url = (
-        #     f"https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com/oauth2/authorize"
-        #     f"?identity_provider=Google"
-        #     f"&redirect_uri={REDIRECT_URI}"
-        #     f"&response_type=CODE"
-        #     f"&client_id={CLIENT_ID}"
-        #     f"&state={encoded_state}"
-        #     f"&scope=email+openid+phone"
-        # )
-
-        st.link_button(
-            "🔐 Login with GOOOOGLE SSO",
-            "http://landten-login-redirect.s3-website-us-east-1.amazonaws.com/login-redirect.html"
+        st.markdown(
+            """
+            <div style="display: flex; height: 70vh; justify-content: center; align-items: center;">
+                <a href="http://landten-login-redirect.s3-website-us-east-1.amazonaws.com/login-redirect.html"
+                style="
+                    font-size: 20px;
+                    padding: 12px 24px;
+                    background-color: #4CAF50;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    transition: background-color 0.3s ease;
+                "
+                onmouseover="this.style.backgroundColor='#45a049';"
+                onmouseout="this.style.backgroundColor='#4CAF50';"
+                >
+                    🔐 Login with GOOOOGLE SSO
+                </a>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
+
         st.stop()
 
     code = st.session_state.get("oauth_code")
