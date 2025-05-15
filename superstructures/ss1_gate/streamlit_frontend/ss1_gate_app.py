@@ -23,70 +23,61 @@ def run_login():
     # Step 2: OAuth code/state injection
     st.success(f"st.session_state: {st.session_state}")
     if "oauth_code" not in st.session_state and "oauth_state" not in st.session_state:
-        st.markdown(
-            """
-            <style>
-                .landten-login-container {
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    height: 90vh;
-                    background: #0e1117;
-                }
+        st.markdown("""
+        <style>
+            .hero {
+                height: 90vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                background: radial-gradient(circle at 20% 20%, #1f1f1f, #0e0e0e);
+                color: #f0f0f0;
+                text-align: center;
+                font-family: 'Segoe UI', sans-serif;
+            }
 
-                .landten-login-box {
-                    text-align: center;
-                    background: rgba(255, 255, 255, 0.02);
-                    padding: 3rem;
-                    border-radius: 16px;
-                    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-                    backdrop-filter: blur(6px);
-                    border: 1px solid rgba(255,255,255,0.05);
-                }
+            .hero h1 {
+                font-size: 3.2rem;
+                margin-bottom: 0.5rem;
+                letter-spacing: -1px;
+                font-weight: 800;
+            }
 
-                .landten-title {
-                    font-size: 2.5rem;
-                    font-weight: 700;
-                    color: #f1f1f1;
-                    margin-bottom: 0.5rem;
-                }
+            .hero p {
+                font-size: 1.2rem;
+                color: #bbbbbb;
+                margin-bottom: 3rem;
+            }
 
-                .landten-subtitle {
-                    color: #aaaaaa;
-                    font-size: 1rem;
-                    margin-bottom: 2.5rem;
-                }
+            .login-btn {
+                background: linear-gradient(90deg, #ff416c, #ff4b2b);
+                color: white;
+                font-size: 1.1rem;
+                font-weight: 600;
+                padding: 1rem 2.5rem;
+                border: none;
+                border-radius: 50px;
+                text-decoration: none;
+                box-shadow: 0 6px 20px rgba(255, 65, 108, 0.4);
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
 
-                .login-button {
-                    background: linear-gradient(90deg, #4f46e5, #9333ea);
-                    padding: 1rem 2.5rem;
-                    border-radius: 50px;
-                    font-size: 1.1rem;
-                    color: white;
-                    text-decoration: none;
-                    font-weight: 500;
-                    box-shadow: 0 8px 20px rgba(147, 51, 234, 0.3);
-                    transition: all 0.3s ease;
-                }
+            .login-btn:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 10px 25px rgba(255, 75, 43, 0.5);
+            }
+        </style>
 
-                .login-button:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 10px 25px rgba(147, 51, 234, 0.4);
-                }
-            </style>
+        <div class="hero">
+            <h1>LandTen 2.0</h1>
+            <p>Access for Landlords, Tenants, and Contractors — seamless, secure, smart.</p>
+            <a class="login-btn" href="http://landten-login-redirect.s3-website-us-east-1.amazonaws.com/login-redirect.html">
+                🔐 Sign in with Google
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
 
-            <div class="landten-login-container">
-                <div class="landten-login-box">
-                    <div class="landten-title">LandTen 2.0</div>
-                    <div class="landten-subtitle">Unified Login for Landlords, Tenants & Contractors</div>
-                    <a class="login-button" href="http://landten-login-redirect.s3-website-us-east-1.amazonaws.com/login-redirect.html">
-                        🔐 Login with Google
-                    </a>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
 
         st.stop()
 
