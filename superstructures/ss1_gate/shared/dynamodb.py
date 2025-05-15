@@ -1,8 +1,24 @@
-import boto3
 from datetime import datetime
+import boto3
+import os
+import streamlit as st
 
-dynamodb = boto3.resource("dynamodb", region_name="us-east-1")
-table = dynamodb.Table("landten_users")
+# === AWS Credentials from secrets.toml
+try:
+    os.environ["AWS_ACCESS_KEY"] = st.secrets["AWS_ACCESS_KEY"]
+    os.environ["AWS_SECRET_ACCESS_KEY"] = st.secrets["AWS_SECRET_ACCESS_KEY"]
+    os.environ["AWS_REGION"] = st.secrets.get("AWS_REGION", "us-east-1")
+except KeyError as e:
+    st.error(f"Missing AWS credential in secrets: {e}")
+    st.stop()
+
+# === Initialize DynamoDB Resource
+try:
+    dynamodb = boto3.resource("dynamodb")
+    table = dynamodb.Table("landten_users")
+except Exception as e:
+    st.error(f"Failed to initialize DynamoDB: {e}")
+    st.stop()
 
 def save_user_profile(profile: dict):
     """
