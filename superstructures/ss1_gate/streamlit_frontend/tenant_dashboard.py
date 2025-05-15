@@ -1,229 +1,167 @@
+# streamlit_app.py
+
 import streamlit as st
 import asyncio
 import websockets
 import threading
 import subprocess
 import json
-
+import logging
+from datetime import datetime
+from uuid import uuid4
+from urllib.parse import quote
 from streamlit.components.v1 import html
 
-# -- SS1: Login (Google SSO via Cognito)
+# -- Core Modules --
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
-
-# -- SS2: Persona router
 from superstructures.ss2_pulse.ss2_pulse_app import run_router
-
-# -- SS3: Chat core
 from superstructures.ss3_trichatcore.tri_chat_core import run_chat_core, prune_empty_threads
+from superstructures.ss5_summonengine.summon_engine import (
+    get_all_threads_from_dynamodb,
+    delete_all_threads_from_dynamodb,
+    upload_thread_to_s3,
+    save_message_to_dynamodb
+)
 
-# -- Optional logout logic in sidebar
-from urllib.parse import quote
+# -- Config
+CLIENT_ID = st.secrets.get("COGNITO_CLIENT_ID")
+COGNITO_DOMAIN = "https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com"
+REDIRECT_URI = "https://landtenmvp20.streamlit.app/"
+WEBSOCKET_SERVER_URL = "ws://localhost:8765"
 
-from superstructures.ss5_summonengine.summon_engine import get_all_threads_from_dynamodb, delete_all_threads_from_dynamodb, upload_thread_to_s3, save_message_to_dynamodb
-from uuid import uuid4
-from datetime import datetime
-import logging
+# -- Brand Overlay
+st.set_page_config(page_title="LandTen", page_icon="🏙️", layout="wide")
+html("<style>body { font-family: 'SF Pro Display', sans-serif; }</style>")
 
+# -- Start WebSocket (once per session)
+@st.cache_resource
+def start_websocket_server():
+    subprocess.Popen(["python", "websocket_server.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-def run_tenant_dashboard():    # Verify secrets configuration
-    try:
-        CLIENT_ID = st.secrets["COGNITO_CLIENT_ID"]
-        REDIRECT_URI = "https://landtenmvp20.streamlit.app/"
-        COGNITO_DOMAIN = "https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com"
-    except KeyError as e:
-        st.error(f"Missing required secret: {e.args[0]}")
-        st.stop()
+def start_websocket_client():
+    async def listen():
+        async with websockets.connect(WEBSOCKET_SERVER_URL) as websocket:
+            while True:
+                message = await websocket.recv()
+                notification = json.loads(message)
+                if notification.get("type") == "notification":
+                    st.toast(notification.get("message"))
+    threading.Thread(target=lambda: asyncio.run(listen()), daemon=True).start()
 
-    # WebSocket server URL
-    WEBSOCKET_SERVER_URL = "ws://localhost:8765"
+# -- Thread Builders
+def generate_dummy_threads():
+    dummy_threads = []
+    for i in range(5):
+        thread_id = str(uuid4())
+        dummy_data = {
+            "thread_id": thread_id,
+            "chat_log": [
+                {
+                    "id": str(uuid4()), "timestamp": datetime.utcnow().isoformat(),
+                    "role": "tenant", "message": f"Dummy message {i+1}", "thread_id": thread_id, "email": "dummy@example.com"
+                },
+                {
+                    "id": str(uuid4()), "timestamp": datetime.utcnow().isoformat(),
+                    "role": "agent", "message": f"Response from agent {i+1}", "thread_id": thread_id, "email": "dummy@example.com"
+                }
+            ]
+        }
+        try:
+            for msg in dummy_data["chat_log"]:
+                save_message_to_dynamodb(thread_id, msg)
+            upload_thread_to_s3(thread_id, dummy_data["chat_log"])
+            dummy_threads.append(thread_id)
+        except Exception as e:
+            logging.error(f"[Thread Error] {thread_id}: {e}")
+            st.error(f"Error with thread {thread_id}: {e}")
+    return dummy_threads
 
-    # Start the WebSocket server as a separate process
-    def start_websocket_server():
-        subprocess.Popen(["python", "websocket_server.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+def fetch_and_display_threads():
+    threads = get_all_threads_from_dynamodb()
+    unique = {t['thread_id']: t for t in threads if 'thread_id' in t}
+    sorted_threads = sorted(unique.values(), key=lambda x: x.get('timestamp', ''), reverse=True)
+    return ["Select a Thread"] + [t['thread_id'] for t in sorted_threads]
 
-    # Start the WebSocket server
-    start_websocket_server()
+# -- Sidebar Dashboard
+with st.sidebar:
+    st.markdown(f"👤 **{st.session_state.get('email', 'Unknown')}**")
+    if st.button("Logout"):
+        try:
+            st.session_state.clear()
+            logout_url = f"{COGNITO_DOMAIN}/logout?client_id={CLIENT_ID}&logout_uri={REDIRECT_URI}"
+            st.markdown(f"[🔓 Logged out — click to re-login]({logout_url})")
+            st.stop()
+        except Exception as e:
+            st.error(f"Logout error: {str(e)}")
 
-    # WebSocket client to receive real-time notifications
-    def start_websocket_client():
-        async def listen():
-            async with websockets.connect(WEBSOCKET_SERVER_URL) as websocket:
-                while True:
-                    message = await websocket.recv()
-                    notification = json.loads(message)
-                    if notification.get("type") == "notification":
-                        st.toast(notification.get("message"))  # Display notification using Streamlit's toast
+    thread_options = fetch_and_display_threads()
+    selected = st.selectbox("💬 Select a Thread", options=thread_options)
 
-        asyncio.run(listen())
+    if selected != "Select a Thread":
+        if st.session_state.get('selected_thread') != selected:
+            st.session_state['selected_thread'] = selected
+            chat_log = sorted(
+                [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == selected],
+                key=lambda x: x['timestamp']
+            )
+            st.session_state['chat_log'] = list({t['id']: t for t in chat_log}.values())
 
-    # Start WebSocket client in a separate thread
-    threading.Thread(target=start_websocket_client, daemon=True).start()
+    with st.expander("🛠️ Thread Tools", expanded=False):
+        if st.button("🧹 Delete All Threads"):
+            delete_all_threads_from_dynamodb()
+            st.session_state['selected_thread'] = None
+            st.success("Threads cleared.")
+            st.rerun()
 
-    # Function to generate dummy threads
-    def generate_dummy_threads():
-        dummy_threads = []
-        for i in range(5):
-            thread_id = str(uuid4())
-            dummy_data = {
-                "thread_id": thread_id,
-                "chat_log": [
-                    {"id": str(uuid4()), "timestamp": datetime.utcnow().isoformat(), "role": "tenant", "message": f"Dummy message {i+1} from tenant.", "thread_id": thread_id, "email": "dummy@example.com"},
-                    {"id": str(uuid4()), "timestamp": datetime.utcnow().isoformat(), "role": "agent", "message": f"Dummy reply {i+1} from agent.", "thread_id": thread_id, "email": "dummy@example.com"}
-                ]
-            }
-            try:
-                save_message_to_dynamodb(thread_id, dummy_data["chat_log"][0])
-                save_message_to_dynamodb(thread_id, dummy_data["chat_log"][1])
-                upload_thread_to_s3(thread_id, dummy_data["chat_log"])
-                dummy_threads.append(thread_id)
-            except Exception as e:
-                logging.error(f"Error generating dummy thread {thread_id}: {e}")
-                st.error(f"Failed to generate thread {thread_id}: {e}")
-        return dummy_threads
+        if st.button("❎ Delete Empty Threads"):
+            prune_empty_threads()
 
-    # Update thread_options to remove redundancy and show the latest content
-    def fetch_and_display_threads():
-        threads = get_all_threads_from_dynamodb()
-        logging.debug(f"Fetched threads: {threads}")
+        if st.button("🎯 Generate Dummy Threads"):
+            threads = generate_dummy_threads()
+            st.success(f"Dummy threads: {', '.join(threads)}")
+            st.rerun()
 
-        # Use a dictionary to ensure unique thread_ids and keep the latest content
-        unique_threads = {}
-        for t in threads:
-            if 'thread_id' in t:
-                unique_threads[t['thread_id']] = t
-            else:
-                logging.warning(f"Thread missing 'thread_id': {t}")
+# -- Layout: Title + Chat
+persona = st.session_state.get("persona", "tenant").capitalize()
+st.title(f"🛡️ {persona} Dashboard")
 
-        # Sort threads by timestamp (latest first) if available
-        sorted_threads = sorted(unique_threads.values(), key=lambda x: x.get('timestamp', ''), reverse=True)
+if st.session_state.get("selected_thread"):
+    with st.expander("📜 Messages", expanded=False):
+        st.subheader(f"📂 Thread: {st.session_state['selected_thread']}")
+        for msg in st.session_state.get('chat_log', []):
+            role = msg.get('role', 'Unknown').capitalize()
+            content = msg.get('message', '[No message]')
+            if role == 'Agent' and 'Agent error' in content:
+                content = '[Agent encountered an error.]'
+            st.markdown(f"**{role}**: {content}")
 
-        thread_options = ["Select a Thread"] + [t['thread_id'] for t in sorted_threads]
-        return thread_options
+# -- Chat Module
+run_chat_core()
 
-    # -- Sidebar
-    with st.sidebar:
-        st.markdown(f"👤 **{st.session_state.get('email', 'Unknown')}**")
-        if st.button("Logout"):
-            try:
-                logout_url = (
-                    f"{COGNITO_DOMAIN}/logout?"
-                    f"client_id={CLIENT_ID}&"
-                    f"logout_uri={REDIRECT_URI}"
-                )
-                st.session_state.clear()
-                st.markdown(f"[🔓 Logged out — click to re-login]({logout_url})")
-                st.stop()
-            except Exception as e:
-                st.error(f"Error during logout: {str(e)}")
+# -- Persona Views
+st.subheader("📇 Details")
+if persona == "Tenant":
+    st.markdown("### 🚨 Incidents")
+    st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Incident details will appear here.</div>", unsafe_allow_html=True)
+elif persona == "Landlord":
+    st.markdown("### 🏗️ Jobs")
+    st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Job details will appear here.</div>", unsafe_allow_html=True)
+elif persona == "Contractor":
+    st.markdown("### 🔧 Jobs and Schedule")
+    st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Job info here.</div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Schedule info here.</div>", unsafe_allow_html=True)
+else:
+    st.error("⚠️ Persona mismatch. Contact support.")
 
-        # Fetch and display threads
-        thread_options = fetch_and_display_threads()
-        selected_thread = st.selectbox("Select a Thread", options=thread_options)
+# -- Responsive Design
+html("""
+<style>
+@media (max-width: 768px) {
+    .css-1lcbmhc { flex-direction: column !important; }
+}
+</style>
+""")
 
-        if selected_thread != "Select a Thread":
-            if st.session_state.get('selected_thread') != selected_thread:
-                st.session_state['selected_thread'] = selected_thread
-                # Load the chat log for the selected thread
-                # st.session_state['chat_log'] = [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == selected_thread]
-                st.session_state['chat_log'] = list({
-                    t['id']: t for t in sorted(
-                        [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == st.session_state["selected_thread"]],
-                        key=lambda x: x['timestamp']
-                    )
-                }.values())
-
-        with st.expander("### 🗑️ Thread Management", expanded=False):
-            # Add a button to delete all threads
-            if st.button("Delete All Threads"):
-                try:
-                    delete_all_threads_from_dynamodb()
-                    st.session_state['selected_thread'] = None  # Clear selected thread
-                    st.success("All threads have been deleted.")
-                    st.rerun()
-                except Exception as e:
-                    logging.error(f"Error deleting threads: {e}")
-                    st.error(f"Failed to delete threads: {e}")
-
-            if st.button("Delete Empty Threads"):
-                prune_empty_threads()
-
-            # Add a button to generate 5 dummy threads
-            if st.button("Generate Dummy Threads"):
-                dummy_threads = generate_dummy_threads()
-                st.success(f"Generated 5 dummy threads: {', '.join(dummy_threads)}")
-                st.rerun()
-
-    # -- Main Layout
-    persona = st.session_state.get("persona", "tenant")
-
-    st.title(f"{persona.capitalize()} Dashboard")
-
-    # Display messages for the selected thread
-    if st.session_state.get('selected_thread'):
-        with st.expander("Messages in Current Thread", expanded=False):
-            st.subheader(f"Messages in Thread: {st.session_state['selected_thread']}")
-            for message in st.session_state['chat_log']:
-                # Validate message object and handle missing keys
-                role = message.get('role', 'Unknown').capitalize()
-                content = message.get('message', '[No content available (Display)]')
-                if role == 'Agent' and 'Agent error' in content:
-                    content = '[Agent encountered an error while processing the message.]'
-                st.markdown(f"**{role}**: {content}")
-
-            # # Ensure thread content is stored in S3
-            # if st.session_state.get('chat_log'):
-            #     upload_thread_to_s3(st.session_state['selected_thread'], st.session_state['chat_log'])
-
-    # Function to send a message and update the selected thread state
-    def send_message_and_update_thread(thread_id, message):
-        # Send the message to the backend (DynamoDB and S3)
-        save_message_to_dynamodb(thread_id, message)
-        upload_thread_to_s3(thread_id, st.session_state['chat_log'])
-
-        # Re-fetch the updated thread messages from S3
-        # updated_thread = [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == thread_id]
-        # st.session_state['chat_log'] = updated_thread
-        st.session_state['chat_log'] = list({
-                t['id']: t for t in sorted(
-                    [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == st.session_state["selected_thread"]],
-                    key=lambda x: x['timestamp']
-                )
-            }.values())
-        st.rerun()  # Trigger UI update
-
-
-    # st.subheader("Chat Window")
-    # if st.session_state.get('selected_thread'):
-    #     message = st.text_input("Type your message here...")
-    #     if st.button("Send"):
-    #         send_message_and_update_thread(st.session_state['selected_thread'], {
-    #             "id": str(uuid4()),
-    #             "timestamp": datetime.utcnow().isoformat(),
-    #             "role": "tenant",
-    #             "message": message,
-    #             "thread_id": st.session_state['selected_thread'],
-    #             "email": st.session_state.get('email', 'unknown')
-    #         })
-    # Call the run_chat_core function to render the chat interface and sidebar controls
-    run_chat_core()
-
-    # Right column: Persona-specific container
-
-    st.subheader("Details")
-    if persona == "tenant":
-        st.markdown("### Incidents")
-        st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Incident details will appear here.</div>", unsafe_allow_html=True)
-    elif persona == "landlord":
-        st.markdown("### Jobs")
-        st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Job details will appear here.</div>", unsafe_allow_html=True)
-    elif persona == "contractor":
-        st.markdown("### Jobs and Schedule")
-        st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Job details will appear here.</div>", unsafe_allow_html=True)
-        st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>Schedule details will appear here.</div>", unsafe_allow_html=True)
-    else:
-        st.error("Invalid persona. Please contact support.")
-
-
-
-    # -- Mobile Compatibility
-    html("<style>@media (max-width: 768px) { .css-1lcbmhc { flex-direction: column; } }</style>")
+# -- Start Real-time Server/Client
+start_websocket_server()
+start_websocket_client()
