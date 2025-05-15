@@ -65,6 +65,7 @@ def logout():
         <script>
         localStorage.removeItem("user_profile");
         localStorage.removeItem("expires_at");
+        window.location.href = "https://landtenmvp20.streamlit.app/";
         </script>
     """, height=0)
     st.rerun()
