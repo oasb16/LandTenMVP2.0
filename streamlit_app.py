@@ -97,6 +97,7 @@ if st.session_state.get("oauth_code") and "user_profile" not in st.session_state
                 user_info["persona"] = st.session_state["persona"]
                 store_session(user_info)
 
+
                 try:
                     save_user_profile({
                         "user_id": user_info.get("userId", ""),
