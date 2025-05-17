@@ -333,14 +333,14 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
     }
 
     # Initialize state
-    current_state = "idle"
+    st.session_state['agent_state'] = "idle"
 
     # Check if @agent is mentioned in the user input
     engage_agent = "@agent" in user_input
 
     if engage_agent:
         st.info("🤖 Agent engaged")
-        current_state = "engaged"
+        st.session_state['agent_state'] = "engaged"
 
     # Validate chat_log to ensure all messages have the 'role' key
     for message in chat_log:
@@ -349,7 +349,7 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
 
     # Process user input if agent is engaged
     reply = ""
-    if current_state == "engaged":
+    if st.session_state['agent_state'] == "engaged":
         reply = call_gpt_agent(chat_log)
 
     # Process media if available
@@ -358,7 +358,7 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
         try:
             transcription = call_whisper(MEDIA_PATHS["audio"])
             media_summary += f"\n📣 Whisper Transcript: {transcription}"
-            current_state = "media_processing"
+            st.session_state['agent_state'] = "media_processing"
         except Exception as e:
             media_summary += f"\n[Whisper error: {e}]"
 
@@ -372,7 +372,7 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
 
     # Combine replies and update state
     combined_reply = reply + media_summary
-    if current_state in ["engaged", "media_processing"]:
+    if st.session_state['agent_state'] in ["engaged", "media_processing"]:
         agent_msg = {
             "id": str(uuid4()),
             "timestamp": datetime.utcnow().isoformat(),
@@ -397,7 +397,7 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
 
         # Upload thread to S3
         upload_thread_to_s3(thread_id, chat_log)
-        current_state = "completed"
+        st.session_state['agent_state'] = "completed"
 
         st.success("💡 Agent updated with media context.")
     else:
@@ -414,7 +414,7 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
         upload_thread_to_s3(thread_id, chat_log)
 
     # Log final state
-    logging.info(f"Final state: {states[current_state]}")
+    logging.info(f"Final state: {states[st.session_state['agent_state']]}")
 
 def update_thread_timestamp_in_dynamodb(thread_id):
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])

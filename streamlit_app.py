@@ -28,6 +28,15 @@ from utils.session_persistence import try_restore_session, store_session
 if "logged_in" not in st.session_state:
     try_restore_session()
 
+# Define symbolic states
+states = {
+    "idle": "Agent is inactive",
+    "engaged": "Agent is processing user input",
+    "media_processing": "Agent is analyzing media",
+    "completed": "Agent has completed processing"
+}
+
+
 # === Query param extraction
 with st.sidebar:
     params = st.query_params
@@ -38,6 +47,8 @@ with st.sidebar:
         st.popover(f"Selected role: {st.session_state['persona']}")
         st.session_state["logged_in"] = True
         st.popover("Logged in successfully!")
+        st.text(f"Agent state: {st.session_state['agent_state']}")
+        st.text(f"Agent status: {states[st.session_state['agent_state']]}")
 
 # === Routing helper
 def handle_persona_routing():
