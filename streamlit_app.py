@@ -52,6 +52,7 @@ def handle_persona_routing():
     else:
         st.error("Unknown persona. Please contact support.")
 
+
 # === Logout
 def logout():
     import streamlit.components.v1 as components
