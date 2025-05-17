@@ -40,7 +40,7 @@ def save_message_to_dynamodb(thread_id, message):
     try:
         validate_message_schema(message)
         table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
-        logging.debug(f"Saving message to DynamoDB for thread_id: {thread_id}, message: {message}")
+        st.warning(f"Saving message to DynamoDB for thread_id: {thread_id}, message: {message}")
         table.put_item(Item=message)
     except ValueError as ve:
         logging.error(f"Schema validation error: {ve} message to DynamoDB for thread_id: {thread_id}, message: {message}")
@@ -50,6 +50,7 @@ def save_message_to_dynamodb(thread_id, message):
         logging.error(f"DynamoDB Error in save_message_to_dynamodb: {e.response['Error']['Message']}")
         st.error(f"DynamoDB Error in save_message_to_dynamodb: {e.response['Error']['Message']}")
         return False
+    st.success(f"Saved message to DynamoDB for thread_id: {thread_id}, message: {message}")
     return True
 
 def append_chat_log(thread_id, message):
