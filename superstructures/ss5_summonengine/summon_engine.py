@@ -293,7 +293,7 @@ def upload_media_to_s3(file, thread_id):
 
         # Append the message to the chat log and upload the thread to S3
         append_chat_log(thread_id, user_msg)
-        # upload_thread_to_s3(thread_id, get_chat_log(thread_id))
+        upload_thread_to_s3(thread_id, get_chat_log(thread_id))
 
         # Display success message with the presigned URL
         st.success(f"Media uploaded successfully! Access it [here]({presigned_url})")
@@ -411,8 +411,8 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
             "email": st.session_state.get("email", "unknown")
         }
         # Message is appended to chat log here
-        save_message_to_dynamodb(thread_id, user_msg)
-        upload_thread_to_s3(thread_id, chat_log)
+        # save_message_to_dynamodb(thread_id, user_msg)
+        # upload_thread_to_s3(thread_id, chat_log)
 
     # Log final state
     st.success(f"Final state: {states[st.session_state['agent_state']]}")
