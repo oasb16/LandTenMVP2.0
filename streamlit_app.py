@@ -35,7 +35,7 @@ states = {
     "media_processing": "Agent is analyzing media",
     "completed": "Agent has completed processing"
 }
-
+st.session_state['agent_state'] = "idle"
 
 # === Query param extraction
 with st.sidebar:
