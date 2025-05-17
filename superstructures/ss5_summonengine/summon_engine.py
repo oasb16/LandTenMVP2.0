@@ -395,9 +395,9 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
         except Exception as e:
             st.warning(f"Incident detection failed: {e}")
 
-        # # Upload thread to S3
-        # upload_thread_to_s3(thread_id, chat_log)
-        # st.session_state['agent_state'] = "completed"
+        # Upload thread to S3
+        upload_thread_to_s3(thread_id, chat_log)
+        st.session_state['agent_state'] = "completed"
 
         st.success("💡 Agent updated with media context.")
     else:
@@ -410,8 +410,8 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
             "thread_id": thread_id,
             "email": st.session_state.get("email", "unknown")
         }
-        save_message_to_dynamodb(thread_id, user_msg)
-        upload_thread_to_s3(thread_id, chat_log)
+        # save_message_to_dynamodb(thread_id, user_msg)
+        # upload_thread_to_s3(thread_id, chat_log)
 
     # Log final state
     logging.info(f"Final state: {states[st.session_state['agent_state']]}")
