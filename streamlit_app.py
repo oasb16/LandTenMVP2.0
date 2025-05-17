@@ -50,6 +50,25 @@ with st.sidebar:
         st.text(f"Agent state: {st.session_state['agent_state']}")
         st.text(f"Agent status: {states[st.session_state['agent_state']]}")
 
+    # Add a logging expander box in the sidebar
+    st.markdown("### 📝 Logs")
+    with st.expander("View Logs", expanded=False):
+        if "logs" not in st.session_state:
+            st.session_state["logs"] = []
+
+        # Display logs in a scrollable text area
+        log_area = st.empty()
+        log_area.text("\n".join(st.session_state["logs"]))
+
+        # Function to add a log entry
+        def add_log_entry(entry):
+            st.session_state["logs"].append(entry)
+            log_area.text("\n".join(st.session_state["logs"]))
+
+        # Example usage (can be removed or replaced with actual logging logic)
+        if st.button("Add Example Log"):
+            add_log_entry(f"Log entry at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
 # === Routing helper
 def handle_persona_routing():
     page_map = {
