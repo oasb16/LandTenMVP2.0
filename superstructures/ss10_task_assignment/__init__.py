@@ -1,3 +1,6 @@
+# Initialize the ss10_task_assignment module
+from .job_manager import JobManager
+
 import streamlit as st
 import os
 from datetime import datetime

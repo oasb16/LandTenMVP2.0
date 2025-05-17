@@ -1,8 +1,32 @@
 import streamlit as st
 import os
+import sqlite3
 from datetime import datetime
 
+def initialize_database():
+    conn = sqlite3.connect("maintenance_requests.db")
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS requests (
+        id TEXT PRIMARY KEY,
+        description TEXT NOT NULL,
+        urgency TEXT NOT NULL,
+        photo_path TEXT,
+        status TEXT DEFAULT 'pending',
+        timestamp TEXT NOT NULL
+    )''')
+    conn.commit()
+    conn.close()
+
+def is_duplicate_request(description):
+    conn = sqlite3.connect("maintenance_requests.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM requests WHERE description = ?", (description,))
+    count = cursor.fetchone()[0]
+    conn.close()
+    return count > 0
+
 def handle_maintenance_requests():
+    initialize_database()
     st.subheader("Submit Maintenance Request")
 
     # Input fields for maintenance request
@@ -16,12 +40,17 @@ def handle_maintenance_requests():
             st.error("Description is required to submit a maintenance request.")
             return
 
+        if is_duplicate_request(description):
+            st.warning("A similar maintenance request already exists.")
+            return
+
         # Save the request details
         request_id = f"REQ-{datetime.now().strftime('%Y%m%d%H%M%S')}"
         request_data = {
             "id": request_id,
             "description": description,
             "urgency": urgency,
+            "status": "pending",
             "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
 
@@ -33,10 +62,13 @@ def handle_maintenance_requests():
                 f.write(photo.read())
             request_data["photo_path"] = photo_path
 
-        # Simulate saving to a database or file
-        os.makedirs("maintenance_requests", exist_ok=True)
-        with open(f"maintenance_requests/{request_id}.txt", "w") as f:
-            f.write(str(request_data))
+        # Save to database
+        conn = sqlite3.connect("maintenance_requests.db")
+        cursor = conn.cursor()
+        cursor.execute('''INSERT INTO requests (id, description, urgency, photo_path, status, timestamp)
+                          VALUES (:id, :description, :urgency, :photo_path, :status, :timestamp)''', request_data)
+        conn.commit()
+        conn.close()
 
         # Notify landlord and contractor (simulated)
         st.success(f"Maintenance request submitted successfully! Request ID: {request_id}")
