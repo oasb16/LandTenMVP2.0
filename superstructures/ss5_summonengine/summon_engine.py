@@ -412,7 +412,7 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
             "email": st.session_state.get("email", "unknown")
         }
         # Message is appended to chat log here
-        save_message_to_dynamodb(thread_id, user_msg)
+        # save_message_to_dynamodb(thread_id, user_msg)
         # upload_thread_to_s3(thread_id, chat_log)
 
     # Log final state
