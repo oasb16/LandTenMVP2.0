@@ -395,9 +395,9 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
         except Exception as e:
             st.warning(f"Incident detection failed: {e}")
 
-        # Upload thread to S3
-        upload_thread_to_s3(thread_id, chat_log)
-        st.session_state['agent_state'] = "completed"
+        # # Upload thread to S3
+        # upload_thread_to_s3(thread_id, chat_log)
+        # st.session_state['agent_state'] = "completed"
 
         st.success("💡 Agent updated with media context.")
     else:
