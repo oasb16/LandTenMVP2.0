@@ -64,7 +64,7 @@ def render_chat_log(chat_log):
     # Remove duplicates and sort messages by timestamp
     unique_chat_log = {msg["id"]: msg for msg in sorted(chat_log, key=lambda x: x["timestamp"])}.values()
 
-    st.markdown("### 💬 Conversation")
+    st.markdown(f"### 💬 Conversation {st.session_state["current_thread"]}")
 
     chat_html = ""
     for msg in unique_chat_log:
