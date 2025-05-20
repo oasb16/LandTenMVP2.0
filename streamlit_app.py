@@ -12,7 +12,6 @@ from websocket_server import log_error,log_success,log_popover
 
 st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")
 
-
 # === Secrets
 try:
     COGNITO_DOMAIN = st.secrets["COGNITO_DOMAIN"]
