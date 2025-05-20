@@ -17,12 +17,32 @@ from superstructures.ss5_summonengine.summon_engine import run_summon_engine, sa
 from superstructures.ss7_mediastream import run_media_interface
 from superstructures.ss8_canvascard.canvascard import create_canvas_card
 from utils.chat_log_writer import load_chat_log, append_chat_log
+from superstructures.ss6_actionrelay import SymbolicActionHandler
+
+# Initialize SymbolicActionHandler
+action_handler = SymbolicActionHandler()
+
+# Register a sample action
+action_handler.register_action("greet", lambda name: f"Hello, {name}!")
+
+# Example: Executing an action
+if st.button("Execute Greet Action"):
+    result = action_handler.execute_action("greet", "Landlord")
+    st.success(result)
 
 def initialize_session_state():
-    if "persona" not in st.session_state:
-        st.session_state["persona"] = "tenant"
+    """Initialize session state variables."""
     if "thread_id" not in st.session_state:
         st.session_state["thread_id"] = str(uuid4())
+    if "persona" not in st.session_state:
+        st.session_state["persona"] = "default"
+    if "email" not in st.session_state:
+        st.session_state["email"] = "unknown"
+    if "selected_thread" not in st.session_state:
+        st.session_state["selected_thread"] = None
+    if "current_thread" not in st.session_state:
+        st.session_state["current_thread"] = st.session_state["thread_id"]
+    if "chat_log" not in st.session_state:
         initial_message = {
             "id": str(uuid4()),
             "timestamp": datetime.utcnow().isoformat(),
@@ -65,7 +85,7 @@ def render_chat_log(chat_log):
     # Remove duplicates and sort messages by timestamp
     unique_chat_log = {msg["id"]: msg for msg in sorted(chat_log, key=lambda x: x["timestamp"])}.values()
 
-    st.markdown(f"### 💬 Conversation {st.session_state["current_thread"]}")
+    st.markdown(f"### 💬 Conversation {st.session_state['current_thread']}")
 
     chat_html = ""
     for msg in unique_chat_log:
