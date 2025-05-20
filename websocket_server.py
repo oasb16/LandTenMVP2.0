@@ -12,8 +12,10 @@ import traceback
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Initialize AWS clients
-dynamodb = boto3.client('dynamodb',aws_access_key_id="<AWS_ACCESS_KEY>",aws_secret_access_key="<AWS_SECRET_ACCESS_KEY>",region_name="<AWS_REGION>")
-
+dynamodb = boto3.resource('dynamodb',
+                          aws_access_key_id=st.secrets["AWS_ACCESS_KEY"],
+                          aws_secret_access_key=st.secrets["AWS_SECRET_ACCESS_KEY"],
+                          region_name=st.secrets["AWS_REGION"])
 # Secret key for JWT authentication
 JWT_SECRET = "your_jwt_secret_key"
 JWT_ALGORITHM = "HS256"

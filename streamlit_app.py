@@ -8,6 +8,7 @@ import requests, logging, traceback
 import base64
 import json
 import jwt
+from websocket_server import log_error,log_success,log_popover
 
 st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")
 
