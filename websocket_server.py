@@ -115,6 +115,7 @@ async def websocket_handler(websocket, path):
 # Start WebSocket server
 async def main():
     logging.info("Starting WebSocket server on ws://localhost:8765")
+    st.success("WebSocket server started.")
     async with websockets.serve(websocket_handler, "localhost", 8765):
         await asyncio.Future()  # Run forever
 
