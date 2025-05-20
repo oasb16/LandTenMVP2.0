@@ -29,8 +29,6 @@ from superstructures.ss1_gate.shared.thread_job_service import (
     prune_empty_threads
 )
 
-from superstructures.ss10_task_assignment import JobManager
-
 # -- Config
 CLIENT_ID = st.secrets.get("COGNITO_CLIENT_ID")
 COGNITO_DOMAIN = "https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com"
@@ -82,7 +80,7 @@ def run_landlord_dashboard():
             if st.button("🧹 Delete All Threads"):
                 delete_all_threads()
                 st.session_state['selected_thread'] = None
-                # log_success("Threads cleared.")
+                st.success("Threads cleared.")
                 st.rerun()
 
             if st.button("❎ Delete Empty Threads"):
@@ -90,7 +88,7 @@ def run_landlord_dashboard():
 
             if st.button("🎯 Generate Dummy Threads"):
                 threads = generate_dummy_threads()
-                # log_success(f"Dummy threads: {', '.join(threads)}")
+                st.success(f"Dummy threads: {', '.join(threads)}")
                 st.rerun()
 
     # -- Layout: Title + Chat
@@ -114,24 +112,6 @@ def run_landlord_dashboard():
     st.subheader("📇 Details")
     st.markdown("### 🏗️ Jobs")
     st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Job requests, assignments, and contractor proposals will be shown here.</div>", unsafe_allow_html=True)
-
-    # Initialize JobManager
-    job_manager = JobManager()
-
-    # Example: Adding a job
-    if st.button("Add Job"):
-        job = job_manager.create_job(
-            job_id="job_001",
-            description="Fix leaking faucet",
-            assignee="Contractor A",
-            deadline="2025-05-25"
-        )
-        st.success(f"Job created: {job}")
-
-    # Example: Assigning a job
-    if st.button("Assign Job"):
-        assigned_job = job_manager.assign_job(job_id="job_001", assignee="Contractor B")
-        st.success(f"Job assigned: {assigned_job}")
 
     # -- Responsive Styling
     html("""

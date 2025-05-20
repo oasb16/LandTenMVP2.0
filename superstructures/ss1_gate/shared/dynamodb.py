@@ -2,7 +2,6 @@ from datetime import datetime
 import boto3
 import os
 import streamlit as st
-from websocket_server import log_error
 
 # === AWS Credentials from secrets.toml
 try:
@@ -10,7 +9,7 @@ try:
     aws_secret_key = st.secrets["AWS_SECRET_ACCESS_KEY"]
     aws_region     = st.secrets.get("AWS_REGION", "us-east-1")
 except KeyError as e:
-    log_error(f"Missing AWS credential in secrets: {e}")
+    st.error(f"Missing AWS credential in secrets: {e}")
     st.stop()
 
 # === Initialize DynamoDB Resource
@@ -23,7 +22,7 @@ try:
     )
     table = dynamodb.Table("landten_users")
 except Exception as e:
-    log_error(f"Failed to initialize DynamoDB: {e}")
+    st.error(f"Failed to initialize DynamoDB: {e}")
     st.stop()
 
 def save_user_profile(profile: dict):
