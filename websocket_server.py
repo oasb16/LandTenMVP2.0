@@ -24,6 +24,18 @@ JWT_ALGORITHM = "HS256"
 # Mapping of thread IDs to connected WebSocket clients
 connected_clients = {}
 
+# Enhanced error handling and logging for WebSocket server and DynamoDB Streams
+def log_error(context, error):
+    """Log detailed error information."""
+    logging.error(f"Error in {context}: {str(error)}")
+    logging.error(traceback.format_exc())
+
+def log_popover(context, error):
+    """Log detailed error information."""
+    logging.error(f"Error in {context}: {str(error)}")
+    logging.error(traceback.format_exc())
+
+
 def authenticate_client(token):
     """Authenticate WebSocket client using JWT."""
     try:

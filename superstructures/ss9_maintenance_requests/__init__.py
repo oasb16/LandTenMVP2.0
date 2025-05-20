@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import sqlite3
 from datetime import datetime
-from streamlit_app import log_success
+from websocket_server import log_success, log_error
 
 def initialize_database():
     conn = sqlite3.connect("maintenance_requests.db")
@@ -38,7 +38,7 @@ def handle_maintenance_requests():
     # Submit button
     if st.button("Submit Request"):
         if not description:
-            st.error("Description is required to submit a maintenance request.")
+            log_error("Description is required to submit a maintenance request.")
             return
 
         if is_duplicate_request(description):

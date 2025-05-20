@@ -8,7 +8,7 @@ from utils.incident_writer import save_incident_from_media
 import boto3
 from botocore.exceptions import ClientError
 import logging
-from streamlit_app import log_success, log_error
+from websocket_server import log_success, log_error
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')

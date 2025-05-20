@@ -29,7 +29,7 @@ from superstructures.ss1_gate.shared.thread_job_service import (
     prune_empty_threads
 )
 
-from streamlit_app import log_success
+from websocket_server import log_success
 
 # -- Config
 CLIENT_ID = st.secrets.get("COGNITO_CLIENT_ID")

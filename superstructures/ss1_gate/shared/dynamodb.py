@@ -2,7 +2,7 @@ from datetime import datetime
 import boto3
 import os
 import streamlit as st
-from streamlit_app import log_error
+from websocket_server import log_error
 
 # === AWS Credentials from secrets.toml
 try:

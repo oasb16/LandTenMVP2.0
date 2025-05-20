@@ -11,17 +11,6 @@ import jwt
 
 st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")
 
-# Enhanced error handling and logging for WebSocket server and DynamoDB Streams
-def log_error(context, error):
-    """Log detailed error information."""
-    logging.error(f"Error in {context}: {str(error)}")
-    logging.error(traceback.format_exc())
-
-def log_popover(context, error):
-    """Log detailed error information."""
-    logging.error(f"Error in {context}: {str(error)}")
-    logging.error(traceback.format_exc())
-
 # === Secrets
 try:
     COGNITO_DOMAIN = st.secrets["COGNITO_DOMAIN"]
