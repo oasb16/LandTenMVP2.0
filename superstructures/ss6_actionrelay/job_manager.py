@@ -73,10 +73,13 @@ def accept_job(job_id: str, contractor_id: str) -> dict:
         jobs = json.load(f)
         for job in jobs:
             if job["job_id"] == job_id:
+                if job["accepted"] is not None:
+                    raise ValueError("Decision already made")
                 if job["assigned_contractor_id"] != contractor_id:
                     raise ValueError("Contractor ID does not match the assigned contractor.")
                 job["accepted"] = True
                 job["status"] = "accepted"
+                job["timestamp"] = datetime.utcnow().isoformat()
                 f.seek(0)
                 json.dump(jobs, f, indent=4)
                 return job
@@ -92,10 +95,44 @@ def reject_job(job_id: str, contractor_id: str) -> dict:
         jobs = json.load(f)
         for job in jobs:
             if job["job_id"] == job_id:
+                if job["accepted"] is not None:
+                    raise ValueError("Decision already made")
                 if job["assigned_contractor_id"] != contractor_id:
                     raise ValueError("Contractor ID does not match the assigned contractor.")
                 job["accepted"] = False
                 job["status"] = "rejected"
+                job["timestamp"] = datetime.utcnow().isoformat()
+                f.seek(0)
+                json.dump(jobs, f, indent=4)
+                return job
+
+    raise ValueError(f"Job with ID {job_id} not found.")
+
+def get_jobs_for_contractor(contractor_id: str) -> list:
+    # Load jobs
+    if not os.path.exists(LOG_FILE):
+        return []
+
+    with open(LOG_FILE, "r") as f:
+        jobs = json.load(f)
+        return [
+            job for job in jobs
+            if job.get("assigned_contractor_id") == contractor_id and job.get("status") in ["pending", "assigned", "accepted"]
+        ]
+
+def propose_schedule(job_id: str, contractor_id: str, schedule: str) -> dict:
+    # Load jobs
+    if not os.path.exists(LOG_FILE):
+        raise ValueError("No jobs found.")
+
+    with open(LOG_FILE, "r+") as f:
+        jobs = json.load(f)
+        for job in jobs:
+            if job["job_id"] == job_id:
+                if job["assigned_contractor_id"] != contractor_id:
+                    raise ValueError("Contractor ID does not match the assigned contractor.")
+                job["proposed_schedule"] = schedule
+                job["timestamp"] = datetime.utcnow().isoformat()
                 f.seek(0)
                 json.dump(jobs, f, indent=4)
                 return job

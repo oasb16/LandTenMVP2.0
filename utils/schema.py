@@ -29,6 +29,7 @@ class JobSchema(TypedDict):
     accepted: Optional[bool]
     timestamp: str
     created_by: Optional[str]  # Role/user who created the job
+    proposed_schedule: Optional[str]  # Schedule proposed by contractor (e.g., date/time string)
 
 def build_incident_template() -> IncidentSchema:
     """Returns a default-structured incident with placeholders."""

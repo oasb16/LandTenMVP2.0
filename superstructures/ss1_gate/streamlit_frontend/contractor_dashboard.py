@@ -22,12 +22,59 @@ from superstructures.ss5_summonengine.summon_engine import (
     upload_thread_to_s3,
     save_message_to_dynamodb
 )
+from superstructures.ss6_actionrelay.job_manager import (
+    get_jobs_for_contractor, accept_job, reject_job, propose_schedule
+)
 
 # -- Config
 CLIENT_ID = st.secrets.get("COGNITO_CLIENT_ID")
 COGNITO_DOMAIN = "https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com"
 REDIRECT_URI = "https://landtenmvp20.streamlit.app/"
 WEBSOCKET_SERVER_URL = "ws://localhost:8765"
+
+def render_contractor_dashboard():
+    st.header("Contractor Dashboard")
+
+    contractor_id = st.session_state.get("user_id", "")
+    if not contractor_id:
+        st.error("User ID missing from session.")
+        return
+
+    assigned_jobs = get_jobs_for_contractor(contractor_id)
+
+    for job in assigned_jobs:
+        with st.expander(f"Job: {job['description']}"):
+            st.write(f"**Priority**: {job['priority']}")
+            st.write(f"**Status**: {job['status']}")
+            st.write(f"**Proposed Schedule**: {job.get('proposed_schedule', 'Not proposed')}")
+
+            if job["status"] == "pending":
+                with st.form(key=f"decision_form_{job['job_id']}"):
+                    decision = st.radio("Decision", ["Accept", "Reject"], horizontal=True)
+                    submitted = st.form_submit_button("Submit Decision")
+                    if submitted:
+                        try:
+                            if decision == "Accept":
+                                accept_job(job["job_id"], contractor_id)
+                                st.success("Job accepted.")
+                            else:
+                                reject_job(job["job_id"], contractor_id)
+                                st.warning("Job rejected.")
+                        except ValueError as e:
+                            st.error(str(e))
+
+            elif job["status"] == "accepted":
+                with st.form(key=f"schedule_form_{job['job_id']}"):
+                    date = st.date_input("Propose Date")
+                    time = st.time_input("Propose Time")
+                    submitted = st.form_submit_button("Propose Schedule")
+                    if submitted:
+                        schedule_str = f"{date} {time}"
+                        try:
+                            propose_schedule(job["job_id"], contractor_id, schedule_str)
+                            st.success("Schedule proposed.")
+                        except ValueError as e:
+                            st.error(str(e))
 
 def run_contractor_dashboard():
     html("<style>body { font-family: 'SF Pro Display', sans-serif; }</style>")
@@ -138,8 +185,7 @@ def run_contractor_dashboard():
     # -- Role-Specific Panel
     st.subheader("📇 Details")
     st.markdown("### 🔧 Jobs and Schedule")
-    st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Job info will appear here.</div>", unsafe_allow_html=True)
-    st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Schedule info will appear here.</div>", unsafe_allow_html=True)
+    render_contractor_dashboard()
 
     # -- Responsive Styling
     html("""
