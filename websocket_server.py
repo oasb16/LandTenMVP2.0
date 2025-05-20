@@ -113,8 +113,10 @@ async def websocket_handler(websocket, path):
                 del connected_clients[thread_id]
 
 # Start WebSocket server
-start_server = websockets.serve(websocket_handler, "localhost", 8765)
+async def main():
+    logging.info("Starting WebSocket server on ws://localhost:8765")
+    async with websockets.serve(websocket_handler, "localhost", 8765):
+        await asyncio.Future()  # Run forever
 
-logging.info("Starting WebSocket server on ws://localhost:8765")
-asyncio.get_event_loop().run_until_complete(start_server)
-asyncio.get_event_loop().run_forever()
+if __name__ == "__main__":
+    asyncio.run(main())
