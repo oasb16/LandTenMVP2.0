@@ -35,6 +35,11 @@ def log_popover(context, error):
     logging.error(f"Error in {context}: {str(error)}")
     logging.error(traceback.format_exc())
 
+def log_success(context, error):
+    """Log detailed error information."""
+    logging.error(f"Error in {context}: {str(error)}")
+    logging.error(traceback.format_exc())
+
 
 def authenticate_client(token):
     """Authenticate WebSocket client using JWT."""
