@@ -23,6 +23,7 @@ except KeyError as e:
     log_error(f"Missing required secret: {e.args[0]}")
     st.stop()
 
+
 from utils.session_persistence import try_restore_session, store_session
 
 # Attempt to restore session before anything else
