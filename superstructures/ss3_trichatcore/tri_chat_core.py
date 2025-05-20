@@ -8,6 +8,7 @@ import traceback
 import streamlit.components.v1 as components
 import boto3
 from botocore.exceptions import ClientError
+from streamlit_app import log_success
 
 # Configure logging
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -124,7 +125,7 @@ def prune_empty_threads():
                         "email": item["email"],
                         "id": item["id"]
                     })
-        st.success("Empty threads have been deleted successfully.")
+        log_success("Empty threads have been deleted successfully.")
     except ClientError as e:
         st.error(f"DynamoDB Error in prune_empty_threads: {e.response['Error']['Message']}")
 

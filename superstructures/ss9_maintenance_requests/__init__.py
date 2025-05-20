@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import sqlite3
 from datetime import datetime
+from streamlit_app import log_success
 
 def initialize_database():
     conn = sqlite3.connect("maintenance_requests.db")
@@ -71,5 +72,5 @@ def handle_maintenance_requests():
         conn.close()
 
         # Notify landlord and contractor (simulated)
-        st.success(f"Maintenance request submitted successfully! Request ID: {request_id}")
+        log_success(f"Maintenance request submitted successfully! Request ID: {request_id}")
         st.info("Landlord and contractor have been notified.")

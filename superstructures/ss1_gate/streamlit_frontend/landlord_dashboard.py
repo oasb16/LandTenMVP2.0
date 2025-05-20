@@ -29,6 +29,8 @@ from superstructures.ss1_gate.shared.thread_job_service import (
     prune_empty_threads
 )
 
+from streamlit_app import log_success
+
 # -- Config
 CLIENT_ID = st.secrets.get("COGNITO_CLIENT_ID")
 COGNITO_DOMAIN = "https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com"
@@ -80,7 +82,7 @@ def run_landlord_dashboard():
             if st.button("🧹 Delete All Threads"):
                 delete_all_threads()
                 st.session_state['selected_thread'] = None
-                st.success("Threads cleared.")
+                log_success("Threads cleared.")
                 st.rerun()
 
             if st.button("❎ Delete Empty Threads"):
@@ -88,7 +90,7 @@ def run_landlord_dashboard():
 
             if st.button("🎯 Generate Dummy Threads"):
                 threads = generate_dummy_threads()
-                st.success(f"Dummy threads: {', '.join(threads)}")
+                log_success(f"Dummy threads: {', '.join(threads)}")
                 st.rerun()
 
     # -- Layout: Title + Chat
