@@ -4,13 +4,23 @@ from superstructures.ss1_gate.persona_extractor import extract_persona
 from superstructures.ss1_gate.shared.dynamodb import save_user_profile
 from streamlit_javascript import st_javascript
 from datetime import datetime
-import requests
+import requests, logging, traceback
 import base64
 import json
 import jwt
-from streamlit_app import log_error, log_popover
 
 st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")
+
+# Enhanced error handling and logging for WebSocket server and DynamoDB Streams
+def log_error(context, error):
+    """Log detailed error information."""
+    logging.error(f"Error in {context}: {str(error)}")
+    logging.error(traceback.format_exc())
+
+def log_popover(context, error):
+    """Log detailed error information."""
+    logging.error(f"Error in {context}: {str(error)}")
+    logging.error(traceback.format_exc())
 
 # === Secrets
 try:
