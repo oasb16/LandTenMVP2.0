@@ -8,7 +8,6 @@ from utils.incident_writer import save_incident_from_media
 import boto3
 from botocore.exceptions import ClientError
 import logging
-from websocket_server import log_success, log_error
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -45,13 +44,10 @@ def save_message_to_dynamodb(thread_id, message):
         table.put_item(Item=message)
     except ValueError as ve:
         logging.error(f"Schema validation error: {ve} message to DynamoDB for thread_id: {thread_id}, message: {message}")
-        log_error(f"Schema validation error: {ve} message to DynamoDB for thread_id: {thread_id}, message: {message}")
         return False
     except ClientError as e:
         logging.error(f"DynamoDB Error in save_message_to_dynamodb: {e.response['Error']['Message']}")
-        log_error(f"DynamoDB Error in save_message_to_dynamodb: {e.response['Error']['Message']}")
         return False
-    log_success(f"Saved message to DynamoDB for thread_id: {thread_id}, message: {message}")
     return True
 
 def append_chat_log(thread_id, message):
@@ -72,13 +68,10 @@ def append_chat_log(thread_id, message):
                     ':empty_list': []
                 }
             )
-            log_success(f"Chat log updated for thread_id: {thread_id}")
         except ClientError as e:
             logging.error(f"Error appending to chat_log: {e.response['Error']['Message']}")
-            log_error(f"Error appending to chat_log: {e.response['Error']['Message']}")
     except ClientError as e:
         logging.error(f"DynamoDB Error in append_chat_log: {e.response['Error']['Message']}")
-        log_error(f"DynamoDB Error in append_chat_log: {e.response['Error']['Message']}")
         return False
     return True
 
@@ -100,7 +93,6 @@ def save_incident_from_media(chat_log, persona, thread_id):
     try:
         table.put_item(Item=incident)
     except ClientError as e:
-        log_error(f"DynamoDB Error in save_incident_from_media: {e.response['Error']['Message']}")
         print(f"DynamoDB Error: {e.response['Error']['Message']}")
         return False
     return True
@@ -119,7 +111,6 @@ def get_chat_log(thread_id):
                 )
         return chat_log
     except ClientError as e:
-        log_error(f"DynamoDB Error in get_chat_log: {e.response['Error']['Message']}")
         return []
 
 def get_thread_id():
@@ -198,7 +189,6 @@ def run_chat_core():
                 thread_id=thread_id
             )
         except Exception as e:
-            log_error(f"Error in run_summon_engine: {e}")
             agent_reply = f"[Agent error: {str(e)}]"
         if agent_reply:
             agent_msg = {
@@ -221,7 +211,6 @@ def get_all_threads_from_dynamodb():
         return response.get("Items", [])
     except ClientError as e:
         logging.error(f"DynamoDB Error in get_all_threads_from_dynamodb: {e.response['Error']['Message']}")
-        log_error(f"DynamoDB Error in get_all_threads_from_dynamodb: {e.response['Error']['Message']}")
         return []
 
 def delete_all_threads_from_dynamodb():
@@ -236,7 +225,7 @@ def delete_all_threads_from_dynamodb():
                     "id": item["id"]
                 })
     except ClientError as e:
-        log_error(f"DynamoDB Error in delete_all_threads_from_dynamodb: {e.response['Error']['Message']}")
+        pass
 
 
 def upload_thread_to_s3(thread_id, chat_log):
@@ -259,19 +248,16 @@ def upload_thread_to_s3(thread_id, chat_log):
             HttpMethod="GET"
         )
 
-        log_success(f"Thread uploaded to S3. To view click [here]({presigned_url})")
         return presigned_url
 
     except ClientError as e:
         logging.error(f"S3 Upload Error: {e.response['Error']['Message']}")
-        log_error(f"S3 Upload Error: {e.response['Error']['Message']}")
         return None
 
 
 def upload_media_to_s3(file, thread_id):
     try:
         file_key = f"media/{thread_id}/{file.name}"
-        log_success(f"Uploading media to S3 for thread_id: {thread_id}, file_key: {file_key}")
         s3_client.upload_fileobj(file, st.secrets["S3_BUCKET"], file_key)
 
         # Generate a presigned URL for the uploaded media
@@ -297,14 +283,10 @@ def upload_media_to_s3(file, thread_id):
         append_chat_log(thread_id, user_msg)
         upload_thread_to_s3(thread_id, get_chat_log(thread_id))
 
-        # Display success message with the presigned URL
-        log_success(f"Media uploaded successfully! Access it [here]({presigned_url})")
-
         return presigned_url
 
     except ClientError as e:
         logging.error(f"S3 Upload Error: {e.response['Error']['Message']}")
-        log_error(f"S3 Upload Error: {e.response['Error']['Message']}")
         return None
 
 
@@ -318,7 +300,6 @@ def get_thread_from_s3(thread_id):
         return thread_data
     except ClientError as e:
         logging.error(f"S3 Fetch Error: {e.response['Error']['Message']}")
-        log_error(f"S3 Fetch Error: {e.response['Error']['Message']}")
         return []
 
 def run_summon_engine(chat_log, user_input, persona, thread_id):
@@ -401,12 +382,6 @@ def run_summon_engine(chat_log, user_input, persona, thread_id):
         upload_thread_to_s3(thread_id, chat_log)
         st.session_state['agent_state'] = "completed"
 
-        log_success("💡 Agent updated with media context.")
-
-
-    # Log final state
-    log_success(f"Final state: {states[st.session_state['agent_state']]}")
-
 def update_thread_timestamp_in_dynamodb(thread_id):
     table = dynamodb.Table(st.secrets["DYNAMODB_TABLE"])
     try:
@@ -416,4 +391,4 @@ def update_thread_timestamp_in_dynamodb(thread_id):
             ExpressionAttributeValues={":timestamp": datetime.utcnow().isoformat()}
         )
     except ClientError as e:
-        log_error(f"DynamoDB Error in update_thread_timestamp_in_dynamodb: {e.response['Error']['Message']}")
+        pass

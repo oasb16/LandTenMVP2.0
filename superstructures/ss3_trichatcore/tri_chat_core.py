@@ -8,7 +8,7 @@ import traceback
 import streamlit.components.v1 as components
 import boto3
 from botocore.exceptions import ClientError
-from websocket_server import log_success, log_error
+# from websocket_server import log_success, log_error
 
 # Configure logging
 logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -125,9 +125,10 @@ def prune_empty_threads():
                         "email": item["email"],
                         "id": item["id"]
                     })
-        log_success("Empty threads have been deleted successfully.")
+        # log_success("Empty threads have been deleted successfully.")
     except ClientError as e:
-        log_error(f"DynamoDB Error in prune_empty_threads: {e.response['Error']['Message']}")
+        # log_error(f"DynamoDB Error in prune_empty_threads: {e.response['Error']['Message']}")
+        pass
 
 def run_chat_core():
     initialize_session_state()

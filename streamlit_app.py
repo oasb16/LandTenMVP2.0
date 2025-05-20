@@ -8,7 +8,7 @@ import requests, logging, traceback
 import base64
 import json
 import jwt
-from websocket_server import log_error,log_success,log_popover
+# from websocket_server import log_error,log_success,log_popover
 
 st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")
 
@@ -20,7 +20,7 @@ try:
     CLIENT_SECRET = st.secrets["COGNITO_CLIENT_SECRET"]
     TOKEN_ENDPOINT = f"{COGNITO_DOMAIN}/oauth2/token"
 except KeyError as e:
-    log_error(f"Missing required secret: {e.args[0]}")
+    # log_error(f"Missing required secret: {e.args[0]}")
     st.stop()
 
 from utils.session_persistence import try_restore_session, store_session
@@ -43,11 +43,11 @@ with st.sidebar:
     params = st.query_params
     if "code" in params:
         st.session_state["oauth_code"] = params["code"]
-        log_popover(f"params[] : {params['code']}")
+        # log_popover(f"params[] : {params['code']}")
         st.session_state['persona'] = st.selectbox("Choose your role", ["tenant", "landlord", "contractor"])
-        log_popover(f"Selected role: {st.session_state['persona']}")
+        # log_popover(f"Selected role: {st.session_state['persona']}")
         st.session_state["logged_in"] = True
-        log_popover("Logged in successfully!")
+        # log_popover("Logged in successfully!")
         st.text(f"Agent state: {st.session_state['agent_state']}")
         st.text(f"Agent status: {states[st.session_state['agent_state']]}")
 
@@ -81,7 +81,8 @@ def handle_persona_routing():
     if page:
         st.session_state["page"] = page
     else:
-        log_error("Unknown persona. Please contact support.")
+        # log_error("Unknown persona. Please contact support.")
+        pass
 
 # === Logout
 def logout():
@@ -141,9 +142,10 @@ if "oauth_code" in st.session_state and "user_profile" not in st.session_state:
                     "login_source": "GoogleSSO",
                     "timestamp": datetime.utcnow().isoformat()
                 })
-                log_success("✅ Profile saved to DB")
+                # log_success("✅ Profile saved to DB")
             except Exception as e:
-                log_error(f"DB write failed: {e}")
+                # log_error(f"DB write failed: {e}")
+                pass
 
             import streamlit.components.v1 as components
             components.html(f"""
@@ -155,9 +157,11 @@ if "oauth_code" in st.session_state and "user_profile" not in st.session_state:
 
             # st.rerun()
         else:
-            log_error(f"OAuth token request failed: {res.status_code} {res.text}")
+            # log_error(f"OAuth token request failed: {res.status_code} {res.text}")
+            pass
     except Exception as e:
-        log_error(f"Token exchange error: {e}")
+        # log_error(f"Token exchange error: {e}")
+        pass
 
 # === Routing
 if "user_profile" in st.session_state:
@@ -168,7 +172,7 @@ if st.session_state.get("logged_in") and "page" not in st.session_state:
 
 page = st.session_state.get("page")
 if not page:
-    log_error("No page specified. Please log in again.")
+    # log_error("No page specified. Please log in again.")
     st.stop()
 
 # === Final route
@@ -182,4 +186,5 @@ elif page == "landlord_dashboard":
     from superstructures.ss1_gate.streamlit_frontend.landlord_dashboard import run_landlord_dashboard
     run_landlord_dashboard()
 else:
-    log_error("Invalid page. Please log in again.")
+    # log_error("Invalid page. Please log in again.")
+    pass
