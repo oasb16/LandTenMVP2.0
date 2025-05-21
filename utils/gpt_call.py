@@ -50,3 +50,14 @@ def call_gpt_vision(image_bytes):
         max_tokens=300
     )
     return response.choices[0].message.content
+
+def call_gpt_model(prompt: str) -> str:
+    """Calls the GPT model with the given prompt and returns the response."""
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "system", "content": prompt}]
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        raise RuntimeError(f"Failed to call GPT model: {e}")

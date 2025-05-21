@@ -32,7 +32,11 @@ COGNITO_DOMAIN = "https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com"
 REDIRECT_URI = "https://landtenmvp20.streamlit.app/"
 WEBSOCKET_SERVER_URL = "ws://localhost:8765"
 
-def render_contractor_dashboard():
+def run_contractor_dashboard():
+    if st.session_state.get("persona") != "contractor":
+        st.error("Access denied.")
+        return
+
     st.header("Contractor Dashboard")
 
     contractor_id = st.session_state.get("user_id", "")
@@ -185,7 +189,7 @@ def run_contractor_dashboard():
     # -- Role-Specific Panel
     st.subheader("📇 Details")
     st.markdown("### 🔧 Jobs and Schedule")
-    render_contractor_dashboard()
+    run_contractor_dashboard()
 
     # -- Responsive Styling
     html("""
