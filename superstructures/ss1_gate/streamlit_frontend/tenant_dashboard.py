@@ -11,6 +11,8 @@ from datetime import datetime
 from uuid import uuid4
 from urllib.parse import quote
 from streamlit.components.v1 import html
+import websocket
+import time
 
 # -- Core Modules --
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
@@ -28,6 +30,56 @@ CLIENT_ID = st.secrets.get("COGNITO_CLIENT_ID")
 COGNITO_DOMAIN = "https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com"
 REDIRECT_URI = "https://landtenmvp20.streamlit.app/"
 WEBSOCKET_SERVER_URL = "ws://localhost:8765"
+
+# Debounce control
+def _trigger_notification(event_type, job_id):
+    if event_type == "job_accepted":
+        st.toast(f"✅ Your job {job_id} was accepted.")
+    elif event_type == "schedule_proposed":
+        st.toast(f"📅 Contractor proposed a schedule for job {job_id}.")
+    time.sleep(1)
+    st.experimental_rerun()
+
+def _ws_listener():
+    def on_message(ws, message):
+        try:
+            data = json.loads(message)
+            event_type = data.get("event")
+            payload = data.get("payload", {})
+            job_id = payload.get("job_id", "unknown")
+
+            if event_type in {"job_accepted", "schedule_proposed"}:
+                _trigger_notification(event_type, job_id)
+
+        except Exception as e:
+            print(f"❌ WebSocket message parse error: {e}")
+
+    def on_error(ws, error):
+        print(f"⚠️ WebSocket error: {error}")
+
+    def on_close(ws, close_status_code, close_msg):
+        print("🔌 WebSocket closed")
+
+    def on_open(ws):
+        print("🔗 WebSocket connection established")
+
+    ws = websocket.WebSocketApp(
+        "ws://localhost:8765/",
+        on_open=on_open,
+        on_message=on_message,
+        on_error=on_error,
+        on_close=on_close
+    )
+
+    try:
+        ws.run_forever()
+    except Exception as e:
+        print(f"WebSocket connection failed: {e}")
+
+# Launch listener thread (one-time)
+if not st.session_state.get("ws_active"):
+    st.session_state["ws_active"] = True
+    threading.Thread(target=_ws_listener, daemon=True).start()
 
 def run_tenant_dashboard():
     # -- Brand Overlay

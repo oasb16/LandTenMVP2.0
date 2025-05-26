@@ -1,48 +1,42 @@
 from typing import List, Dict, Any
-from utils.gpt_call import call_gpt_agent
-import json
-import os
-from uuid import uuid4
+from utils.gpt_call import call_gpt_model
 
 def process_agent_tag(chat_data: List[Dict[str, str]]) -> Dict[str, Any]:
+    """
+    Accepts chat_data and returns GPT-suggested job metadata.
+    """
     if not chat_data:
-        raise ValueError("Chat data is empty.")
+        return {"job_type": "", "description": "", "priority": "", "price": None}
 
-    formatted_messages = "\n".join(
+    # Format chat log for GPT prompt
+    formatted_chat = "\n".join(
         f"{msg['sender']} ({msg['timestamp']}): {msg['message']}"
         for msg in chat_data
     )
 
+    # System prompt
     system_prompt = (
-        "You are a property maintenance expert. Given a list of chat messages between tenant and landlord, extract:\n\n"
-        "- The likely job type (e.g. plumbing, electrical)\n"
-        "- A description of the issue\n"
+        "You are a property maintenance expert.\n\n"
+        "Analyze the following tenant-landlord chat log and extract:\n"
+        "- The likely job type (e.g., plumbing, electrical)\n"
+        "- A description of the problem\n"
         "- The urgency (low, medium, high)\n"
-        "- An estimated price range if possible\n\n"
-        "Output as a JSON dictionary with keys: job_type, description, priority, price"
+        "- An estimated price if appropriate\n\n"
+        "Output only a JSON dictionary with keys:\n"
+        "job_type, description, priority, price"
     )
 
-    prompt_payload = f"{system_prompt}\n\nCHAT LOG:\n{formatted_messages}"
-
-    gpt_response = call_gpt_agent([{"role": "system", "content": prompt_payload}])
+    prompt_payload = f"{system_prompt}\n\nCHAT LOG:\n{formatted_chat}"
 
     try:
-        gpt_response_dict = json.loads(gpt_response)
-    except json.JSONDecodeError:
-        raise ValueError("GPT response is not valid JSON.")
-
-    if not isinstance(gpt_response_dict, dict):
-        raise ValueError("GPT response is not a dictionary.")
-
-    expected_keys = {"job_type", "description", "priority", "price"}
-    if not expected_keys.issubset(gpt_response_dict):
-        raise ValueError(f"GPT response missing required keys: {expected_keys - gpt_response_dict.keys()}")
-
-    # Optional: Log raw output in dev mode
-    if os.getenv("DEV_MODE") == "true":
-        log_file = f"logs/agent_responses_{uuid4()}.json"
-        os.makedirs(os.path.dirname(log_file), exist_ok=True)
-        with open(log_file, "w") as f:
-            json.dump(gpt_response_dict, f, indent=4)
-
-    return gpt_response_dict
+        result = call_gpt_model(prompt_payload)
+        if isinstance(result, dict) and all(k in result for k in ["job_type", "description", "priority", "price"]):
+            return result
+        else:
+            # Optional logging stub — replace with actual logger if needed
+            print("⚠️ Malformed GPT response:", result)
+            return {"job_type": "", "description": "", "priority": "", "price": None}
+    except Exception as e:
+        # Optional logging stub — replace with actual logger if needed
+        print(f"❌ GPT call failed: {e}")
+        return {"job_type": "", "description": "", "priority": "", "price": None}

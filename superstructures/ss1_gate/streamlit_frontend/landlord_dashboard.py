@@ -57,33 +57,48 @@ def run_landlord_dashboard():
             for msg in incident.get("chat_data", []):
                 st.markdown(f"- **{msg['sender']}** @ {msg['timestamp']}: {msg['message']}")
 
-            if st.button("🧠 Analyze with Agent", key=f"analyze_{incident['incident_id']}"):
+            # Analyze with Agent
+            agent_key = f"agent_output_{incident['incident_id']}"
+            if st.button("🧠 Analyze with Agent", key=agent_key):
                 try:
-                    agent_response = process_agent_tag(incident["chat_data"])
+                    suggestion = process_agent_tag(incident["chat_data"])
+                    st.session_state[agent_key] = suggestion
                     st.success("Agent analysis complete. Prefilling job form.")
-
-                    with st.form(key=f"create_job_form_{incident['incident_id']}"):
-                        st.markdown("### Create Job from This Incident")
-                        job_type = st.text_input("Job Type", value=agent_response.get("job_type", ""))
-                        description = st.text_area("Job Description", value=agent_response.get("description", ""))
-                        price = st.number_input("Price", min_value=0.0, format="%.2f", value=float(agent_response.get("price", 0)))
-                        priority = st.selectbox("Priority", ["Low", "Medium", "High"], index=["Low", "Medium", "High"].index(agent_response.get("priority", "Low")))
-                        submit = st.form_submit_button("Create Job")
-                        if submit:
-                            try:
-                                create_job({
-                                    "incident_id": incident["incident_id"],
-                                    "job_type": job_type,
-                                    "description": description,
-                                    "price": price,
-                                    "priority": priority,
-                                    "created_by": user_id
-                                })
-                                st.success("Job created.")
-                            except Exception as e:
-                                st.error(f"Error creating job: {e}")
                 except Exception as e:
-                    st.error(f"Agent analysis failed: {e}")
+                    st.warning("Agent failed to process chat.")
+                    st.session_state[agent_key] = None
+                    print(f"❌ Agent analysis failed: {e}")
+
+            # Display GPT suggestion if available
+            suggestion = st.session_state.get(agent_key)
+            if suggestion:
+                st.subheader("🔍 Agent Suggestion")
+                st.markdown(f"**Job Type**: {suggestion['job_type']}")
+                st.markdown(f"**Priority**: {suggestion['priority']}")
+                st.markdown(f"**Estimated Price**: {suggestion['price']}")
+                st.markdown(f"**Description**: {suggestion['description']}")
+
+            # Job Creation Form (Prefilled if suggestion exists)
+            with st.form(key=f"create_job_form_{incident['incident_id']}"):
+                st.markdown("### Create Job from This Incident")
+                job_type = st.text_input("Job Type", value=suggestion.get("job_type", "") if suggestion else "")
+                description = st.text_area("Job Description", value=suggestion.get("description", "") if suggestion else "")
+                price = st.number_input("Price", min_value=0.0, format="%.2f", value=suggestion.get("price", 0.0) if suggestion and suggestion.get("price") else 0.0)
+                priority = st.selectbox("Priority", ["Low", "Medium", "High"], index=["Low", "Medium", "High"].index(suggestion.get("priority", "Medium")) if suggestion else 1)
+                submit = st.form_submit_button("Create Job")
+                if submit:
+                    try:
+                        create_job({
+                            "incident_id": incident["incident_id"],
+                            "job_type": job_type,
+                            "description": description,
+                            "price": price,
+                            "priority": priority,
+                            "created_by": user_id
+                        })
+                        st.success("Job created.")
+                    except Exception as e:
+                        st.error(f"Error creating job: {e}")
 
     st.subheader("🔧 Assign Contractors to Jobs")
     try:
