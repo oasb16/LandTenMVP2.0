@@ -11,7 +11,7 @@ from datetime import datetime
 from uuid import uuid4
 from urllib.parse import quote
 from streamlit.components.v1 import html
-import websocket
+import websockets
 import time
 
 # -- Core Modules --
