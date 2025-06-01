@@ -7,6 +7,7 @@ import threading
 import subprocess
 import json
 import logging
+import os
 from datetime import datetime
 from uuid import uuid4
 from urllib.parse import quote
@@ -22,9 +23,6 @@ from superstructures.ss5_summonengine.summon_engine import (
     upload_thread_to_s3,
     save_message_to_dynamodb
 )
-from superstructures.ss6_actionrelay.job_manager import (
-    get_jobs_for_contractor, accept_job, reject_job, propose_schedule
-)
 
 # -- Config
 CLIENT_ID = st.secrets.get("COGNITO_CLIENT_ID")
@@ -32,53 +30,13 @@ COGNITO_DOMAIN = "https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com"
 REDIRECT_URI = "https://landtenmvp20.streamlit.app/"
 WEBSOCKET_SERVER_URL = "ws://localhost:8765"
 
-def run_contractor_dashboard():
-    if st.session_state.get("persona") != "contractor":
-        st.error("Access denied.")
-        return
-
-    st.header("Contractor Dashboard")
-
-    contractor_id = st.session_state.get("user_id", "")
-    if not contractor_id:
-        st.error("User ID missing from session.")
-        return
-
-    assigned_jobs = get_jobs_for_contractor(contractor_id)
-
-    for job in assigned_jobs:
-        with st.expander(f"Job: {job['description']}"):
-            st.write(f"**Priority**: {job['priority']}")
-            st.write(f"**Status**: {job['status']}")
-            st.write(f"**Proposed Schedule**: {job.get('proposed_schedule', 'Not proposed')}")
-
-            if job["status"] == "pending":
-                with st.form(key=f"decision_form_{job['job_id']}"):
-                    decision = st.radio("Decision", ["Accept", "Reject"], horizontal=True)
-                    submitted = st.form_submit_button("Submit Decision")
-                    if submitted:
-                        try:
-                            if decision == "Accept":
-                                accept_job(job["job_id"], contractor_id)
-                                st.success("Job accepted.")
-                            else:
-                                reject_job(job["job_id"], contractor_id)
-                                st.warning("Job rejected.")
-                        except ValueError as e:
-                            st.error(str(e))
-
-            elif job["status"] == "accepted":
-                with st.form(key=f"schedule_form_{job['job_id']}"):
-                    date = st.date_input("Propose Date")
-                    time = st.time_input("Propose Time")
-                    submitted = st.form_submit_button("Propose Schedule")
-                    if submitted:
-                        schedule_str = f"{date} {time}"
-                        try:
-                            propose_schedule(job["job_id"], contractor_id, schedule_str)
-                            st.success("Schedule proposed.")
-                        except ValueError as e:
-                            st.error(str(e))
+def get_jobs_by_contractor(contractor_id):
+    log_path = "logs/jobs.json"
+    if not os.path.exists(log_path):
+        return []
+    with open(log_path, "r") as f:
+        jobs = json.load(f)
+    return [job for job in jobs if job.get("assigned_contractor_id") == contractor_id]
 
 def run_contractor_dashboard():
     html("<style>body { font-family: 'SF Pro Display', sans-serif; }</style>")
@@ -189,7 +147,50 @@ def run_contractor_dashboard():
     # -- Role-Specific Panel
     st.subheader("📇 Details")
     st.markdown("### 🔧 Jobs and Schedule")
-    run_contractor_dashboard()
+    st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Job info will appear here.</div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Schedule info will appear here.</div>", unsafe_allow_html=True)
+
+    st.header("📋 Assigned Jobs")
+    contractor_id = st.session_state.get("user_id", "")
+    jobs = get_jobs_by_contractor(contractor_id)
+
+    if not jobs:
+        st.info("No jobs assigned yet.")
+
+    for job in jobs:
+        with st.expander(f"Job: {job['description']}"):
+            st.write(f"**Status:** {job['status']}")
+            st.write(f"**Priority:** {job['priority']}")
+            st.write(f"**Accepted:** {job.get('accepted', '—')}")
+            st.write(f"**Schedule:** {job.get('proposed_schedule', '—')}")
+
+            if job["status"] == "pending":
+                with st.form(key=f"decision_{job['job_id']}"):
+                    decision = st.radio("Decision", ["Accept", "Reject"], horizontal=True)
+                    if st.form_submit_button("Submit"):
+                        from superstructures.ss6_actionrelay.job_manager import accept_job, reject_job
+                        try:
+                            if decision == "Accept":
+                                accept_job(job["job_id"], contractor_id)
+                            else:
+                                reject_job(job["job_id"], contractor_id)
+                            st.success("Decision recorded.")
+                            st.experimental_rerun()
+                        except Exception as e:
+                            st.error(str(e))
+
+            elif job["status"] == "accepted":
+                with st.form(key=f"schedule_{job['job_id']}"):
+                    date = st.date_input("Propose Date")
+                    time = st.time_input("Propose Time")
+                    if st.form_submit_button("Propose Schedule"):
+                        from superstructures.ss6_actionrelay.job_manager import propose_schedule
+                        try:
+                            propose_schedule(job["job_id"], contractor_id, f"{date} {time}")
+                            st.success("Schedule proposed.")
+                            st.experimental_rerun()
+                        except Exception as e:
+                            st.error(str(e))
 
     # -- Responsive Styling
     html("""

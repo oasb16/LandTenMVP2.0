@@ -7,12 +7,11 @@ import threading
 import subprocess
 import json
 import logging
+import os
 from datetime import datetime
 from uuid import uuid4
 from urllib.parse import quote
 from streamlit.components.v1 import html
-import websockets
-import time
 
 # -- Core Modules --
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
@@ -31,55 +30,13 @@ COGNITO_DOMAIN = "https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com"
 REDIRECT_URI = "https://landtenmvp20.streamlit.app/"
 WEBSOCKET_SERVER_URL = "ws://localhost:8765"
 
-# Debounce control
-def _trigger_notification(event_type, job_id):
-    if event_type == "job_accepted":
-        st.toast(f"✅ Your job {job_id} was accepted.")
-    elif event_type == "schedule_proposed":
-        st.toast(f"📅 Contractor proposed a schedule for job {job_id}.")
-    time.sleep(1)
-    st.experimental_rerun()
-
-def _ws_listener():
-    def on_message(ws, message):
-        try:
-            data = json.loads(message)
-            event_type = data.get("event")
-            payload = data.get("payload", {})
-            job_id = payload.get("job_id", "unknown")
-
-            if event_type in {"job_accepted", "schedule_proposed"}:
-                _trigger_notification(event_type, job_id)
-
-        except Exception as e:
-            print(f"❌ WebSocket message parse error: {e}")
-
-    def on_error(ws, error):
-        print(f"⚠️ WebSocket error: {error}")
-
-    def on_close(ws, close_status_code, close_msg):
-        print("🔌 WebSocket closed")
-
-    def on_open(ws):
-        print("🔗 WebSocket connection established")
-
-    ws = websocket.WebSocketApp(
-        "ws://localhost:8765/",
-        on_open=on_open,
-        on_message=on_message,
-        on_error=on_error,
-        on_close=on_close
-    )
-
-    try:
-        ws.run_forever()
-    except Exception as e:
-        print(f"WebSocket connection failed: {e}")
-
-# Launch listener thread (one-time)
-if not st.session_state.get("ws_active"):
-    st.session_state["ws_active"] = True
-    threading.Thread(target=_ws_listener, daemon=True).start()
+def get_incidents_by_user(user_id):
+    log_path = "logs/incidents.json"
+    if not os.path.exists(log_path):
+        return []
+    with open(log_path, "r") as f:
+        incidents = json.load(f)
+    return [inc for inc in incidents if inc.get("tenant_id") == user_id]
 
 def run_tenant_dashboard():
     # -- Brand Overlay
@@ -195,6 +152,20 @@ def run_tenant_dashboard():
     if persona == "Tenant":
         st.markdown("### 🚨 Incidents")
         st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Incident details will appear here.</div>", unsafe_allow_html=True)
+        st.header("🧾 My Reported Incidents")
+        user_id = st.session_state.get("user_id", "")
+        incidents = get_incidents_by_user(user_id)
+
+        if not incidents:
+            st.info("No incidents reported yet.")
+        for inc in incidents:
+            with st.expander(f"Issue: {inc['issue']}"):
+                st.write(f"**Priority:** {inc['priority']}")
+                st.write(f"**Reported by:** {inc.get('created_by', 'N/A')}")
+                st.write("**Chat Log:**")
+                for msg in inc.get("chat_data", []):
+                    st.markdown(f"- **{msg['sender']}** @ {msg['timestamp']}: {msg['message']}")
+        st.button("🔄 Refresh", on_click=st.experimental_rerun)
     elif persona == "Landlord":
         st.markdown("### 🏗️ Jobs")
         st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Job details will appear here.</div>", unsafe_allow_html=True)
