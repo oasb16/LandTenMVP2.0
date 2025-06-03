@@ -168,7 +168,9 @@ def run_tenant_dashboard():
                 incident_id = inc["incident_id"]
                 chat_data = get_chat_thread(incident_id)
                 render_chat_thread(chat_data, incident_id)
-        st.button("🔄 Refresh", on_click=st.experimental_rerun)
+        if st.button("🔄 Refresh"):
+            st.rerun()
+
 
         # Fetch jobs for tenant
         jobs = get_all_jobs()
