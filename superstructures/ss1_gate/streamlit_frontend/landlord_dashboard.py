@@ -139,6 +139,23 @@ def run_landlord_dashboard():
     if not incidents:
         st.info("No incidents available.")
     for incident in incidents:
+        from superstructures.ss7_intelprint.report_engine import generate_pdf_report
+
+        if st.button("📝 Export Report", key=f"report_{incident['id']}"):
+            try:
+                path = generate_pdf_report(incident["id"])
+                st.success(f"PDF report saved: {path}")
+                # Optional:
+                with open(path, "rb") as f:
+                    st.download_button(
+                        label="📥 Download PDF",
+                        data=f,
+                        file_name=f"incident_{incident['id']}.pdf",
+                        mime="application/pdf",
+                    )
+            except Exception as e:
+                st.warning(f"Report generation failed: {e}")
+
         with st.expander(f"Incident ID: {incident['incident_id']}"):
             st.write(f"**Description:** {incident['issue']}")
             st.write(f"**Priority:** {incident['priority']}")
