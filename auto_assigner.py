@@ -1,4 +1,4 @@
-import json
+import json, logging
 from contractor_metrics import build_scorecard
 from utils.gpt_call import call_gpt_model
 
@@ -32,4 +32,7 @@ def suggest_best_contractor(job_dict: dict,
         parsed = json.loads(response)
         return parsed.get("chosen_contractor")
     except Exception as e:
+        logging.error(f"GPT contractor selection failed: {e}")
+        if not isinstance(parsed, dict) or "chosen_contractor" not in parsed:
+            logging.warning("GPT returned invalid contractor suggestion format.")
         return None

@@ -37,6 +37,7 @@ WEBSOCKET_SERVER_URL = "ws://localhost:8765"
 def get_jobs_by_contractor(contractor_id):
     log_path = "logs/jobs.json"
     if not os.path.exists(log_path):
+        logging.warning(f"Missing job log file: {log_path}")
         return []
     with open(log_path, "r") as f:
         jobs = json.load(f)
@@ -47,7 +48,10 @@ def run_contractor_dashboard():
 
     @st.cache_resource
     def start_websocket_server():
-        subprocess.Popen(["python", "websocket_server.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            subprocess.Popen(["python", "websocket_server.py"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except Exception as e:
+            logging.error("WebSocket server failed to start: " + str(e))
 
     def start_websocket_client():
         async def listen():
