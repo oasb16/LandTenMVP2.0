@@ -149,6 +149,7 @@ def run_tenant_dashboard():
     # -- Chat Module
     run_chat_core()
 
+
     # -- Persona Views
     st.subheader("📇 Details")
     if persona == "Tenant":
