@@ -14,7 +14,7 @@ from urllib.parse import quote
 from streamlit.components.v1 import html
 from utils.db import save_feedback, get_chat_thread, get_all_jobs, get_feedback_by_job
 from superstructures.ss3_trichatcore.chat_renderer import render_chat_thread
-from ss6_actionrelay.feedback_logger import submit_feedback
+from superstructures.ss6_actionrelay.feedback_logger import submit_feedback
 
 # -- Core Modules --
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
