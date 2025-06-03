@@ -13,7 +13,7 @@ from uuid import uuid4
 from urllib.parse import quote
 from streamlit.components.v1 import html
 from utils.db import save_feedback, get_chat_thread, get_all_jobs, get_feedback_by_job
-from ss3_trichatcore.chat_renderer import render_chat_thread
+from superstructures.ss3_trichatcore.chat_renderer import render_chat_thread
 from ss6_actionrelay.feedback_logger import submit_feedback
 
 # -- Core Modules --
