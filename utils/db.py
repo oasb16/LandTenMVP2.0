@@ -3,6 +3,7 @@ import os
 from typing import List, Dict
 from utils.validation import validate_incident, validate_job
 from datetime import datetime
+from utils.validation import validate_incident, validate_job
 
 INCIDENTS_LOG = "logs/incidents.json"
 JOBS_LOG = "logs/jobs.json"
