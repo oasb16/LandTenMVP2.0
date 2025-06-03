@@ -1,4 +1,4 @@
-from ss5_summonengine.chat_summarizer import summarize_chat_thread
+from superstructures.ss5_summonengine.chat_summarizer import summarize_chat_thread
 from utils.db import get_chat_thread
 import streamlit as st
 
