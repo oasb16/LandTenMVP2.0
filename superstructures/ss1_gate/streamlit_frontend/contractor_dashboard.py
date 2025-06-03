@@ -23,6 +23,10 @@ from superstructures.ss5_summonengine.summon_engine import (
     upload_thread_to_s3,
     save_message_to_dynamodb
 )
+from ss3_trichatcore.chat_renderer import render_chat_thread
+from utils.db import get_chat_thread
+from ss6_actionrelay.feedback_logger import submit_feedback
+from utils.db import get_feedback_by_job
 
 # -- Config
 CLIENT_ID = st.secrets.get("COGNITO_CLIENT_ID")
@@ -164,6 +168,10 @@ def run_contractor_dashboard():
             st.write(f"**Accepted:** {job.get('accepted', '—')}")
             st.write(f"**Schedule:** {job.get('proposed_schedule', '—')}")
 
+            incident_id = job["incident_id"]
+            chat_data = get_chat_thread(incident_id)
+            render_chat_thread(chat_data, incident_id)
+
             if job["status"] == "pending":
                 with st.form(key=f"decision_{job['job_id']}"):
                     decision = st.radio("Decision", ["Accept", "Reject"], horizontal=True)
@@ -191,6 +199,31 @@ def run_contractor_dashboard():
                             st.experimental_rerun()
                         except Exception as e:
                             st.error(str(e))
+
+            elif job["status"] == "completed":
+                existing_feedback = get_feedback_by_job(job["job_id"])
+                already_submitted = any(
+                    f["submitted_by"] == st.session_state["user_email"] and f["role"] == "contractor"
+                    for f in existing_feedback
+                )
+
+                if not already_submitted:
+                    st.markdown("### 🧰 Rate this job experience")
+                    with st.form(key=f"feedback_form_{job['job_id']}"):
+                        rating = st.selectbox("Rating", [1, 2, 3, 4, 5])
+                        notes = st.text_area("Notes or observations")
+                        if st.form_submit_button("Submit Feedback"):
+                            try:
+                                submit_feedback({
+                                    "job_id": job["job_id"],
+                                    "submitted_by": st.session_state["user_email"],
+                                    "role": "contractor",
+                                    "rating": rating,
+                                    "notes": notes
+                                })
+                                st.success("✅ Feedback submitted!")
+                            except ValueError as ve:
+                                st.warning(str(ve))
 
     # -- Responsive Styling
     html("""

@@ -30,6 +30,10 @@ from superstructures.ss1_gate.shared.thread_job_service import (
     prune_empty_threads
 )
 
+from utils.trust_score import compute_contractor_trust_scores
+from utils.db import load_all_feedback
+from superstructures.ss7_intelprint.report_engine import generate_pdf_report
+
 # -- Config
 CLIENT_ID = st.secrets.get("COGNITO_CLIENT_ID")
 COGNITO_DOMAIN = "https://us-east-1liycxnadt.auth.us-east-1.amazoncognito.com"
@@ -121,6 +125,13 @@ def run_landlord_dashboard():
     st.markdown("### 🏗️ Jobs")
     st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Job requests, assignments, and contractor proposals will be shown here.</div>", unsafe_allow_html=True)
 
+    # -- Contractor Trust Scores
+    scores = compute_contractor_trust_scores()
+    if scores:
+        st.markdown("### 📊 Contractor Trust Scores")
+        for cid, score in scores.items():
+            st.markdown(f"**{cid}**: ⭐ {score}/5")
+
     # -- Incident Listing
     incidents = load_incidents()
 
@@ -142,6 +153,51 @@ def run_landlord_dashboard():
                     st.success("Job created successfully.")
                 except Exception as e:
                     st.error(f"Error creating job: {e}")
+            if st.button("📄 View Summary", key=f"summary_{incident['incident_id']}"):
+                from ss5_summonengine.chat_summarizer import summarize_chat_thread
+                with st.spinner("Generating summary..."):
+                    summary = summarize_chat_thread(incident["incident_id"])
+                    st.markdown(f"**📘 Case Summary:**\n\n{summary}")
+
+            report_path = f"logs/reports/incident_{incident['incident_id']}.pdf"
+
+            # Show Export Button
+            if not os.path.exists(report_path):
+                if st.button("📝 Export Report", key=f"report_{incident['incident_id']}"):
+                    try:
+                        path = generate_pdf_report(incident["incident_id"])
+                        st.success(f"✅ PDF report generated: {path}")
+                    except Exception as e:
+                        st.warning("⚠️ Report generation failed. Check logs.")
+            else:
+                st.success("📄 Report already exists.")
+                with open(report_path, "rb") as f:
+                    st.download_button(
+                        label="⬇️ Download Report",
+                        data=f,
+                        file_name=f"incident_{incident['incident_id']}.pdf",
+                        mime="application/pdf",
+                        key=f"download_{incident['incident_id']}"
+                    )
+
+    # -- Tenant Feedback History
+    feedback_entries = load_all_feedback()
+
+    if feedback_entries:
+        st.markdown("## 🗣️ Tenant Feedback History")
+        for fb in feedback_entries:
+            with st.expander(f"Job: {fb['job_id']} — ⭐ {fb['rating']}"):
+                st.markdown(f"**Submitted by:** {fb['submitted_by']}")
+                st.markdown(f"**Comment:** {fb['comment']}")
+                st.caption(f"🕒 {fb['timestamp']}")
+    else:
+        st.info("No feedback submitted yet.")
+
+    if st.button("🔍 Analyze Feedback"):
+        from feedback_reflector import analyze_feedback
+        summary = analyze_feedback()
+        st.markdown("### 📊 GPT Feedback Summary")
+        st.markdown(summary)
 
     # -- Responsive Styling
     html("""

@@ -12,6 +12,9 @@ from datetime import datetime
 from uuid import uuid4
 from urllib.parse import quote
 from streamlit.components.v1 import html
+from utils.db import save_feedback, get_chat_thread, get_all_jobs, get_feedback_by_job
+from ss3_trichatcore.chat_renderer import render_chat_thread
+from ss6_actionrelay.feedback_logger import submit_feedback
 
 # -- Core Modules --
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
@@ -93,7 +96,6 @@ def run_tenant_dashboard():
 
     # -- Sidebar Dashboard
     with st.sidebar:
-        st.title(f"👤 **{st.session_state.get('email', 'Unknown')}**")
         if st.button("Logout"):
             try:
                 st.session_state.clear()
@@ -163,9 +165,41 @@ def run_tenant_dashboard():
                 st.write(f"**Priority:** {inc['priority']}")
                 st.write(f"**Reported by:** {inc.get('created_by', 'N/A')}")
                 st.write("**Chat Log:**")
-                for msg in inc.get("chat_data", []):
-                    st.markdown(f"- **{msg['sender']}** @ {msg['timestamp']}: {msg['message']}")
+                incident_id = inc["incident_id"]
+                chat_data = get_chat_thread(incident_id)
+                render_chat_thread(chat_data, incident_id)
         st.button("🔄 Refresh", on_click=st.experimental_rerun)
+
+        # Fetch jobs for tenant
+        jobs = get_all_jobs()
+
+        # Feedback Form Logic
+        for job in jobs:
+            if job["status"] == "completed":
+                existing_feedback = get_feedback_by_job(job["job_id"])
+                already_submitted = any(
+                    f["submitted_by"] == st.session_state["user_email"] and f["role"] == "tenant"
+                    for f in existing_feedback
+                )
+
+                if not already_submitted:
+                    st.markdown("### 🗣️ Rate this job")
+                    with st.form(key=f"feedback_form_{job['job_id']}"):
+                        rating = st.selectbox("Rating", [1, 2, 3, 4, 5])
+                        notes = st.text_area("Feedback Notes")
+                        if st.form_submit_button("Submit Feedback"):
+                            try:
+                                submit_feedback({
+                                    "job_id": job["job_id"],
+                                    "submitted_by": st.session_state["user_email"],
+                                    "role": "tenant",
+                                    "rating": rating,
+                                    "notes": notes
+                                })
+                                st.success("✅ Feedback submitted!")
+                            except ValueError as ve:
+                                st.warning(str(ve))
+
     elif persona == "Landlord":
         st.markdown("### 🏗️ Jobs")
         st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Job details will appear here.</div>", unsafe_allow_html=True)
