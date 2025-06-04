@@ -31,6 +31,6 @@ def dev_seed_expander():
             except Exception as e:
                 st.error(f"Error deleting test data: {e}")
         
-        st.code(f"Incidents in session: {len(st.session_state.get('incidents', []))}")
-        st.code(f"Jobs in session: {len(st.session_state.get('jobs', []))}")
+        st.success(f"Incidents in session: {len(st.session_state.get('incidents', []))}")
+        st.success(f"Jobs in session: {len(st.session_state.get('jobs', []))}")
 
