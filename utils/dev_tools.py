@@ -11,7 +11,7 @@ def dev_seed_expander():
                 seed_incidents(n=3)
                 seed_jobs_from_incidents()
                 st.success("Dummy incidents and jobs created.")
-                st.rerun()
+                # st.rerun()
             except Exception as e:
                 st.error(f"Error generating test data: {e}")
 
