@@ -59,6 +59,7 @@ def handle_persona_routing():
         "landlord": "landlord_dashboard"
     }
     page = page_map.get(st.session_state["persona"], None)
+    st.success(f"Routing to {page} for persona {st.session_state['persona']}")
     if page:
         st.session_state["page"] = page
     else:
@@ -107,6 +108,8 @@ if "oauth_code" in st.session_state and "user_profile" not in st.session_state:
             st.session_state["user_profile"] = user_info
             st.session_state["email"] = user_info.get("email", "")
             st.session_state["logged_in"] = True
+            if st.session_state["persona"] not in ["tenant", "landlord", "contractor"]:
+                st.session_state["persona"] = extract_persona(user_info.get("cognito:groups", []))    
             st.session_state["persona"] = st.session_state.get("persona", "tenant")
             st.session_state["expires_at"] = user_info["exp"]
 

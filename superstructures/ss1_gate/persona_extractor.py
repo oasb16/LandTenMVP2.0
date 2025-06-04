@@ -7,6 +7,7 @@ def extract_persona():
         return query_params["persona"][0]
 
     path = urlparse(st.get_url()).path
+    st.success(f"Extracting persona from path: {path}")
     for p in ["tenant", "landlord", "contractor"]:
         if p in path:
             return p
