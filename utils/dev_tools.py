@@ -11,10 +11,12 @@ def dev_seed_expander():
             try:
                 seed_incidents(n=3)
                 seed_jobs_from_incidents()
+
+                # Reload from disk AFTER seeding and BEFORE rerun
                 st.session_state["incidents"] = _load_json("logs/incidents.json")
                 st.session_state["jobs"] = _load_json("logs/jobs.json")
                 st.success("Dummy incidents and jobs created.")
-                logging.info("Dummy incidents and jobs created successfully.")
+                # DO NOT st.rerun() here!
             except Exception as e:
                 st.error(f"Error generating test data: {e}")
 
@@ -24,6 +26,7 @@ def dev_seed_expander():
                     if os.path.exists(file):
                         os.remove(file)
                         st.success(f"Deleted {file}")
-                st.rerun()
+                st.session_state["incidents"] = []
+                st.session_state["jobs"] = []
             except Exception as e:
                 st.error(f"Error deleting test data: {e}")

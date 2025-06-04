@@ -165,6 +165,7 @@ def run_tenant_dashboard():
                 render_chat_thread(chat_data, incident_id)
 
     # -- Persona Views
+    st.session_state["incidents"] = []
     st.subheader("📇 Details")
     if persona == "Tenant":
         st.markdown("### 🚨 Incidents")
@@ -172,15 +173,13 @@ def run_tenant_dashboard():
         st.header("🧾 My Reported Incidents")
         user_id = st.session_state.get("user_id", "")
 
-        # PROD Functionality: Fetch incidents for the logged-in user
-        #st.session_state["incidents"] = get_incidents_by_user(user_id)
+        if "incidents" not in st.session_state:
+            st.session_state["incidents"] = get_incidents_by_user(user_id)
+        incidents = st.session_state["incidents"]
+        show_incidents(incidents)
 
-        st.session_state["incidents"] = []
-        show_incidents(st.session_state["incidents"])
- 
         if st.button("🔄 Refresh"):
-           show_incidents(st.session_state["incidents"])
-
+           show_incidents(incidents)
 
         # Fetch jobs for tenant
         jobs = get_all_jobs()
