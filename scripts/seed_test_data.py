@@ -48,6 +48,7 @@ def seed_incidents(n=3):
         existing = json.load(f)
         existing.extend(incidents)
         st.session_state["incidents"] = existing  # Store in session state for immediate access
+        st.success(f"Seeded {len(incidents)} incidents.")
         f.seek(0)
         json.dump(existing, f, indent=2)
 
@@ -84,5 +85,6 @@ def seed_jobs_from_incidents():
         existing = json.load(f)
         existing.extend(jobs)
         st.session_state["jobs"] = existing  # Store in session state for immediate access
+        st.success(f"Seeded {len(jobs)} jobs from incidents.")
         f.seek(0)
         json.dump(existing, f, indent=2)
