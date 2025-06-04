@@ -2,16 +2,18 @@
 
 import streamlit as st
 import os
+from scripts.seed_test_data import seed_incidents, seed_jobs_from_incidents
+from utils.db import _load_json
 
 def dev_seed_expander():
     with st.expander("🧪 Test Data Tools", expanded=False):
         if st.button("🆕 Create Dummy Incidents + Jobs"):
             try:
-                from scripts.seed_test_data import seed_incidents, seed_jobs_from_incidents
                 seed_incidents(n=3)
                 seed_jobs_from_incidents()
+                st.session_state["incidents"] = _load_json("logs/incidents.json")
+                st.session_state["jobs"] = _load_json("logs/jobs.json")
                 st.success("Dummy incidents and jobs created.")
-                # st.rerun()
             except Exception as e:
                 st.error(f"Error generating test data: {e}")
 
