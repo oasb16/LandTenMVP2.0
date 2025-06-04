@@ -171,7 +171,9 @@ def run_tenant_dashboard():
         st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Incident details will appear here.</div>", unsafe_allow_html=True)
         st.header("🧾 My Reported Incidents")
         user_id = st.session_state.get("user_id", "")
-        st.session_state["incidents"] = get_incidents_by_user(user_id)
+        # PROD Functionality: Fetch incidents for the logged-in user
+        #st.session_state["incidents"] = get_incidents_by_user(user_id)
+        
         show_incidents(st.session_state["incidents"])
  
         if st.button("🔄 Refresh"):

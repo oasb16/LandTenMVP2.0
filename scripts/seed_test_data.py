@@ -1,6 +1,7 @@
 # scripts/seed_test_data.py
 
 import json
+import streamlit as st
 import os
 import uuid
 from datetime import datetime
@@ -46,6 +47,7 @@ def seed_incidents(n=3):
     with open(INCIDENTS_LOG, "r+") as f:
         existing = json.load(f)
         existing.extend(incidents)
+        st.session_state["incidents"] = existing  # Store in session state for immediate access
         f.seek(0)
         json.dump(existing, f, indent=2)
 
@@ -56,6 +58,7 @@ def seed_jobs_from_incidents():
 
     with open(INCIDENTS_LOG, "r") as f:
         incidents = json.load(f)
+        st.session_state["incidents"] = incidents
 
     if not incidents:
         raise ValueError("No incidents found. Seed incidents first.")
@@ -80,5 +83,6 @@ def seed_jobs_from_incidents():
     with open(JOBS_LOG, "r+") as f:
         existing = json.load(f)
         existing.extend(jobs)
+        st.session_state["jobs"] = existing  # Store in session state for immediate access
         f.seek(0)
         json.dump(existing, f, indent=2)
