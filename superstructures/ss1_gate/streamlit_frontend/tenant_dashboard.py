@@ -152,15 +152,7 @@ def run_tenant_dashboard():
     # -- Chat Module
     run_chat_core()
 
-    # -- Persona Views
-    st.subheader("📇 Details")
-    if persona == "Tenant":
-        st.markdown("### 🚨 Incidents")
-        st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Incident details will appear here.</div>", unsafe_allow_html=True)
-        st.header("🧾 My Reported Incidents")
-        user_id = st.session_state.get("user_id", "")
-        incidents = get_incidents_by_user(user_id)
-
+    def show_incidents(incidents):
         if not incidents:
             st.info("No incidents reported yet.")
         for inc in incidents:
@@ -171,8 +163,19 @@ def run_tenant_dashboard():
                 incident_id = inc["incident_id"]
                 chat_data = get_chat_thread(incident_id)
                 render_chat_thread(chat_data, incident_id)
+
+    # -- Persona Views
+    st.subheader("📇 Details")
+    if persona == "Tenant":
+        st.markdown("### 🚨 Incidents")
+        st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Incident details will appear here.</div>", unsafe_allow_html=True)
+        st.header("🧾 My Reported Incidents")
+        user_id = st.session_state.get("user_id", "")
+        st.session_state["incidents"] = get_incidents_by_user(user_id)
+        show_incidents(st.session_state["incidents"])
+ 
         if st.button("🔄 Refresh"):
-            st.rerun()
+           show_incidents(st.session_state["incidents"])
 
 
         # Fetch jobs for tenant
