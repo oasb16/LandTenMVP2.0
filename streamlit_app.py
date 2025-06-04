@@ -126,6 +126,11 @@ if "oauth_code" in st.session_state and "user_profile" not in st.session_state:
                     "timestamp": datetime.utcnow().isoformat()
                 })
                 st.success("✅ Profile saved to DB")
+                st.success(f"Welcome, {user_info.get('cognito:username', 'User')}! You are logged in as {st.session_state['persona']}.")
+                st.success(f"Your email: {user_info.get('email', 'Unknown')}")
+                st.success(f"Your user ID: {user_info.get('userId', 'Unknown')}")
+                st.success(f"Your session expires at: {datetime.fromtimestamp(user_info['exp'])}")
+                st.success(f"Your persona: {st.session_state['persona']}")
             except Exception as e:
                 st.error(f"DB write failed: {e}")
 
