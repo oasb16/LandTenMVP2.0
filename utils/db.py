@@ -105,3 +105,15 @@ def get_feedback_by_job(job_id: str) -> list:
     with open(path) as f:
         feedback = json.load(f)
     return [f for f in feedback if f["job_id"] == job_id]
+
+FEEDBACK_LOG = "logs/feedback.json"
+
+def load_all_feedback() -> list:
+    """Load all feedback entries from logs/feedback.json"""
+    if not os.path.exists(FEEDBACK_LOG):
+        return []
+    try:
+        with open(FEEDBACK_LOG, "r") as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        return []

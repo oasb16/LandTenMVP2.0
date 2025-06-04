@@ -200,6 +200,21 @@ def run_landlord_dashboard():
     # -- Tenant Feedback History
     feedback_entries = load_all_feedback()
 
+    # if "feedback" not in st.session_state:
+    #     st.session_state["feedback"] = load_all_feedback()
+
+    # all_feedback = st.session_state["feedback"]
+
+    # # Example usage
+    # st.markdown(f"### 📬 Total Feedback Received: {len(all_feedback)}")
+
+    # for entry in all_feedback:
+    #     with st.expander(f"Job ID: {entry['job_id']}"):
+    #         st.write(f"Submitted by: {entry['submitted_by']}")
+    #         st.write(f"Role: {entry['role']}")
+    #         st.write(f"Rating: {entry['rating']}")
+    #         st.write(f"Notes: {entry['notes']}")
+
     if feedback_entries:
         st.markdown("## 🗣️ Tenant Feedback History")
         for fb in feedback_entries:
