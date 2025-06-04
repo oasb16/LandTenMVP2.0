@@ -132,8 +132,8 @@ def run_tenant_dashboard():
                 st.success(f"Dummy threads: {', '.join(threads)}")
                 st.rerun()
 
-            from utils.dev_tools import dev_seed_expander
-            dev_seed_expander()
+        from utils.dev_tools import dev_seed_expander
+        dev_seed_expander()
 
     # -- Layout: Title + Chat
     persona = st.session_state.get("persona", "tenant").capitalize()
