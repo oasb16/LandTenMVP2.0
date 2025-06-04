@@ -1,7 +1,7 @@
 # utils/dev_tools.py
 
 import streamlit as st
-import os
+import os, logging
 from scripts.seed_test_data import seed_incidents, seed_jobs_from_incidents
 from utils.db import _load_json
 
@@ -14,6 +14,7 @@ def dev_seed_expander():
                 st.session_state["incidents"] = _load_json("logs/incidents.json")
                 st.session_state["jobs"] = _load_json("logs/jobs.json")
                 st.success("Dummy incidents and jobs created.")
+                logging.info("Dummy incidents and jobs created successfully.")
             except Exception as e:
                 st.error(f"Error generating test data: {e}")
 
