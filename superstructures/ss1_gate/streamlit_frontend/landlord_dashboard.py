@@ -54,6 +54,20 @@ def load_incidents():
     with open(log_path, "r") as f:
         return json.load(f)
 
+def export_dialog(incident_id):
+    st.write(f"Generate export for Incident ID: `{incident_id}`")
+
+    from superstructures.ss7_intelprint.report_engine import generate_pdf_report
+    try:
+        path = generate_pdf_report(incident_id)
+        st.success(f"✅ Report saved to: `{path}`")
+
+        if os.path.exists(path):
+            with open(path, "rb") as f:
+                st.download_button("⬇️ Download PDF", data=f, file_name=f"{incident_id}.pdf", mime="application/pdf")
+    except Exception as e:
+        st.error(f"❌ Export error: {e}")
+
 def run_landlord_dashboard():
     html("<style>body { font-family: 'SF Pro Display', sans-serif; }</style>")
 
@@ -255,17 +269,10 @@ def run_landlord_dashboard():
                 with st.dialog("🔍 Summary View"):
                     st.error("Summary feature unavailable.")
 
-        with col7:
+        with col7:  
+            # Trigger
             if st.button("📄", key=f"export_{incident_id}"):
-                from superstructures.ss7_intelprint.report_engine import generate_pdf_report
-                try:
-                    path = generate_pdf_report(incident_id)
-                    st.success(f"Report saved to `{path}`")
-                    if os.path.exists(path):
-                        with open(path, "rb") as f:
-                            st.download_button("⬇️ Download PDF", data=f, file_name=f"{incident_id}.pdf", mime="application/pdf")
-                except Exception as e:
-                    st.error(f"Error exporting: {e}")
+                export_dialog(incident_id)
 
         with col8:
             if st.button("➕", key=f"job_{incident_id}"):
