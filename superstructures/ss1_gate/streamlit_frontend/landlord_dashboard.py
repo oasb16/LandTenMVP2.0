@@ -206,9 +206,6 @@ def run_landlord_dashboard():
     from superstructures.ss6_actionrelay.job_manager import create_job
     from utils.dev_tools import list_json_objects, load_json_from_s3
 
-    # Fetch all incidents from S3
-    incident_keys = list_json_objects("incidents/")
-    incidents = [load_json_from_s3(k) for k in incident_keys]
 
     st.header("📋 Live Incident Listing")
 
