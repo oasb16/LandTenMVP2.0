@@ -234,6 +234,7 @@ def run_landlord_dashboard():
 
                 with col1:
                     if st.button("📄 View Summary (Unavailable)", key=f"summary_{incident_id}_{idx}"):
+                        st.error("⚠️ Summary feature is currently unavailable.")
                         # with st.spinner("Generating summary..."):
                         #     summary = summarize_chat_thread(incident_id)
                         #     st.markdown(f"**📘 Case Summary:**\n\n{summary}")
