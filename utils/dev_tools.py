@@ -204,6 +204,9 @@ def delete_all_jobs_from_s3():
 # --- Unified Expander UI ---
 def dev_seed_expander():
     with st.expander("🧪 Test Data Tools", expanded=False):
+        if "incidents" not in st.session_state:
+            from utils.db import _load_json
+            st.session_state["incidents"] = _load_json("logs/incidents.json")
 
         if st.button("🆕 Create Dummy Incidents + Jobs"):
             try:
