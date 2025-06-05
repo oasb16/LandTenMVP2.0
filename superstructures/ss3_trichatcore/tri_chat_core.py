@@ -142,19 +142,6 @@ def run_chat_core():
     else:
         st.session_state["current_thread"] = thread_id
 
-    with st.sidebar:
-        with st.expander("### 🧭 Media Controls", expanded=False):
-            if st.button("📁 Toggle Upload"):
-                st.session_state.show_upload = not st.session_state.show_upload
-                st.session_state.last_action = "toggle_upload"
-            if st.button("📷 Toggle Capture"):
-                st.session_state.show_capture = not st.session_state.show_capture
-                st.session_state.last_action = "toggle_capture"
-            if st.button("🔄 Close All Panels"):
-                st.session_state.show_upload = False
-                st.session_state.show_capture = False
-                st.session_state.last_action = "close_panels"
-
     if st.session_state.show_upload:
         with st.expander("📎 Upload Media", expanded=True):
             media_msg = run_media_interface(mode="upload")
@@ -189,6 +176,18 @@ def run_chat_core():
         st.markdown("💬 To chat with Agent, say @agent")
         user_input = st.text_input("Type a message...")
         submitted = st.form_submit_button("Send")
+
+        with st.expander("### 🧭 Media Controls", expanded=False):
+            if st.button("📁 Toggle Upload"):
+                st.session_state.show_upload = not st.session_state.show_upload
+                st.session_state.last_action = "toggle_upload"
+            if st.button("📷 Toggle Capture"):
+                st.session_state.show_capture = not st.session_state.show_capture
+                st.session_state.last_action = "toggle_capture"
+            if st.button("🔄 Close All Panels"):
+                st.session_state.show_upload = False
+                st.session_state.show_capture = False
+                st.session_state.last_action = "close_panels"
 
     if submitted and user_input.strip():
         role = st.session_state['user_profile']['email'] if 'user_profile' in st.session_state and st.session_state['user_profile'].get('email') else persona
