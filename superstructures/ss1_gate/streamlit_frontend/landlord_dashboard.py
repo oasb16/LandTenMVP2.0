@@ -14,6 +14,11 @@ from urllib.parse import quote
 from streamlit.components.v1 import html
 # List all Jobs Overview (Table View
 from utils.dev_tools import list_json_objects, load_json_from_s3
+import pandas as pd
+import math
+from superstructures.ss7_intelprint.report_engine import generate_pdf_report
+from ss5_summonengine.chat_summarizer import summarize_chat_thread
+from superstructures.ss6_actionrelay.job_manager import create_job
 
 # -- Core Modules --
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
@@ -197,12 +202,6 @@ def run_landlord_dashboard():
 
     st.success("🔗 All data fetched from S3 successfully.")
 
-
-    import pandas as pd
-    import math
-    from superstructures.ss7_intelprint.report_engine import generate_pdf_report
-    from ss5_summonengine.chat_summarizer import summarize_chat_thread
-    from superstructures.ss6_actionrelay.job_manager import create_job
 
     st.header("📋 Live Incident Listing")
 
