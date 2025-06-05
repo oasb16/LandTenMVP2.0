@@ -208,7 +208,6 @@ def run_landlord_dashboard():
     from st_aggrid.shared import GridUpdateMode
 
     # Sample paginated incident rows (replace with real S3 data)
-    incidents = st.session_state.get("incidents", [])  # Each must have incident_id, issue, etc.
     PER_PAGE = 10
     page = st.number_input("Incident Page", min_value=1, max_value=max(1, len(incidents) // PER_PAGE), value=1)
     start, end = (page - 1) * PER_PAGE, page * PER_PAGE
