@@ -211,15 +211,15 @@ def run_tenant_dashboard():
                             except ValueError as ve:
                                 st.warning(str(ve))
 
-    elif persona == "Landlord":
-        st.markdown("### 🏗️ Jobs")
-        st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Job details will appear here.</div>", unsafe_allow_html=True)
-    elif persona == "Contractor":
-        st.markdown("### 🔧 Jobs and Schedule")
-        st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Job info here.</div>", unsafe_allow_html=True)
-        st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Schedule info here.</div>", unsafe_allow_html=True)
-    else:
-        st.error("⚠️ Persona mismatch. Contact support.")
+    # elif persona == "Landlord":
+    #     st.markdown("### 🏗️ Jobs")
+    #     st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Job details will appear here.</div>", unsafe_allow_html=True)
+    # elif persona == "Contractor":
+    #     st.markdown("### 🔧 Jobs and Schedule")
+    #     st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Job info here.</div>", unsafe_allow_html=True)
+    #     st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Schedule info here.</div>", unsafe_allow_html=True)
+    # else:
+    #     st.error("⚠️ Persona mismatch. Contact support.")
 
     # -- Responsive Design
     html("""
