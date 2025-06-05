@@ -71,7 +71,6 @@ def seed_incidents(n=3):
         existing = json.load(f)
         existing.extend(incidents)
         # st.session_state["incidents"] = existing
-        # st.success(f"Seeded {len(incidents)} incidents.")
         f.seek(0)
         json.dump(existing, f, indent=2)
         f.truncate()  # <-- ensure no residual JSON remains
