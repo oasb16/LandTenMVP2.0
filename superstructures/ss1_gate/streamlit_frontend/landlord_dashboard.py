@@ -183,8 +183,8 @@ def run_landlord_dashboard():
 
         except Exception as e:
             st.error(f"Failed to load or display jobs from S3: {e}")
-
-
+        
+    st.success(f"📊 Total Jobs: {len(jobs)}")
 
 
 
