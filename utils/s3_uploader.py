@@ -59,3 +59,28 @@ def upload_job_to_s3(job_id, data):
         logging.error(f"S3 Upload Error: {e.response['Error']['Message']}")
         st.error(f"S3 Upload Error: {e.response['Error']['Message']}")
         return None
+
+
+def delete_all_from_s3(prefix: str):
+    bucket = st.secrets["S3_BUCKET"]
+    try:
+        response = s3_client.list_objects_v2(Bucket=bucket, Prefix=prefix)
+        if "Contents" not in response:
+            st.warning(f"No S3 files found under prefix `{prefix}`.")
+            return
+
+        for obj in response["Contents"]:
+            s3_client.delete_object(Bucket=bucket, Key=obj["Key"])
+            logging.info(f"Deleted {obj['Key']} from S3")
+
+        st.success(f"✅ All `{prefix}` entries deleted from S3.")
+
+    except ClientError as e:
+        logging.error(f"S3 Delete Error: {e}")
+        st.error(f"Failed to delete from S3: {e.response['Error']['Message']}")
+
+def delete_all_incidents_from_s3():
+    delete_all_from_s3("incidents/")
+
+def delete_all_jobs_from_s3():
+    delete_all_from_s3("jobs/")

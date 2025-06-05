@@ -4,7 +4,7 @@ import streamlit as st
 import os, logging
 from scripts.seed_test_data import seed_incidents, seed_jobs_from_incidents
 from utils.db import _load_json
-from utils.s3_uploader import upload_job_to_s3, upload_incident_to_s3
+from utils.s3_uploader import upload_job_to_s3, upload_incident_to_s3, delete_all_incidents_from_s3, delete_all_jobs_from_s3
 
 
 def dev_seed_expander():
@@ -46,3 +46,8 @@ def dev_seed_expander():
             for job in st.session_state.get("jobs", []):
                 upload_job_to_s3(job["job_id"], job)
 
+        if st.button("❌ Delete All Incidents from S3"):
+            delete_all_incidents_from_s3()
+
+        if st.button("❌ Delete All Jobs from S3"):
+            delete_all_jobs_from_s3()
