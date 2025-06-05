@@ -244,7 +244,8 @@ def run_landlord_dashboard():
             cellRenderer=JsCode(f"""
                 function(params) {{
                     const id = params.data["Incident ID"];
-                    return `<span style='cursor:pointer;color:#1f77b4;text-decoration:underline;' onClick="streamlit.send({{type: 'streamlit:customEvent', detail: {{action: '{action.lower()}', id: id }} }})">${{params.value}}</span>`;
+                    const payload = JSON.stringify({{ id: id, action: "{action.lower()}" }});
+                    return `<a href='#' onClick="window.dispatchEvent(new CustomEvent('cellClick', {{ detail: payload }}))">${{params.value}}</a>`;
                 }}
             """)
         )
@@ -270,18 +271,19 @@ def run_landlord_dashboard():
     st.markdown("""
     <script>
     window.addEventListener('cellClick', function(e) {
-        const payload = JSON.parse(e.detail);
-        const input = window.parent.document.querySelector('iframe').contentWindow.document.querySelector('input[data-testid="stTextInput"][aria-label="cell_click"]');
+        const payload = e.detail;
+        const input = window.parent.document.querySelector('iframe').contentWindow.document.querySelector('input[aria-label="cell_click"]');
         if (input) {
-            input.value = payload.id + "::" + payload.action;
+            input.value = payload;
             input.dispatchEvent(new Event('input', { bubbles: true }));
         }
     });
     </script>
     """, unsafe_allow_html=True)
 
+
     # ---------- Hidden Input Trap ----------
-    clicked = st.text_input("cell_click", key="clicked_cell", label_visibility="collapsed")
+    clicked = st.text_input(label="cell_click", key="clicked_cell", label_visibility="collapsed")
 
     # ---------- Dialog ----------
     @st.experimental_dialog("📄 Incident Action")
