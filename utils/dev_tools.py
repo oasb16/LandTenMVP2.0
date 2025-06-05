@@ -230,6 +230,9 @@ def dev_seed_expander():
         st.markdown("## ☁️ S3 Sync for Test Data")
 
         if st.button("☁️ Upload All Seeded Incidents to S3"):
+            if "incidents" not in st.session_state:
+                st.error("No incidents found in session state. Please seed incidents first.")
+                return
             for inc in st.session_state.get("incidents", []):
                 upload_incident_to_s3(inc["incident_id"], inc)
 
