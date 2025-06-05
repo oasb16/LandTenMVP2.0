@@ -238,9 +238,9 @@ def run_landlord_dashboard():
             }
             incident_rows.append(row)
 
-        # Convert to DataFrame for table display
-        df_incidents = pd.DataFrame(incident_rows)
-        import ace_tools as tools; tools.display_dataframe_to_user(name="Paginated Incident Table", dataframe=df_incidents)
+        # # Convert to DataFrame for table display
+        # df_incidents = pd.DataFrame(incident_rows)
+        # import ace_tools as tools; tools.display_dataframe_to_user(name="Paginated Incident Table", dataframe=df_incidents)
 
 
         st.markdown(f"Page {page} of {total_pages}")
