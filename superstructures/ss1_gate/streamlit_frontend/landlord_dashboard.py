@@ -186,6 +186,9 @@ def run_landlord_dashboard():
             st.error(f"Failed to load or display jobs from S3: {e}")
 
 
+
+
+
     # -- Contractor Trust Scores
     scores = compute_contractor_trust_scores()
     if scores:
@@ -193,67 +196,95 @@ def run_landlord_dashboard():
         for cid, score in scores.items():
             st.markdown(f"**{cid}**: ⭐ {score}/5")
 
+
+
+
+    import pandas as pd
+    import math
+    from superstructures.ss7_intelprint.report_engine import generate_pdf_report
+    from ss5_summonengine.chat_summarizer import summarize_chat_thread
+    from superstructures.ss6_actionrelay.job_manager import create_job
+    from utils.dev_tools import list_json_objects, load_json_from_s3
+
+    # Fetch all incidents from S3
+    incident_keys = list_json_objects("incidents/")
+    incidents = [load_json_from_s3(k) for k in incident_keys]
+
     st.header("📋 Live Incident Listing")
+
     if not incidents:
         st.info("No incidents available.")
-    for incident in incidents:
-        from superstructures.ss7_intelprint.report_engine import generate_pdf_report
+    else:
+        # Pagination setup
+        PER_PAGE = 10
+        total_pages = math.ceil(len(incidents) / PER_PAGE)
+        page = st.number_input("Page", min_value=1, max_value=total_pages, value=1, step=1)
 
-        if st.button("📝 Export Report", key=f"report_{incident['incident_id']}"):
-            try:
-                path = generate_pdf_report(incident["incident_id"])
-                st.success(f"PDF report saved: {path}")
-                # Optional:
-                with open(path, "rb") as f:
-                    st.download_button(
-                        label="📥 Download PDF",
-                        data=f,
-                        file_name=f"incident_{incident['incident_id']}.pdf",
-                        mime="application/pdf",
-                    )
-            except Exception as e:
-                st.warning(f"Report generation failed: {e}")
+        start = (page - 1) * PER_PAGE
+        end = start + PER_PAGE
+        paginated_incidents = incidents[start:end]
 
-        with st.expander(f"Incident ID: {incident['incident_id']}"):
-            st.write(f"**Description:** {incident['issue']}")
-            st.write(f"**Priority:** {incident['priority']}")
-            st.write(f"**Reported by:** {incident.get('created_by', 'N/A')}")
-            st.write("**Chat Log:**")
-            for msg in incident.get("chat_data", []):
-                st.markdown(f"- **{msg['sender']}** @ {msg['timestamp']}: {msg['message']}")
-            if st.button("Create Job", key=incident['incident_id']):
-                from superstructures.ss6_actionrelay.job_manager import create_job
-                try:
-                    create_job({"incident_id": incident['incident_id'], "description": incident['issue'], "priority": incident['priority']})
-                    st.success("Job created successfully.")
-                except Exception as e:
-                    st.error(f"Error creating job: {e}")
-            if st.button("📄 View Summary", key=f"summary_{incident['incident_id']}"):
-                from ss5_summonengine.chat_summarizer import summarize_chat_thread
-                with st.spinner("Generating summary..."):
-                    summary = summarize_chat_thread(incident["incident_id"])
-                    st.markdown(f"**📘 Case Summary:**\n\n{summary}")
+        for idx, incident in enumerate(paginated_incidents):
+            incident_id = incident["incident_id"]
+            issue = incident.get("issue", "N/A")
 
-            report_path = f"logs/reports/incident_{incident['incident_id']}.pdf"
+            with st.expander(f"📍 Incident {incident_id} – {issue}", expanded=False):
+                st.write(f"**Description:** {incident['issue']}")
+                st.write(f"**Priority:** {incident['priority']}")
+                st.write(f"**Reported by:** {incident.get('created_by', 'N/A')}")
 
-            # Show Export Button
-            if not os.path.exists(report_path):
-                if st.button("📝 Export Report", key=f"report_generate_{incident['incident_id']}"):
-                    try:
-                        path = generate_pdf_report(incident["incident_id"])
-                        st.success(f"✅ PDF report generated: {path}")
-                    except Exception as e:
-                        st.warning("⚠️ Report generation failed. Check logs.")
-            else:
-                st.success("📄 Report already exists.")
-                with open(report_path, "rb") as f:
-                    st.download_button(
-                        label="⬇️ Download Report",
-                        data=f,
-                        file_name=f"incident_{incident['incident_id']}.pdf",
-                        mime="application/pdf",
-                        key=f"download_{incident['incident_id']}"
-                    )
+                st.write("**Chat Log:**")
+                for msg in incident.get("chat_data", []):
+                    st.markdown(f"- **{msg['sender']}** @ {msg['timestamp']}: {msg['message']}")
+
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    if st.button("📄 View Summary", key=f"summary_{incident_id}_{idx}"):
+                        with st.spinner("Generating summary..."):
+                            summary = summarize_chat_thread(incident_id)
+                            st.markdown(f"**📘 Case Summary:**\n\n{summary}")
+
+                with col2:
+                    if st.button("🛠️ Create Job", key=f"create_job_{incident_id}_{idx}"):
+                        try:
+                            create_job({
+                                "incident_id": incident_id,
+                                "description": incident["issue"],
+                                "priority": incident["priority"]
+                            })
+                            st.success("✅ Job created successfully.")
+                        except Exception as e:
+                            st.error(f"❌ Error creating job: {e}")
+
+                with col3:
+                    report_path = f"logs/reports/incident_{incident_id}.pdf"
+                    if not os.path.exists(report_path):
+                        if st.button("📝 Export Report", key=f"report_generate_{incident_id}_{idx}"):
+                            try:
+                                path = generate_pdf_report(incident_id)
+                                st.success(f"✅ PDF generated: {path}")
+                            except Exception as e:
+                                st.error(f"⚠️ Report generation failed: {e}")
+                    else:
+                        st.success("📄 Report already exists.")
+                        with open(report_path, "rb") as f:
+                            st.download_button(
+                                label="⬇️ Download Report",
+                                data=f,
+                                file_name=f"incident_{incident_id}.pdf",
+                                mime="application/pdf",
+                                key=f"download_{incident_id}_{idx}"
+                            )
+
+        st.markdown(f"Page {page} of {total_pages}")
+
+
+
+
+
+
+
 
     # -- Tenant Feedback History
     feedback_entries = load_all_feedback()
