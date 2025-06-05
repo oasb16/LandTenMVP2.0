@@ -17,8 +17,8 @@ from utils.dev_tools import list_json_objects, load_json_from_s3
 import pandas as pd
 import math
 from superstructures.ss7_intelprint.report_engine import generate_pdf_report
-from ss5_summonengine.chat_summarizer import summarize_chat_thread
-# from superstructures.ss6_actionrelay.job_manager import create_job
+# from ss5_summonengine.chat_summarizer import summarize_chat_thread
+from superstructures.ss6_actionrelay.job_manager import create_job
 
 # -- Core Modules --
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
@@ -233,10 +233,10 @@ def run_landlord_dashboard():
                 col1, col2, col3 = st.columns(3)
 
                 with col1:
-                    if st.button("📄 View Summary", key=f"summary_{incident_id}_{idx}"):
-                        with st.spinner("Generating summary..."):
-                            summary = summarize_chat_thread(incident_id)
-                            st.markdown(f"**📘 Case Summary:**\n\n{summary}")
+                    if st.button("📄 View Summary (Unavailable)", key=f"summary_{incident_id}_{idx}"):
+                        # with st.spinner("Generating summary..."):
+                        #     summary = summarize_chat_thread(incident_id)
+                        #     st.markdown(f"**📘 Case Summary:**\n\n{summary}")
 
                 with col2:
                     if st.button("🛠️ Create Job", key=f"create_job_{incident_id}_{idx}"):
