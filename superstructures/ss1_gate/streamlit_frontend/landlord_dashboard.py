@@ -210,59 +210,60 @@ def run_landlord_dashboard():
     else:
         # --- Pagination Setup ---
         PER_PAGE = 10
-        total_rows = len(incidents)
-        total_pages = math.ceil(total_rows / PER_PAGE)
+        total_incidents = len(incidents)
+        total_pages = math.ceil(total_incidents / PER_PAGE)
         page = st.number_input("Incident Page", min_value=1, max_value=total_pages, value=1, step=1)
         start = (page - 1) * PER_PAGE
         end = start + PER_PAGE
         paginated = incidents[start:end]
 
-        st.markdown(f"### Showing {start+1}–{min(end, total_rows)} of {total_rows} incidents")
+        st.markdown(f"Showing incidents {start+1}–{min(end, total_incidents)} of {total_incidents}")
 
-        # --- Table Header ---
-        st.markdown("#### Incident Table")
-        for idx, incident in enumerate(paginated):
-            incident_id = incident.get("incident_id", f"unknown_{idx}")
+        # --- DataFrame View ---
+        df_data = []
+        for idx, inc in enumerate(paginated):
+            incident_id = inc.get("incident_id", f"unknown_{idx}")
+            df_data.append({
+                "Incident ID": incident_id,
+                "Issue": inc.get("issue", "N/A"),
+                "Priority": inc.get("priority", "N/A"),
+                "Created By": inc.get("created_by", "N/A"),
+                "Last Message": inc.get("chat_data", [])[-1]["message"] if inc.get("chat_data") else "—",
+                "Chat Count": len(inc.get("chat_data", [])),
+            })
+
+        df = pd.DataFrame(df_data)
+        st.dataframe(df, use_container_width=True, hide_index=True)
+
+        # --- Action Buttons (below table) ---
+        for idx, inc in enumerate(paginated):
+            incident_id = inc.get("incident_id", f"unknown_{idx}")
             report_path = f"logs/reports/incident_{incident_id}.pdf"
-
-            st.markdown(f"---")
-            st.markdown(f"#### 🆔 Incident: `{incident_id}`")
-            st.markdown(f"**Issue:** {incident.get('issue', 'N/A')}  \n"
-                        f"**Priority:** {incident.get('priority', 'N/A')}  \n"
-                        f"**Created By:** {incident.get('created_by', 'N/A')}")
-
-            # -- Chat Log Preview --
-            st.markdown("**Chat Log:**")
-            for msg in incident.get("chat_data", [])[-3:]:  # show last 3 messages
-                st.markdown(f"- **{msg['sender']}** @ {msg['timestamp']}: {msg['message']}")
-
-            # -- Action Buttons --
             col1, col2, col3, col4 = st.columns(4)
 
-            if col1.button("📄 Summary", key=f"summary_{incident_id}_{idx}"):
-                st.error("Summary feature is currently disabled.")
-                # with st.spinner("Generating summary..."):
-                #     try:
-                #         summary = summarize_chat_thread(incident_id)
-                #         st.success("Summary generated.")
-                #         st.markdown(f"**📝 Summary:**\n\n{summary}")
-                #     except Exception as e:
-                #         st.error(f"Failed to summarize: {e}")
-
-            if col2.button("📝 Export Report", key=f"report_{incident_id}_{idx}"):
+            if col1.button("📝 Export Report", key=f"report_{incident_id}_{idx}"):
                 try:
                     path = generate_pdf_report(incident_id)
-                    st.success(f"✅ PDF saved: {path}")
+                    st.success(f"✅ Report generated: {path}")
                 except Exception as e:
-                    st.warning(f"⚠️ Failed to generate report: {e}")
+                    st.error(f"⚠️ Failed: {e}")
+
+            if col2.button("📄 View Summary", key=f"summary_{incident_id}_{idx}"):
+                st.error("This feature is currently disabled. Please check back later.")
+                # try:
+                #     with st.spinner("Generating summary..."):
+                #         summary = summarize_chat_thread(incident_id)
+                #     st.markdown(f"**Summary for {incident_id}:**\n\n{summary}")
+                # except Exception as e:
+                #     st.error(f"Failed to generate summary: {e}")
 
             if col3.button("➕ Create Job", key=f"create_job_{incident_id}_{idx}"):
-                st.error("Create Job feature is currently disabled.")
+                st.error("This feature is currently disabled. Please check back later.")
                 # try:
                 #     create_job({
                 #         "incident_id": incident_id,
-                #         "description": incident.get("issue", "N/A"),
-                #         "priority": incident.get("priority", "Medium")
+                #         "description": inc.get("issue", "N/A"),
+                #         "priority": inc.get("priority", "Medium")
                 #     })
                 #     st.success("✅ Job created.")
                 # except Exception as e:
@@ -271,7 +272,7 @@ def run_landlord_dashboard():
             if os.path.exists(report_path):
                 with open(report_path, "rb") as f:
                     col4.download_button(
-                        label="⬇️ Download Report",
+                        label="⬇️ Download PDF",
                         data=f,
                         file_name=f"incident_{incident_id}.pdf",
                         mime="application/pdf",
