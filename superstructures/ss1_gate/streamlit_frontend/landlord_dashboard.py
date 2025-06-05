@@ -221,7 +221,7 @@ def run_landlord_dashboard():
 
     PER_PAGE = 5
     max_value = max(1, math.ceil(len(incidents)/PER_PAGE))
-    st.header(f"📋 Live Incident Listing : {max_value}")
+    st.header(f"📋 Live Incident Listing : {len(incidents)}")
     page = st.number_input("Incident Page", min_value=1, max_value=max_value, value=1)
     start, end = (page - 1) * PER_PAGE, page * PER_PAGE
     paginated = incidents[start:end]
