@@ -207,19 +207,23 @@ def run_landlord_dashboard():
     from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
     from st_aggrid.shared import GridUpdateMode
 
-    # Sample paginated incident rows (replace with real S3 data)
-    PER_PAGE = 10
-    page = st.number_input("Incident Page", min_value=1, max_value=max(1, len(incidents) // PER_PAGE), value=1)
-    start, end = (page - 1) * PER_PAGE, page * PER_PAGE
-    paginated_incidents = incidents[start:end]
 
-    if not paginated_incidents:
-        st.info("No incidents to display.")
+    # ---------- Config ----------
+    PER_PAGE = 10
+    
+    # ---------- Pagination ----------
+    page = st.number_input("Incident Page", min_value=1, max_value=max(1, math.ceil(len(incidents)/PER_PAGE)), value=1)
+    start = (page - 1) * PER_PAGE
+    end = start + PER_PAGE
+    paginated = incidents[start:end]
+
+    if not paginated:
+        st.warning("No incidents to display.")
         st.stop()
 
-    # Build DataFrame
+    # ---------- Build DataFrame ----------
     df = pd.DataFrame([{
-        "Incident ID": i["incident_id"],
+        "Incident ID": i.get("incident_id"),
         "Issue": i.get("issue", "N/A"),
         "Priority": i.get("priority", "N/A"),
         "Created By": i.get("created_by", "N/A"),
@@ -227,70 +231,76 @@ def run_landlord_dashboard():
         "Summary": "🔍 View",
         "Export": "📄 Export",
         "Job": "➕ Job"
-    } for i in paginated_incidents])
+    } for i in paginated])
 
-    # Setup AgGrid
+    # ---------- Configure Grid ----------
     gb = GridOptionsBuilder.from_dataframe(df)
     gb.configure_pagination(enabled=True)
     gb.configure_default_column(editable=False, groupable=False)
 
-    # Add custom JS buttons
-    for action in ["Summary", "Export", "Job"]:
-        gb.configure_column(action, 
+    for col in ["Summary", "Export", "Job"]:
+        gb.configure_column(col, 
             cellRenderer=JsCode(f"""
-            function(params) {{
-                return `<a href='#' style="text-decoration:none;" onClick="window.dispatchEvent(new CustomEvent('cellClick', {{ detail: '{{"id": "${{params.data["Incident ID"]}}", "action": "{action.lower()}" }}' }}))">${{params.value}}</a>`;
-            }}
-            """)
-        )
+                function(params) {{
+                    return `<a href='#' style="text-decoration:none;" onClick="window.dispatchEvent(new CustomEvent('cellClick', {{ detail: JSON.stringify({{ id: params.data['Incident ID'], action: '{col.lower()}' }}) }}))">${{params.value}}</a>`;
+                }}
+            """))
 
-    # Render grid
-    grid = AgGrid(df, gridOptions=gb.build(), height=380, update_mode=GridUpdateMode.NO_UPDATE, allow_unsafe_jscode=True)
+    # ---------- AgGrid Render ----------
+    AgGrid(
+        df,
+        gridOptions=gb.build(),
+        height=400,
+        update_mode=GridUpdateMode.NO_UPDATE,
+        allow_unsafe_jscode=True
+    )
 
-    # JS Event Handler — reads event from window event
+    # ---------- JS Listener to Trigger st.text_input (proxy method) ----------
     st.markdown("""
     <script>
     window.addEventListener('cellClick', function(e) {
-        const detail = JSON.parse(e.detail);
-        const input = window.parent.document.querySelector('iframe').contentWindow.document.querySelector('input[data-testid="stTextInput"]');
-        if (input) {{
-            input.value = detail.id + '::' + detail.action;
-            input.dispatchEvent(new Event('input', {{ bubbles: true }}));
-        }}
+        const payload = JSON.parse(e.detail);
+        const input = window.parent.document.querySelector('iframe').contentWindow.document.querySelector('input[data-testid="stTextInput"][aria-label="cell_click"]');
+        if (input) {
+            input.value = payload.id + "::" + payload.action;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
     });
     </script>
     """, unsafe_allow_html=True)
 
-    # Hidden input to catch event
-    clicked = st.text_input("clicked_cell", key="clicked_cell", label_visibility="collapsed")
+    # ---------- Hidden Input Trap ----------
+    clicked = st.text_input("cell_click", key="clicked_cell", label_visibility="collapsed")
 
-    # Dialogs
+    # ---------- Dialog ----------
     @st.experimental_dialog("📄 Incident Action")
     def incident_dialog(incident_id, action):
-        st.write(f"**Incident:** `{incident_id}`")
+        st.write(f"**Incident ID:** `{incident_id}`")
         st.write(f"**Action:** `{action}`")
 
         if action == "summary":
-            st.error("📄 Summary feature unavailable.")
-        elif action == "job":
-            st.error("➕ Job creation feature unavailable.")
+            # from ss5_summonengine.chat_summarizer import summarize_chat_thread
+            st.error("🔍 Summary feature unavailable.")
         elif action == "export":
             from superstructures.ss7_intelprint.report_engine import generate_pdf_report
             try:
                 path = generate_pdf_report(incident_id)
-                st.success(f"Report generated at: {path}")
+                st.success(f"✅ Report generated at: `{path}`")
                 if os.path.exists(path):
                     with open(path, "rb") as f:
                         st.download_button("⬇️ Download PDF", data=f, file_name=f"{incident_id}.pdf", mime="application/pdf")
             except Exception as e:
-                st.error(f"Error exporting report: {e}")
+                st.error(f"❌ Export error: {e}")
+        elif action == "job":
+            # from superstructures.ss6_actionrelay.job_manager import create_job
+            st.error("➕ Job creation feature unavailable.")
         else:
-            st.warning("Unknown action.")
+            st.warning("⚠️ Unknown action.")
 
-    # Show dialog if a click occurred
+    # ---------- Trigger Dialog ----------
     if "::" in st.session_state.get("clicked_cell", ""):
-        incident_id, action = st.session_state["clicked_cell"].split("::")
-        incident_dialog(incident_id, action)
+        inc_id, action = st.session_state["clicked_cell"].split("::")
+        incident_dialog(inc_id, action)
         st.session_state["clicked_cell"] = ""
 
 
