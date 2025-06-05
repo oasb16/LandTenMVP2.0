@@ -133,6 +133,7 @@ def run_tenant_dashboard():
                 if st.button("❎ Delete Empty Threads"):
                     prune_empty_threads()
 
+
                 if st.button("🎯 Generate Dummy Threads"):
                     threads = generate_dummy_threads()
                     st.success(f"Dummy threads: {', '.join(threads)}")
