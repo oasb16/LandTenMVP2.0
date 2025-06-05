@@ -245,10 +245,12 @@ def run_landlord_dashboard():
                 function(params) {{
                     const id = params.data["Incident ID"];
                     const payload = JSON.stringify({{ id: id, action: "{action.lower()}" }});
-                    return `<a href='#' onClick="window.dispatchEvent(new CustomEvent('cellClick', {{ detail: payload }}))">${{params.value}}</a>`;
+                    return `<a href='#' style='text-decoration:none;color:#1f77b4;' onClick="window.dispatchEvent(new CustomEvent('cellClick', {{ detail: payload }}))">${{params.value}}</a>`;
                 }}
-            """)
+            """),
+            cellRendererParams={"useInnerHtml": True}
         )
+
 
     # ---------- AgGrid Render ----------
     AgGrid(
