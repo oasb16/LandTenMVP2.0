@@ -12,6 +12,9 @@ from datetime import datetime
 from uuid import uuid4
 from urllib.parse import quote
 from streamlit.components.v1 import html
+# List all Jobs Overview (Table View
+from utils.dev_tools import list_json_objects, load_json_from_s3
+import pandas as pd
 
 # -- Core Modules --
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
@@ -120,21 +123,20 @@ def run_landlord_dashboard():
     # -- Chat Core
     run_chat_core()
 
-    # List all Jobs Overview (Table View
-    from utils.dev_tools import list_json_objects, load_json_from_s3
-    import pandas as pd
+
+
 
     st.subheader("📇 Details")
-    with st.expander("🏗️ Jobs Overview (Table View)", expanded=False):
-
+    with st.expander("🏗️ Jobs Overview (Paginated)", expanded=True):
         try:
+            # Fetch jobs + incidents from S3
             job_keys = list_json_objects("jobs/")
             incident_keys = list_json_objects("incidents/")
 
             jobs = [load_json_from_s3(k) for k in job_keys]
             incidents = [load_json_from_s3(k) for k in incident_keys]
 
-            # Merge jobs with linked incidents
+            # Merge jobs with incidents
             merged = []
             for job in jobs:
                 match = next((inc for inc in incidents if inc.get("incident_id") == job.get("incident_id")), {})
@@ -151,11 +153,42 @@ def run_landlord_dashboard():
                     "Timestamp": job.get("timestamp", "—")
                 })
 
+            # Setup DataFrame
             df = pd.DataFrame(merged)
-            st.dataframe(df, use_container_width=True)
+            page_size = 10
+            total_jobs = len(df)
+            total_pages = (total_jobs - 1) // page_size + 1
+
+            # Session-state page tracker
+            if "job_page" not in st.session_state:
+                st.session_state.job_page = 0
+
+            # Pagination controls
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col1:
+                if st.button("◀️ Previous") and st.session_state.job_page > 0:
+                    st.session_state.job_page -= 1
+            with col3:
+                if st.button("Next ▶️") and st.session_state.job_page < total_pages - 1:
+                    st.session_state.job_page += 1
+            with col2:
+                st.markdown(
+                    f"<div style='text-align:center;'>Page {st.session_state.job_page + 1} of {total_pages}</div>",
+                    unsafe_allow_html=True
+                )
+
+            # Slice current page
+            start_idx = st.session_state.job_page * page_size
+            end_idx = start_idx + page_size
+            st.dataframe(df.iloc[start_idx:end_idx], use_container_width=True)
 
         except Exception as e:
             st.error(f"Failed to load or display jobs from S3: {e}")
+
+
+
+
+
 
 
 
@@ -184,7 +217,7 @@ def run_landlord_dashboard():
                     st.download_button(
                         label="📥 Download PDF",
                         data=f,
-                        file_name=f"incident_{incident['id']}.pdf",
+                        file_name=f"incident_{incident['incident_id']}.pdf",
                         mime="application/pdf",
                     )
             except Exception as e:
