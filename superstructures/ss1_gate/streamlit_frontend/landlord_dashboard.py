@@ -18,7 +18,7 @@ import pandas as pd
 import math
 from superstructures.ss7_intelprint.report_engine import generate_pdf_report
 from ss5_summonengine.chat_summarizer import summarize_chat_thread
-from superstructures.ss6_actionrelay.job_manager import create_job
+# from superstructures.ss6_actionrelay.job_manager import create_job
 
 # -- Core Modules --
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
