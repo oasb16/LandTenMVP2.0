@@ -215,7 +215,7 @@ def run_tenant_dashboard():
                             except ValueError as ve:
                                 st.warning(str(ve))
 
-    elif persona == "contractor_dashboard":
+    elif persona == "Contractor":
         try:
             from contractor_dashboard import run_contractor_dashboard
             run_contractor_dashboard()
@@ -223,7 +223,8 @@ def run_tenant_dashboard():
             st.error("Contractor dashboard module not found. Please ensure it is installed correctly.")
         except Exception as e:
             st.error(f"An error occurred while loading the contractor dashboard: {str(e)}")
-    elif persona == "landlord_dashboard":
+
+    elif persona == "Landlord":
         try:
             from landlord_dashboard import run_landlord_dashboard
             run_landlord_dashboard()
