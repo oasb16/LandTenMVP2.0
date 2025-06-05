@@ -216,11 +216,21 @@ def run_tenant_dashboard():
                                 st.warning(str(ve))
 
     elif persona == "contractor_dashboard":
-        from contractor_dashboard import run_contractor_dashboard
-        run_contractor_dashboard()
+        try:
+            from contractor_dashboard import run_contractor_dashboard
+            run_contractor_dashboard()
+        except ImportError as e:
+            st.error("Contractor dashboard module not found. Please ensure it is installed correctly.")
+        except Exception as e:
+            st.error(f"An error occurred while loading the contractor dashboard: {str(e)}")
     elif persona == "landlord_dashboard":
-        from landlord_dashboard import run_landlord_dashboard
-        run_landlord_dashboard()
+        try:
+            from landlord_dashboard import run_landlord_dashboard
+            run_landlord_dashboard()
+        except ImportError as e:
+            st.error("Landlord dashboard module not found. Please ensure it is installed correctly.")
+        except Exception as e:
+            st.error(f"An error occurred while loading the landlord dashboard: {str(e)}")
 
     # -- Responsive Design
     html("""
