@@ -70,10 +70,16 @@ def seed_incidents(n=3):
     with open(INCIDENTS_LOG, "r+") as f:
         existing = json.load(f)
         existing.extend(incidents)
-        st.session_state["incidents"] = existing
-        st.success(f"Seeded {len(incidents)} incidents.")
+        # st.session_state["incidents"] = existing
+        # st.success(f"Seeded {len(incidents)} incidents.")
         f.seek(0)
         json.dump(existing, f, indent=2)
+        f.truncate()  # <-- ensure no residual JSON remains
+
+        # Now load cleanly from disk into session (ensures sync)
+        with open(INCIDENTS_LOG, "r") as refreshed:
+            synced = json.load(refreshed)
+            st.session_state["incidents"] = synced
 
 
 def seed_jobs_from_incidents():
