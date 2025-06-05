@@ -24,7 +24,10 @@ def _ensure_log(path):
     if not os.path.exists(path):
         with open(path, "w") as f:
             json.dump([], f)
-
+            st.success(f"Created log file: {path}", icon="📂")
+    else:
+        st.info(f"Log file already exists: {path}", icon="📄")
+            
 def _load_json(filepath: str):
     if not os.path.exists(filepath):
         return []
