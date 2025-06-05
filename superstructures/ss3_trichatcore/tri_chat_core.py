@@ -143,7 +143,7 @@ def run_chat_core():
         st.session_state["current_thread"] = thread_id
 
     with st.sidebar:
-        st.markdown("### 🧭 Media Controls")
+        st.expander("### 🧭 Media Controls", expanded=False)
         if st.button("📁 Toggle Upload"):
             st.session_state.show_upload = not st.session_state.show_upload
             st.session_state.last_action = "toggle_upload"

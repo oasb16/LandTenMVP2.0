@@ -1,5 +1,5 @@
 import streamlit as st
-import asyncio
+import asyncio, logging
 import websockets
 
 # Simulated WebSocket server for real-time chat
@@ -33,4 +33,4 @@ def handle_real_time_communication():
 try:
     asyncio.get_event_loop().run_until_complete(start_server())
 except RuntimeError:
-    st.warning("WebSocket server is already running.")
+    logging.warning("WebSocket server is already running.")
