@@ -195,7 +195,7 @@ def run_landlord_dashboard():
         for cid, score in scores.items():
             st.markdown(f"**{cid}**: ⭐ {score}/5")
 
-
+    st.success("🔗 All data fetched from S3 successfully.")
 
 
     import pandas as pd
