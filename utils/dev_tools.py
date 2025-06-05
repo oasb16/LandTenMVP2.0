@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime
 from botocore.exceptions import ClientError
 import boto3
+from utils.db import _load_json
 
 # --- Constants ---
 INCIDENTS_LOG = "logs/incidents.json"
@@ -28,14 +29,6 @@ def _ensure_log(path):
     else:
         st.info(f"Log file already exists: {path}", icon="📄")
             
-def _load_json(filepath: str):
-    if not os.path.exists(filepath):
-        return []
-    with open(filepath, "r") as f:
-        try:
-            return json.load(f)
-        except json.JSONDecodeError:
-            return []
 
 # --- Schema Imports ---
 from utils.schema import IncidentSchema, JobSchema
@@ -208,7 +201,6 @@ def delete_all_jobs_from_s3():
 def dev_seed_expander():
     with st.expander("🧪 Test Data Tools", expanded=False):
         if "incidents" not in st.session_state:
-            from utils.db import _load_json
             st.session_state["incidents"] = _load_json("logs/incidents.json")
 
         if st.button("🆕 Create Dummy Incidents + Jobs"):
