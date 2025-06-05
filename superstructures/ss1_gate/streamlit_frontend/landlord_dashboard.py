@@ -220,64 +220,69 @@ def run_landlord_dashboard():
 
 
 
-    # ---------- Config ----------
+
     st.header("📋 Live Incident Listing")
     PER_PAGE = 10
-
-    # ---------- Pagination ----------
     page = st.number_input("Incident Page", min_value=1, max_value=max(1, math.ceil(len(incidents)/PER_PAGE)), value=1)
-    start = (page - 1) * PER_PAGE
-    end = start + PER_PAGE
+    start, end = (page - 1) * PER_PAGE, page * PER_PAGE
     paginated = incidents[start:end]
 
     if not paginated:
         st.warning("No incidents to display.")
         st.stop()
 
-    # ---------- Table-Like Rendering ----------
-    st.markdown("### 🧾 Incident Table")
+    st.subheader("🧾 Incident Table")
 
-    headers = ["Incident ID", "Issue", "Priority", "Created By", "Timestamp", "Summary", "Export", "Job"]
-    st.write("")
+    # Define export dialog
+    @st.dialog("📄 Export Report")
+    def export_dialog(incident_id):
+        st.markdown(f"**Generate export for:** `{incident_id}`")
+        from superstructures.ss7_intelprint.report_engine import generate_pdf_report
+        try:
+            path = generate_pdf_report(incident_id)
+            if os.path.exists(path):
+                st.success(f"✅ Report saved to: `{path}`")
+                with open(path, "rb") as f:
+                    st.download_button("⬇️ Download PDF", data=f, file_name=f"{incident_id}.pdf", mime="application/pdf")
+            else:
+                st.error("⚠️ File not found after generation.")
+        except Exception as e:
+            st.error(f"❌ Failed to generate report:\n\n{e}")
 
-    # Header row
-    st.columns([2, 2, 1, 2, 2, 1, 1, 1])  # Manual layout for alignment
-    for h in headers:
-        st.write(f"**{h}**", unsafe_allow_html=True)
+    @st.dialog("📘 Summary")
+    def summary_dialog(incident_id):
+        st.markdown(f"**Generate summary for:** `{incident_id}`")
+        # from ss5_summonengine.chat_summarizer import summarize_chat_thread
+        st.error("🔍 Summary feature unavailable.")
 
-    # Row rendering
+    @st.dialog("🔧 Create Job")
+    def job_dialog(incident_id):
+        st.markdown(f"**Create job for:** `{incident_id}`")
+        # from superstructures.ss6_actionrelay.job_manager import create_job
+        st.error("➕ Job creation feature unavailable.")
+
+
+    # Render table
     for inc in paginated:
-        col1, col2, col3, col4, col5, col6, col7, col8 = st.columns([2, 2, 1, 2, 2, 1, 1, 1])
+        cols = st.columns([2.5, 2, 1, 2, 2.5, 0.5, 0.5, 0.5])
+        incident_id = inc.get("incident_id", "unknown")
 
-        incident_id = inc.get("incident_id", "N/A")
-        timestamp = inc.get("chat_data", [{}])[-1].get("timestamp", "N/A")
+        cols[0].write(incident_id)
+        cols[1].write(inc.get("issue", "—"))
+        cols[2].write(inc.get("priority", "—"))
+        cols[3].write(inc.get("created_by", "—"))
+        cols[4].write(inc.get("chat_data", [{}])[-1].get("timestamp", "—"))
 
-        with col1:
-            st.write(incident_id)
-        with col2:
-            st.write(inc.get("issue", "N/A"))
-        with col3:
-            st.write(inc.get("priority", "N/A"))
-        with col4:
-            st.write(inc.get("created_by", "N/A"))
-        with col5:
-            st.write(timestamp)
+        if cols[5].button("🔍", key=f"summary_{incident_id}"):
+            summary_dialog(incident_id)
 
-        # Actions
-        with col6:
-            if st.button("🔍", key=f"summary_{incident_id}"):
-                with st.dialog("🔍 Summary View"):
-                    st.error("Summary feature unavailable.")
+        if cols[6].button("📄", key=f"export_{incident_id}"):
+            export_dialog(incident_id)
 
-        with col7:  
-            # Trigger
-            if st.button("📄", key=f"export_{incident_id}"):
-                export_dialog(incident_id)
+        if cols[7].button("➕", key=f"job_{incident_id}"):
+            job_dialog(incident_id)
 
-        with col8:
-            if st.button("➕", key=f"job_{incident_id}"):
-                with st.dialog("➕ Create Job"):
-                    st.error("Job creation feature unavailable.")
+
 
 
 
