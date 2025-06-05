@@ -233,6 +233,18 @@ def dev_seed_expander():
             if "incidents" not in st.session_state:
                 st.error("No incidents found in session state. Please seed incidents first.")
                 return
+            else:
+                st.success(f"Uploading {len(st.session_state['incidents'])} incidents to S3...")
+            # Ensure incidents are loaded
+            if not st.session_state["incidents"]:
+                st.error("No incidents to upload. Please seed incidents first.")
+                return
+            # Upload each incident to S3
+            if not os.path.exists(INCIDENTS_LOG):
+                st.error("INCIDENTS_LOG file not found. Please seed incidents first.")
+                return
+            _ensure_log(INCIDENTS_LOG)
+            st.session_state["incidents"] = _load_json(INCIDENTS_LOG)
             for inc in st.session_state.get("incidents", []):
                 upload_incident_to_s3(inc["incident_id"], inc)
 
