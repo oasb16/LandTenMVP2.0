@@ -258,16 +258,8 @@ def run_landlord_dashboard():
         update_mode=GridUpdateMode.NO_UPDATE,
         allow_unsafe_jscode=True
     )
-    
-    clicked_payload = st.experimental_get_query_params().get("aggrid_click")
-    if clicked_payload:
-        try:
-            detail = eval(clicked_payload[0])  # OR use json.loads if JSON encoded
-            incident_dialog(detail["id"], detail["action"])
-        except Exception as e:
-            st.warning(f"Failed to parse click: {e}")
 
-    # ---------- JS Listener to Trigger st.text_input (proxy method) ----------
+    # JS listener to write to a hidden input
     st.markdown("""
     <script>
     window.addEventListener('cellClick', function(e) {
@@ -311,10 +303,11 @@ def run_landlord_dashboard():
             st.warning("⚠️ Unknown action.")
 
     # ---------- Trigger Dialog ----------
+    # Show dialog
     if "::" in st.session_state.get("clicked_cell", ""):
         inc_id, action = st.session_state["clicked_cell"].split("::")
         incident_dialog(inc_id, action)
-        st.session_state["clicked_cell"] = ""
+        st.session_state["clicked_cell"] = "
 
 
 
