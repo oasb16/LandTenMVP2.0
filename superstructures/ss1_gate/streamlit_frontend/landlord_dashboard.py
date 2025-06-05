@@ -307,9 +307,7 @@ def run_landlord_dashboard():
     if "::" in st.session_state.get("clicked_cell", ""):
         inc_id, action = st.session_state["clicked_cell"].split("::")
         incident_dialog(inc_id, action)
-        st.session_state["clicked_cell"] = "
-
-
+        st.session_state["clicked_cell"] = ""
 
 
 
