@@ -117,3 +117,19 @@ def load_all_feedback() -> list:
             return json.load(f)
     except json.JSONDecodeError:
         return []
+
+def get_incident(incident_id: str) -> dict:
+    """Retrieve a single incident by ID."""
+    incidents = _load_json(INCIDENTS_LOG)
+    for inc in incidents:
+        if inc.get("incident_id") == incident_id:
+            return inc
+    raise ValueError(f"Incident with ID {incident_id} not found.")
+
+def get_job_by_incident(incident_id: str) -> dict:
+    """Retrieve the job linked to a given incident ID."""
+    jobs = _load_json(JOBS_LOG)
+    for job in jobs:
+        if job.get("incident_id") == incident_id:
+            return job
+    return {}  # Return empty dict if not found
