@@ -204,92 +204,100 @@ def run_landlord_dashboard():
 
 
     st.header("📋 Live Incident Listing")
+    from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
+    from st_aggrid.shared import GridUpdateMode
+    import streamlit as st
+    import pandas as pd
+    import os
 
-    # --- State for dialog routing ---
-    if "incident_dialog" not in st.session_state:
-        st.session_state["incident_dialog"] = {"id": None, "action": None}
-
-    # --- Pagination ---
-    st.header("📋 Live Incident Listing")
+    # Sample paginated incident rows (replace with real S3 data)
+    incidents = st.session_state.get("incidents", [])  # Each must have incident_id, issue, etc.
     PER_PAGE = 10
-    total = len(incidents)
-    total_pages = max(1, math.ceil(total / PER_PAGE))
-    page = st.number_input("Incident Page", min_value=1, max_value=total_pages, value=1, step=1)
+    page = st.number_input("Incident Page", min_value=1, max_value=max(1, len(incidents) // PER_PAGE), value=1)
     start, end = (page - 1) * PER_PAGE, page * PER_PAGE
-    paginated = incidents[start:end]
+    paginated_incidents = incidents[start:end]
 
-    # --- Construct display table with action links ---
-    st.markdown("### Incident Table with Actions")
+    if not paginated_incidents:
+        st.info("No incidents to display.")
+        st.stop()
 
-    table_data = []
-    button_map = {}  # key → (incident_id, action_type)
+    # Build DataFrame
+    df = pd.DataFrame([{
+        "Incident ID": i["incident_id"],
+        "Issue": i.get("issue", "N/A"),
+        "Priority": i.get("priority", "N/A"),
+        "Created By": i.get("created_by", "N/A"),
+        "Timestamp": i.get("chat_data", [{}])[-1].get("timestamp", "N/A"),
+        "Summary": "🔍 View",
+        "Export": "📄 Export",
+        "Job": "➕ Job"
+    } for i in paginated_incidents])
 
-    for idx, inc in enumerate(paginated):
-        incident_id = inc.get("incident_id", f"unknown_{idx}")
-        report_path = f"logs/reports/incident_{incident_id}.pdf"
+    # Setup AgGrid
+    gb = GridOptionsBuilder.from_dataframe(df)
+    gb.configure_pagination(enabled=True)
+    gb.configure_default_column(editable=False, groupable=False)
 
-        row = {
-            "Incident ID": incident_id,
-            "Issue": inc.get("issue", "—"),
-            "Priority": inc.get("priority", "—"),
-            "Created By": inc.get("created_by", "—"),
-            "Timestamp": inc.get("chat_data", [{}])[-1].get("timestamp", "—"),
-            "Summary": f"[🔍](#{incident_id}_summary)",
-            "Export": f"[📄](#{incident_id}_export)",
-            "Job": f"[➕](#{incident_id}_job)"
-        }
+    # Add custom JS buttons
+    for action in ["Summary", "Export", "Job"]:
+        gb.configure_column(action, 
+            cellRenderer=JsCode(f"""
+            function(params) {{
+                return `<a href='#' style="text-decoration:none;" onClick="window.dispatchEvent(new CustomEvent('cellClick', {{ detail: '{{"id": "${{params.data["Incident ID"]}}", "action": "{action.lower()}" }}' }}))">${{params.value}}</a>`;
+            }}
+            """)
+        )
 
-        # Map these hyperlink-looking tags to actual buttons
-        button_map[f"{incident_id}_summary"] = (incident_id, "summary")
-        button_map[f"{incident_id}_export"] = (incident_id, "export")
-        button_map[f"{incident_id}_job"] = (incident_id, "job")
+    # Render grid
+    grid = AgGrid(df, gridOptions=gb.build(), height=380, update_mode=GridUpdateMode.NO_UPDATE, allow_unsafe_jscode=True)
 
-        table_data.append(row)
+    # JS Event Handler — reads event from window event
+    st.markdown("""
+    <script>
+    window.addEventListener('cellClick', function(e) {
+        const detail = JSON.parse(e.detail);
+        const input = window.parent.document.querySelector('iframe').contentWindow.document.querySelector('input[data-testid="stTextInput"]');
+        if (input) {{
+            input.value = detail.id + '::' + detail.action;
+            input.dispatchEvent(new Event('input', {{ bubbles: true }}));
+        }}
+    });
+    </script>
+    """, unsafe_allow_html=True)
 
-    # Display table using st.table (simple markdown-style)
-    st.table(pd.DataFrame(table_data))
+    # Hidden input to catch event
+    clicked = st.text_input("clicked_cell", value="", label_visibility="collapsed")
 
-    # --- Render buttons for each fake-link we embedded ---
-    st.markdown("### 🔗 Clickable Action Hooks")
-    for tag, (incident_id, action) in button_map.items():
-        if st.button(f"{action.title()} → {incident_id}", key=tag):
-            st.session_state["incident_dialog"]["id"] = incident_id
-            st.session_state["incident_dialog"]["action"] = action
+    # Dialogs
+    @st.experimental_dialog("📄 Incident Action")
+    def incident_dialog(incident_id, action):
+        st.write(f"**Incident:** `{incident_id}`")
+        st.write(f"**Action:** `{action}`")
 
-    # --- Dialog to open after click ---
-    @st.experimental_dialog("🧾 Incident Action")
-    def show_incident_dialog(incident_id, action):
-        st.subheader(f"Incident ID: {incident_id}")
-        st.write(f"Action Type: **{action.title()}**")
-
-        if action == "export":
+        if action == "summary":
+            st.error("📄 Summary feature unavailable.")
+        elif action == "job":
+            st.error("➕ Job creation feature unavailable.")
+        elif action == "export":
             from superstructures.ss7_intelprint.report_engine import generate_pdf_report
             try:
                 path = generate_pdf_report(incident_id)
-                st.success(f"✅ Report generated: `{path}`")
+                st.success(f"Report generated at: {path}")
                 if os.path.exists(path):
                     with open(path, "rb") as f:
-                        st.download_button("⬇️ Download PDF", data=f, file_name=f"incident_{incident_id}.pdf", mime="application/pdf")
+                        st.download_button("⬇️ Download PDF", data=f, file_name=f"{incident_id}.pdf", mime="application/pdf")
             except Exception as e:
-                st.error(f"Report generation failed: {e}")
+                st.error(f"Error exporting report: {e}")
+        else:
+            st.warning("Unknown action.")
 
-        elif action == "summary":
-            # from ss5_summonengine.chat_summarizer import summarize_chat_thread
-            # summary = summarize_chat_thread(incident_id)
-            # st.markdown(summary)
-            st.error("📄 Summary feature unavailable.")
+    # Show dialog if a click occurred
+    if "::" in clicked:
+        incident_id, action = clicked.split("::")
+        incident_dialog(incident_id, action)
+        # Clear the clicked text to prevent re-trigger
+        st.session_state["clicked_cell"] = ""
 
-        elif action == "job":
-            # from superstructures.ss6_actionrelay.job_manager import create_job
-            # create_job({...})
-            st.error("➕ Job creation feature unavailable.")
-
-    # --- Trigger dialog if state is set ---
-    selected = st.session_state["incident_dialog"]
-    if selected["id"] and selected["action"]:
-        show_incident_dialog(selected["id"], selected["action"])
-        st.session_state["incident_dialog"] = {"id": None, "action": None}
-    st.markdown(f"Page {page} of {total_pages}")
 
 
 
