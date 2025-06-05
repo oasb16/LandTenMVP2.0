@@ -211,66 +211,37 @@ def run_landlord_dashboard():
         # Pagination setup
         PER_PAGE = 10
         total_pages = math.ceil(len(incidents) / PER_PAGE)
-        page = st.number_input("Page", min_value=1, max_value=total_pages, value=1, step=1)
-
+        page = st.number_input("Incident Page", min_value=1, max_value=max(1, total_pages), value=1, step=1)
         start = (page - 1) * PER_PAGE
         end = start + PER_PAGE
         paginated_incidents = incidents[start:end]
 
-        for idx, incident in enumerate(paginated_incidents):
-            incident_id = incident["incident_id"]
-            issue = incident.get("issue", "N/A")
+        # Build table structure
+        incident_rows = []
+        for idx, inc in enumerate(paginated_incidents):
+            incident_id = inc.get("incident_id", f"unknown_{idx}")
+            summary_key = f"summary_{incident_id}_{idx}"
+            job_key = f"create_job_{incident_id}_{idx}"
+            report_key = f"report_{incident_id}_{idx}"
+            download_key = f"download_{incident_id}_{idx}"
+            report_path = f"logs/reports/incident_{incident_id}.pdf"
 
-            with st.expander(f"📍 Incident {incident_id} – {issue}", expanded=False):
-                st.write(f"**Description:** {incident['issue']}")
-                st.write(f"**Priority:** {incident['priority']}")
-                st.write(f"**Reported by:** {incident.get('created_by', 'N/A')}")
+            row = {
+                "Incident ID": incident_id,
+                "Issue": inc.get("issue", "N/A"),
+                "Priority": inc.get("priority", "N/A"),
+                "Created By": inc.get("created_by", "N/A"),
+                "Summary": summary_key,
+                "Create Job": job_key,
+                "Export Report": report_key,
+                "Download Report": download_key if os.path.exists(report_path) else None
+            }
+            incident_rows.append(row)
 
-                st.write("**Chat Log:**")
-                for msg in incident.get("chat_data", []):
-                    st.markdown(f"- **{msg['sender']}** @ {msg['timestamp']}: {msg['message']}")
+        # Convert to DataFrame for table display
+        df_incidents = pd.DataFrame(incident_rows)
+        import ace_tools as tools; tools.display_dataframe_to_user(name="Paginated Incident Table", dataframe=df_incidents)
 
-                col1, col2, col3 = st.columns(3)
-
-                with col1:
-                    if st.button("📄 View Summary (Unavailable)", key=f"summary_{incident_id}_{idx}"):
-                        st.error("⚠️ Summary feature is currently unavailable.")
-                        # with st.spinner("Generating summary..."):
-                        #     summary = summarize_chat_thread(incident_id)
-                        #     st.markdown(f"**📘 Case Summary:**\n\n{summary}")
-
-                with col2:
-                    if st.button("🛠️ Create Job (Unavailable)", key=f"create_job_{incident_id}_{idx}"):
-                        st.error("⚠️ Job creation feature is currently unavailable.")
-                        # try:
-                        #     create_job({
-                        #         "incident_id": incident_id,
-                        #         "description": incident["issue"],
-                        #         "priority": incident["priority"]
-                        #     })
-                        #     st.success("✅ Job created successfully.")
-                        # except Exception as e:
-                        #     st.error(f"❌ Error creating job: {e}")
-
-                with col3:
-                    report_path = f"logs/reports/incident_{incident_id}.pdf"
-                    if not os.path.exists(report_path):
-                        if st.button("📝 Export Report", key=f"report_generate_{incident_id}_{idx}"):
-                            try:
-                                path = generate_pdf_report(incident_id)
-                                st.success(f"✅ PDF generated: {path}")
-                            except Exception as e:
-                                st.error(f"⚠️ Report generation failed: {e}")
-                    else:
-                        st.success("📄 Report already exists.")
-                        with open(report_path, "rb") as f:
-                            st.download_button(
-                                label="⬇️ Download Report",
-                                data=f,
-                                file_name=f"incident_{incident_id}.pdf",
-                                mime="application/pdf",
-                                key=f"download_{incident_id}_{idx}"
-                            )
 
         st.markdown(f"Page {page} of {total_pages}")
 

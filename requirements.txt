@@ -19,3 +19,4 @@ google-api-python-client
 google-auth-oauthlib
 websockets
 fpdf
+ace_tools
