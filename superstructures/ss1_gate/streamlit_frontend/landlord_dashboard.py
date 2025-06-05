@@ -218,10 +218,8 @@ def run_landlord_dashboard():
 
 
 
-
-
-
     st.header("📋 Live Incident Listing")
+
     PER_PAGE = 10
     page = st.number_input("Incident Page", min_value=1, max_value=max(1, math.ceil(len(incidents)/PER_PAGE)), value=1)
     start, end = (page - 1) * PER_PAGE, page * PER_PAGE
@@ -231,12 +229,12 @@ def run_landlord_dashboard():
         st.warning("No incidents to display.")
         st.stop()
 
-    st.subheader("🧾 Incident Table")
+    st.subheader("🧾 Incident Cases")
 
-    # Define export dialog
+    # Dialogs
     @st.dialog("📄 Export Report")
     def export_dialog(incident_id):
-        st.markdown(f"**Generate export for:** `{incident_id}`")
+        st.markdown(f"**Generate export for incident:** `{incident_id}`")
         from superstructures.ss7_intelprint.report_engine import generate_pdf_report
         try:
             path = generate_pdf_report(incident_id)
@@ -245,43 +243,41 @@ def run_landlord_dashboard():
                 with open(path, "rb") as f:
                     st.download_button("⬇️ Download PDF", data=f, file_name=f"{incident_id}.pdf", mime="application/pdf")
             else:
-                st.error("⚠️ File not found after generation.")
+                st.error("⚠️ File not found.")
         except Exception as e:
-            st.error(f"❌ Failed to generate report:\n\n{e}")
+            st.error(f"❌ Error: {e}")
 
     @st.dialog("📘 Summary")
     def summary_dialog(incident_id):
-        st.markdown(f"**Generate summary for:** `{incident_id}`")
+        st.markdown(f"**Generate summary for incident:** `{incident_id}`")
         # from ss5_summonengine.chat_summarizer import summarize_chat_thread
         st.error("🔍 Summary feature unavailable.")
 
-    @st.dialog("🔧 Create Job")
+    @st.dialog("➕ Create Job")
     def job_dialog(incident_id):
-        st.markdown(f"**Create job for:** `{incident_id}`")
+        st.markdown(f"**Create job for incident:** `{incident_id}`")
         # from superstructures.ss6_actionrelay.job_manager import create_job
         st.error("➕ Job creation feature unavailable.")
 
-
-    # Render table
+    # Render each incident as a collapsible card
     for inc in paginated:
-        cols = st.columns([2.5, 2, 1, 2, 2.5, 0.5, 0.5, 0.5])
         incident_id = inc.get("incident_id", "unknown")
+        with st.expander(f"🧾 Incident: {incident_id}"):
+            st.markdown(f"**Issue:** {inc.get('issue', 'N/A')}")
+            st.markdown(f"**Priority:** {inc.get('priority', 'N/A')}")
+            st.markdown(f"**Created By:** {inc.get('created_by', 'N/A')}")
+            st.markdown(f"**Timestamp:** {inc.get('chat_data', [{}])[-1].get('timestamp', '—')}")
 
-        cols[0].write(incident_id)
-        cols[1].write(inc.get("issue", "—"))
-        cols[2].write(inc.get("priority", "—"))
-        cols[3].write(inc.get("created_by", "—"))
-        cols[4].write(inc.get("chat_data", [{}])[-1].get("timestamp", "—"))
+            st.markdown("**Actions:**")
+            a1, a2, a3 = st.columns(3)
+            if a1.button("🔍 Summary", key=f"summary_{incident_id}"):
+                summary_dialog(incident_id)
 
-        if cols[5].button("🔍", key=f"summary_{incident_id}"):
-            summary_dialog(incident_id)
+            if a2.button("📄 Export", key=f"export_{incident_id}"):
+                export_dialog(incident_id)
 
-        if cols[6].button("📄", key=f"export_{incident_id}"):
-            export_dialog(incident_id)
-
-        if cols[7].button("➕", key=f"job_{incident_id}"):
-            job_dialog(incident_id)
-
+            if a3.button("➕ Job", key=f"job_{incident_id}"):
+                job_dialog(incident_id)
 
 
 
