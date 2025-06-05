@@ -239,6 +239,7 @@ def run_landlord_dashboard():
     gb.configure_default_column(editable=False, groupable=False)
 
     for col in ["Summary", "Export", "Job"]:
+        action = col
         gb.configure_column(action,
             cellRenderer=JsCode(f"""
                 function(params) {{
