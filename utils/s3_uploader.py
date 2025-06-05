@@ -73,7 +73,7 @@ def delete_all_from_s3(prefix: str):
             s3_client.delete_object(Bucket=bucket, Key=obj["Key"])
             logging.info(f"Deleted {obj['Key']} from S3")
 
-        st.success(f"✅ All `{prefix}` entries deleted from S3.")
+        st.success(f"✅ All `{prefix}` entries deleted from S3. {response["Contents"]} files removed.", icon="🗑️")
 
     except ClientError as e:
         logging.error(f"S3 Delete Error: {e}")
