@@ -262,7 +262,7 @@ def run_landlord_dashboard():
     """, unsafe_allow_html=True)
 
     # Hidden input to catch event
-    clicked = st.text_input("clicked_cell", value="", label_visibility="collapsed")
+    clicked = st.text_input("clicked_cell", key="clicked_cell", label_visibility="collapsed")
 
     # Dialogs
     @st.experimental_dialog("📄 Incident Action")
@@ -288,11 +288,11 @@ def run_landlord_dashboard():
             st.warning("Unknown action.")
 
     # Show dialog if a click occurred
-    if "::" in clicked:
-        incident_id, action = clicked.split("::")
+    if "::" in st.session_state.get("clicked_cell", ""):
+        incident_id, action = st.session_state["clicked_cell"].split("::")
         incident_dialog(incident_id, action)
-        # Clear the clicked text to prevent re-trigger
         st.session_state["clicked_cell"] = ""
+
 
 
 
