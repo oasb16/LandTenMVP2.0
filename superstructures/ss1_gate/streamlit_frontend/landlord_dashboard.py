@@ -205,112 +205,91 @@ def run_landlord_dashboard():
 
     st.header("📋 Live Incident Listing")
 
-    # Assume `incidents` is already loaded
-    if not incidents:
-        st.info("No incidents available.")
-    else:
-        PER_PAGE = 10
-        total = len(incidents)
-        total_pages = math.ceil(total / PER_PAGE)
-        page = st.number_input("Incident Page", min_value=1, max_value=total_pages, value=1, step=1)
-        start = (page - 1) * PER_PAGE
-        end = start + PER_PAGE
-        paginated = incidents[start:end]
+    # --- State for dialog routing ---
+    if "incident_dialog" not in st.session_state:
+        st.session_state["incident_dialog"] = {"id": None, "action": None}
 
-        # --- Table Header ---
-        st.markdown("""
-            <style>
-                .incident-table th, .incident-table td {
-                    padding: 8px 12px;
-                    border: 1px solid #ccc;
-                    text-align: left;
-                    vertical-align: middle;
-                }
-                .incident-table {
-                    border-collapse: collapse;
-                    width: 100%;
-                    margin-bottom: 20px;
-                }
-                .action-button {
-                    font-size: 0.85rem;
-                }
-            </style>
-            <table class="incident-table">
-                <tr>
-                    <th>Incident ID</th>
-                    <th>Issue</th>
-                    <th>Priority</th>
-                    <th>Created By</th>
-                    <th>Chat Count</th>
-                    <th>Export</th>
-                    <th>Summary</th>
-                    <th>Create Job</th>
-                    <th>Download</th>
-                </tr>
-        """, unsafe_allow_html=True)
+    # --- Pagination ---
+    st.header("📋 Live Incident Listing")
+    PER_PAGE = 10
+    total = len(incidents)
+    total_pages = max(1, math.ceil(total / PER_PAGE))
+    page = st.number_input("Incident Page", min_value=1, max_value=total_pages, value=1, step=1)
+    start, end = (page - 1) * PER_PAGE, page * PER_PAGE
+    paginated = incidents[start:end]
 
-        for idx, inc in enumerate(paginated):
-            incident_id = inc.get("incident_id", f"unknown_{idx}")
-            report_path = f"logs/reports/incident_{incident_id}.pdf"
-            chat_count = len(inc.get("chat_data", []))
-            row_id = f"row_{incident_id}_{idx}"
+    # --- Construct display table with action links ---
+    st.markdown("### Incident Table with Actions")
 
-            # Render row
-            st.markdown(f"""
-                <tr>
-                    <td>{incident_id}</td>
-                    <td>{inc.get('issue', 'N/A')}</td>
-                    <td>{inc.get('priority', 'N/A')}</td>
-                    <td>{inc.get('created_by', 'N/A')}</td>
-                    <td>{chat_count}</td>
-                    <td><form action="" method="post">
-                        <button class="action-button" type="submit" name="{row_id}_export">📝 Export</button>
-                    </form></td>
-                    <td><form action="" method="post">
-                        <button class="action-button" type="submit" name="{row_id}_summary">📄 Summary</button>
-                    </form></td>
-                    <td><form action="" method="post">
-                        <button class="action-button" type="submit" name="{row_id}_job">➕ Job</button>
-                    </form></td>
-                    <td>{'✅' if os.path.exists(report_path) else '—'}</td>
-                </tr>
-            """, unsafe_allow_html=True)
+    table_data = []
+    button_map = {}  # key → (incident_id, action_type)
 
-            # Button Logic
-            if f"{row_id}_export" in st.session_state:
-                try:
-                    path = generate_pdf_report(incident_id)
-                    st.success(f"✅ Exported: {path}")
-                except Exception as e:
-                    st.error(f"Export failed: {e}")
+    for idx, inc in enumerate(paginated):
+        incident_id = inc.get("incident_id", f"unknown_{idx}")
+        report_path = f"logs/reports/incident_{incident_id}.pdf"
 
-            if f"{row_id}_summary" in st.session_state:
-                try:
-                    st.error("Summary feature is currently disabled.")
-                    # with st.spinner("Summarizing..."):
-                    #     summary = summarize_chat_thread(incident_id)
-                    # st.markdown(f"**📘 Summary for {incident_id}:**\n\n{summary}")
-                except Exception as e:
-                    st.error(f"Summary failed: {e}")
+        row = {
+            "Incident ID": incident_id,
+            "Issue": inc.get("issue", "—"),
+            "Priority": inc.get("priority", "—"),
+            "Created By": inc.get("created_by", "—"),
+            "Timestamp": inc.get("chat_data", [{}])[-1].get("timestamp", "—"),
+            "Summary": f"[🔍](#{incident_id}_summary)",
+            "Export": f"[📄](#{incident_id}_export)",
+            "Job": f"[➕](#{incident_id}_job)"
+        }
 
-            if f"{row_id}_job" in st.session_state:
-                try:
-                    st.error("Job creation feature is currently disabled.")
-                    # create_job({
-                    #     "incident_id": incident_id,
-                    #     "description": inc.get("issue", "N/A"),
-                    #     "priority": inc.get("priority", "Medium")
-                    # })
-                    # st.success("Job created.")
-                except Exception as e:
-                    st.error(f"Job creation failed: {e}")
+        # Map these hyperlink-looking tags to actual buttons
+        button_map[f"{incident_id}_summary"] = (incident_id, "summary")
+        button_map[f"{incident_id}_export"] = (incident_id, "export")
+        button_map[f"{incident_id}_job"] = (incident_id, "job")
 
-        st.markdown("</table>", unsafe_allow_html=True)
-        st.markdown(f"**Page {page} of {total_pages}**")
+        table_data.append(row)
 
+    # Display table using st.table (simple markdown-style)
+    st.table(pd.DataFrame(table_data))
 
+    # --- Render buttons for each fake-link we embedded ---
+    st.markdown("### 🔗 Clickable Action Hooks")
+    for tag, (incident_id, action) in button_map.items():
+        if st.button(f"{action.title()} → {incident_id}", key=tag):
+            st.session_state["incident_dialog"]["id"] = incident_id
+            st.session_state["incident_dialog"]["action"] = action
 
-        st.markdown(f"Page {page} of {total_pages}")
+    # --- Dialog to open after click ---
+    @st.experimental_dialog("🧾 Incident Action")
+    def show_incident_dialog(incident_id, action):
+        st.subheader(f"Incident ID: {incident_id}")
+        st.write(f"Action Type: **{action.title()}**")
+
+        if action == "export":
+            from superstructures.ss7_intelprint.report_engine import generate_pdf_report
+            try:
+                path = generate_pdf_report(incident_id)
+                st.success(f"✅ Report generated: `{path}`")
+                if os.path.exists(path):
+                    with open(path, "rb") as f:
+                        st.download_button("⬇️ Download PDF", data=f, file_name=f"incident_{incident_id}.pdf", mime="application/pdf")
+            except Exception as e:
+                st.error(f"Report generation failed: {e}")
+
+        elif action == "summary":
+            # from ss5_summonengine.chat_summarizer import summarize_chat_thread
+            # summary = summarize_chat_thread(incident_id)
+            # st.markdown(summary)
+            st.error("📄 Summary feature unavailable.")
+
+        elif action == "job":
+            # from superstructures.ss6_actionrelay.job_manager import create_job
+            # create_job({...})
+            st.error("➕ Job creation feature unavailable.")
+
+    # --- Trigger dialog if state is set ---
+    selected = st.session_state["incident_dialog"]
+    if selected["id"] and selected["action"]:
+        show_incident_dialog(selected["id"], selected["action"])
+        st.session_state["incident_dialog"] = {"id": None, "action": None}
+    st.markdown(f"Page {page} of {total_pages}")
 
 
 
