@@ -124,17 +124,17 @@ def run_landlord_dashboard():
     run_chat_core()
 
 
+    # Fetch jobs + incidents from S3
+    job_keys = list_json_objects("jobs/")
+    incident_keys = list_json_objects("incidents/")
 
+    jobs = [load_json_from_s3(k) for k in job_keys]
+    incidents = [load_json_from_s3(k) for k in incident_keys]
 
     st.subheader("📇 Details")
     with st.expander("🏗️ Jobs Overview (Paginated)", expanded=True):
         try:
-            # Fetch jobs + incidents from S3
-            job_keys = list_json_objects("jobs/")
-            incident_keys = list_json_objects("incidents/")
 
-            jobs = [load_json_from_s3(k) for k in job_keys]
-            incidents = [load_json_from_s3(k) for k in incident_keys]
 
             # Merge jobs with incidents
             merged = []
@@ -186,21 +186,12 @@ def run_landlord_dashboard():
             st.error(f"Failed to load or display jobs from S3: {e}")
 
 
-
-
-
-
-
-
     # -- Contractor Trust Scores
     scores = compute_contractor_trust_scores()
     if scores:
         st.markdown("### 📊 Contractor Trust Scores")
         for cid, score in scores.items():
             st.markdown(f"**{cid}**: ⭐ {score}/5")
-
-    # -- Incident Listing
-    incidents = load_incidents()
 
     st.header("📋 Live Incident Listing")
     if not incidents:
