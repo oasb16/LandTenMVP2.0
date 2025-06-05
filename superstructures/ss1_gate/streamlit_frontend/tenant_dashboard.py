@@ -94,80 +94,81 @@ def run_tenant_dashboard():
         sorted_threads = sorted(unique.values(), key=lambda x: x.get('timestamp', ''), reverse=True)
         return ["Select a Thread"] + [t['thread_id'] for t in sorted_threads]
 
-    # -- Sidebar Dashboard
-    with st.sidebar:
-        if st.button("Logout"):
-            try:
-                st.session_state.clear()
-                logout_url = f"{COGNITO_DOMAIN}/logout?client_id={CLIENT_ID}&logout_uri={REDIRECT_URI}"
-                st.markdown(f"[🔓 Logged out — click to re-login]({logout_url})")
-                st.stop()
-            except Exception as e:
-                st.error(f"Logout error: {str(e)}")
-
-        thread_options = fetch_and_display_threads()
-        selected = st.selectbox("💬 Select a Thread", options=thread_options)
-
-        if selected != "Select a Thread":
-            if st.session_state.get('selected_thread') != selected:
-                st.session_state['selected_thread'] = selected
-                chat_log = sorted(
-                    [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == selected],
-                    key=lambda x: x['timestamp']
-                )
-                st.session_state['chat_log'] = list({t['id']: t for t in chat_log}.values())
-
-        with st.expander("🛠️ Thread Tools", expanded=False):
-            if st.button("🧹 Delete All Threads"):
-                delete_all_threads_from_dynamodb()
-                st.session_state['selected_thread'] = None
-                st.success("Threads cleared.")
-                st.rerun()
-
-            if st.button("❎ Delete Empty Threads"):
-                prune_empty_threads()
-
-            if st.button("🎯 Generate Dummy Threads"):
-                threads = generate_dummy_threads()
-                st.success(f"Dummy threads: {', '.join(threads)}")
-                st.rerun()
-
-        from utils.dev_tools import dev_seed_expander
-        dev_seed_expander()
-
-    # -- Layout: Title + Chat
-    persona = st.session_state.get("persona", "tenant").capitalize()
-    st.title(f"🛡️ {persona} Dashboard")
-
-    if st.session_state.get("selected_thread"):
-        with st.expander("📜 Messages", expanded=False):
-            st.subheader(f"📂 Thread: {st.session_state['selected_thread']}")
-            for msg in st.session_state.get('chat_log', []):
-                role = msg.get('role', 'Unknown').capitalize()
-                content = msg.get('message', '[No message]')
-                if role == 'Agent' and 'Agent error' in content:
-                    content = '[Agent encountered an error.]'
-                st.markdown(f"**{role}**: {content}")
-
-    # -- Chat Module
-    run_chat_core()
-
-    def show_incidents(incidents):
-        if not incidents:
-            st.info("No incidents reported yet.")
-        for inc in incidents:
-            with st.expander(f"Issue: {inc['issue']}"):
-                st.write(f"**Priority:** {inc['priority']}")
-                st.write(f"**Reported by:** {inc.get('created_by', 'N/A')}")
-                st.write("**Chat Log:**")
-                incident_id = inc["incident_id"]
-                chat_data = get_chat_thread(incident_id)
-                render_chat_thread(chat_data, incident_id)
-
-    # -- Persona Views
-    st.session_state["incidents"] = []
-    st.subheader("📇 Details")
     if persona == "Tenant":
+        # -- Sidebar Dashboard
+        with st.sidebar:
+            if st.button("Logout"):
+                try:
+                    st.session_state.clear()
+                    logout_url = f"{COGNITO_DOMAIN}/logout?client_id={CLIENT_ID}&logout_uri={REDIRECT_URI}"
+                    st.markdown(f"[🔓 Logged out — click to re-login]({logout_url})")
+                    st.stop()
+                except Exception as e:
+                    st.error(f"Logout error: {str(e)}")
+
+            thread_options = fetch_and_display_threads()
+            selected = st.selectbox("💬 Select a Thread", options=thread_options)
+
+            if selected != "Select a Thread":
+                if st.session_state.get('selected_thread') != selected:
+                    st.session_state['selected_thread'] = selected
+                    chat_log = sorted(
+                        [t for t in get_all_threads_from_dynamodb() if t['thread_id'] == selected],
+                        key=lambda x: x['timestamp']
+                    )
+                    st.session_state['chat_log'] = list({t['id']: t for t in chat_log}.values())
+
+            with st.expander("🛠️ Thread Tools", expanded=False):
+                if st.button("🧹 Delete All Threads"):
+                    delete_all_threads_from_dynamodb()
+                    st.session_state['selected_thread'] = None
+                    st.success("Threads cleared.")
+                    st.rerun()
+
+                if st.button("❎ Delete Empty Threads"):
+                    prune_empty_threads()
+
+                if st.button("🎯 Generate Dummy Threads"):
+                    threads = generate_dummy_threads()
+                    st.success(f"Dummy threads: {', '.join(threads)}")
+                    st.rerun()
+
+            from utils.dev_tools import dev_seed_expander
+            dev_seed_expander()
+
+        # -- Layout: Title + Chat
+        persona = st.session_state.get("persona", "tenant").capitalize()
+        st.title(f"🛡️ {persona} Dashboard")
+
+        if st.session_state.get("selected_thread"):
+            with st.expander("📜 Messages", expanded=False):
+                st.subheader(f"📂 Thread: {st.session_state['selected_thread']}")
+                for msg in st.session_state.get('chat_log', []):
+                    role = msg.get('role', 'Unknown').capitalize()
+                    content = msg.get('message', '[No message]')
+                    if role == 'Agent' and 'Agent error' in content:
+                        content = '[Agent encountered an error.]'
+                    st.markdown(f"**{role}**: {content}")
+
+        # -- Chat Module
+        run_chat_core()
+
+        def show_incidents(incidents):
+            if not incidents:
+                st.info("No incidents reported yet.")
+            for inc in incidents:
+                with st.expander(f"Issue: {inc['issue']}"):
+                    st.write(f"**Priority:** {inc['priority']}")
+                    st.write(f"**Reported by:** {inc.get('created_by', 'N/A')}")
+                    st.write("**Chat Log:**")
+                    incident_id = inc["incident_id"]
+                    chat_data = get_chat_thread(incident_id)
+                    render_chat_thread(chat_data, incident_id)
+
+        # -- Persona Views
+        st.session_state["incidents"] = []
+        st.subheader("📇 Details")
+        
         st.markdown("### 🚨 Incidents")
         st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Incident details will appear here.</div>", unsafe_allow_html=True)
         st.header("🧾 My Reported Incidents")
@@ -211,15 +212,12 @@ def run_tenant_dashboard():
                             except ValueError as ve:
                                 st.warning(str(ve))
 
-    # elif persona == "Landlord":
-    #     st.markdown("### 🏗️ Jobs")
-    #     st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Job details will appear here.</div>", unsafe_allow_html=True)
-    # elif persona == "Contractor":
-    #     st.markdown("### 🔧 Jobs and Schedule")
-    #     st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Job info here.</div>", unsafe_allow_html=True)
-    #     st.markdown("<div style='height: 100px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Schedule info here.</div>", unsafe_allow_html=True)
-    # else:
-    #     st.error("⚠️ Persona mismatch. Contact support.")
+    elif persona == "contractor_dashboard":
+        from superstructures.ss1_gate.streamlit_frontend.contractor_dashboard import run_contractor_dashboard
+        run_contractor_dashboard()
+    elif persona == "landlord_dashboard":
+        from superstructures.ss1_gate.streamlit_frontend.landlord_dashboard import run_landlord_dashboard
+        run_landlord_dashboard()
 
     # -- Responsive Design
     html("""
