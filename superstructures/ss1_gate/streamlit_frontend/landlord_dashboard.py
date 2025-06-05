@@ -205,85 +205,112 @@ def run_landlord_dashboard():
 
     st.header("📋 Live Incident Listing")
 
+    # Assume `incidents` is already loaded
     if not incidents:
         st.info("No incidents available.")
     else:
-        # --- Pagination Setup ---
         PER_PAGE = 10
-        total_incidents = len(incidents)
-        total_pages = math.ceil(total_incidents / PER_PAGE)
+        total = len(incidents)
+        total_pages = math.ceil(total / PER_PAGE)
         page = st.number_input("Incident Page", min_value=1, max_value=total_pages, value=1, step=1)
         start = (page - 1) * PER_PAGE
         end = start + PER_PAGE
         paginated = incidents[start:end]
 
-        st.markdown(f"Showing incidents {start+1}–{min(end, total_incidents)} of {total_incidents}")
+        # --- Table Header ---
+        st.markdown("""
+            <style>
+                .incident-table th, .incident-table td {
+                    padding: 8px 12px;
+                    border: 1px solid #ccc;
+                    text-align: left;
+                    vertical-align: middle;
+                }
+                .incident-table {
+                    border-collapse: collapse;
+                    width: 100%;
+                    margin-bottom: 20px;
+                }
+                .action-button {
+                    font-size: 0.85rem;
+                }
+            </style>
+            <table class="incident-table">
+                <tr>
+                    <th>Incident ID</th>
+                    <th>Issue</th>
+                    <th>Priority</th>
+                    <th>Created By</th>
+                    <th>Chat Count</th>
+                    <th>Export</th>
+                    <th>Summary</th>
+                    <th>Create Job</th>
+                    <th>Download</th>
+                </tr>
+        """, unsafe_allow_html=True)
 
-        # --- DataFrame View ---
-        df_data = []
-        for idx, inc in enumerate(paginated):
-            incident_id = inc.get("incident_id", f"unknown_{idx}")
-            df_data.append({
-                "Incident ID": incident_id,
-                "Issue": inc.get("issue", "N/A"),
-                "Priority": inc.get("priority", "N/A"),
-                "Created By": inc.get("created_by", "N/A"),
-                "Last Message": inc.get("chat_data", [])[-1]["message"] if inc.get("chat_data") else "—",
-                "Chat Count": len(inc.get("chat_data", [])),
-            })
-
-        df = pd.DataFrame(df_data)
-        st.dataframe(df, use_container_width=True, hide_index=True)
-
-        # --- Action Buttons (below table) ---
         for idx, inc in enumerate(paginated):
             incident_id = inc.get("incident_id", f"unknown_{idx}")
             report_path = f"logs/reports/incident_{incident_id}.pdf"
-            col1, col2, col3, col4 = st.columns(4)
+            chat_count = len(inc.get("chat_data", []))
+            row_id = f"row_{incident_id}_{idx}"
 
-            if col1.button("📝 Export Report", key=f"report_{incident_id}_{idx}"):
+            # Render row
+            st.markdown(f"""
+                <tr>
+                    <td>{incident_id}</td>
+                    <td>{inc.get('issue', 'N/A')}</td>
+                    <td>{inc.get('priority', 'N/A')}</td>
+                    <td>{inc.get('created_by', 'N/A')}</td>
+                    <td>{chat_count}</td>
+                    <td><form action="" method="post">
+                        <button class="action-button" type="submit" name="{row_id}_export">📝 Export</button>
+                    </form></td>
+                    <td><form action="" method="post">
+                        <button class="action-button" type="submit" name="{row_id}_summary">📄 Summary</button>
+                    </form></td>
+                    <td><form action="" method="post">
+                        <button class="action-button" type="submit" name="{row_id}_job">➕ Job</button>
+                    </form></td>
+                    <td>{'✅' if os.path.exists(report_path) else '—'}</td>
+                </tr>
+            """, unsafe_allow_html=True)
+
+            # Button Logic
+            if f"{row_id}_export" in st.session_state:
                 try:
                     path = generate_pdf_report(incident_id)
-                    st.success(f"✅ Report generated: {path}")
+                    st.success(f"✅ Exported: {path}")
                 except Exception as e:
-                    st.error(f"⚠️ Failed: {e}")
+                    st.error(f"Export failed: {e}")
 
-            if col2.button("📄 View Summary", key=f"summary_{incident_id}_{idx}"):
-                st.error("This feature is currently disabled. Please check back later.")
-                # try:
-                #     with st.spinner("Generating summary..."):
-                #         summary = summarize_chat_thread(incident_id)
-                #     st.markdown(f"**Summary for {incident_id}:**\n\n{summary}")
-                # except Exception as e:
-                #     st.error(f"Failed to generate summary: {e}")
+            if f"{row_id}_summary" in st.session_state:
+                try:
+                    st.error("Summary feature is currently disabled.")
+                    # with st.spinner("Summarizing..."):
+                    #     summary = summarize_chat_thread(incident_id)
+                    # st.markdown(f"**📘 Summary for {incident_id}:**\n\n{summary}")
+                except Exception as e:
+                    st.error(f"Summary failed: {e}")
 
-            if col3.button("➕ Create Job", key=f"create_job_{incident_id}_{idx}"):
-                st.error("This feature is currently disabled. Please check back later.")
-                # try:
-                #     create_job({
-                #         "incident_id": incident_id,
-                #         "description": inc.get("issue", "N/A"),
-                #         "priority": inc.get("priority", "Medium")
-                #     })
-                #     st.success("✅ Job created.")
-                # except Exception as e:
-                #     st.error(f"Failed to create job: {e}")
+            if f"{row_id}_job" in st.session_state:
+                try:
+                    st.error("Job creation feature is currently disabled.")
+                    # create_job({
+                    #     "incident_id": incident_id,
+                    #     "description": inc.get("issue", "N/A"),
+                    #     "priority": inc.get("priority", "Medium")
+                    # })
+                    # st.success("Job created.")
+                except Exception as e:
+                    st.error(f"Job creation failed: {e}")
 
-            if os.path.exists(report_path):
-                with open(report_path, "rb") as f:
-                    col4.download_button(
-                        label="⬇️ Download PDF",
-                        data=f,
-                        file_name=f"incident_{incident_id}.pdf",
-                        mime="application/pdf",
-                        key=f"download_{incident_id}_{idx}"
-                    )
+        st.markdown("</table>", unsafe_allow_html=True)
+        st.markdown(f"**Page {page} of {total_pages}**")
+
 
 
         st.markdown(f"Page {page} of {total_pages}")
-
-
-
 
 
 
