@@ -122,8 +122,31 @@ def run_landlord_dashboard():
 
     # -- Role-Specific Panel
     st.subheader("📇 Details")
+    from utils.db import _load_json  # if not already imported
+
     st.markdown("### 🏗️ Jobs")
-    st.markdown("<div style='height: 200px; overflow-y: auto; border: 1px solid #666; padding: 10px;'>Job requests, assignments, and contractor proposals will be shown here.</div>", unsafe_allow_html=True)
+
+    # Load jobs into session_state if not already present
+    if "jobs" not in st.session_state or not st.session_state["jobs"]:
+        st.session_state["jobs"] = _load_json("logs/jobs.json")
+
+    jobs = st.session_state["jobs"]
+
+    if not jobs:
+        st.info("No jobs available.")
+    else:
+        for job in jobs:
+            with st.expander(f"🔧 Job: {job['description']} — {job['status'].capitalize()}"):
+                st.write(f"**Job ID:** `{job['job_id']}`")
+                st.write(f"**Incident ID:** `{job['incident_id']}`")
+                st.write(f"**Type:** {job.get('job_type', '—')}")
+                st.write(f"**Priority:** {job.get('priority', '—')}")
+                st.write(f"**Price:** ${job.get('price', '—')}")
+                st.write(f"**Assigned To:** {job.get('assigned_contractor_id', '—')}")
+                st.write(f"**Accepted:** {job.get('accepted', '—')}")
+                st.write(f"**Created By:** {job.get('created_by', '—')}")
+                st.write(f"**Timestamp:** {job.get('timestamp', '—')}")
+
 
     # -- Contractor Trust Scores
     scores = compute_contractor_trust_scores()
