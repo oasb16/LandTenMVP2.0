@@ -203,12 +203,11 @@ def run_landlord_dashboard():
     st.success("🔗 All data fetched from S3 successfully.")
 
 
-    st.header("📋 Live Incident Listing")
-    from st_aggrid import AgGrid, GridOptionsBuilder, JsCode
-    from st_aggrid.shared import GridUpdateMode
+
 
 
     # ---------- Config ----------
+    st.header("📋 Live Incident Listing")
     PER_PAGE = 10
 
     # ---------- Pagination ----------
@@ -221,97 +220,57 @@ def run_landlord_dashboard():
         st.warning("No incidents to display.")
         st.stop()
 
-    # ---------- Build DataFrame ----------
-    df = pd.DataFrame([{
-        "Incident ID": i.get("incident_id"),
-        "Issue": i.get("issue", "N/A"),
-        "Priority": i.get("priority", "N/A"),
-        "Created By": i.get("created_by", "N/A"),
-        "Timestamp": i.get("chat_data", [{}])[-1].get("timestamp", "N/A"),
-        "Summary": "🔍 View",
-        "Export": "📄 Export",
-        "Job": "➕ Job"
-    } for i in paginated])
+    # ---------- Table-Like Rendering ----------
+    st.markdown("### 🧾 Incident Table")
 
-    # ---------- Configure Grid ----------
-    gb = GridOptionsBuilder.from_dataframe(df)
-    gb.configure_pagination(enabled=True)
-    gb.configure_default_column(editable=False, groupable=False)
+    headers = ["Incident ID", "Issue", "Priority", "Created By", "Timestamp", "Summary", "Export", "Job"]
+    st.write("")
 
-    for col in ["Summary", "Export", "Job"]:
-        action = col
-        gb.configure_column(action,
-            cellRenderer=JsCode(f"""
-                function(params) {{
-                    const id = params.data["Incident ID"];
-                    const payload = JSON.stringify({{ id: id, action: "{action.lower()}" }});
-                    return `<a href='#' style='text-decoration:none;color:#1f77b4;' onClick="window.dispatchEvent(new CustomEvent('cellClick', {{ detail: payload }}))">${{params.value}}</a>`;
-                }}
-            """),
-            cellRendererParams={"useInnerHtml": True}
-        )
+    # Header row
+    st.columns([2, 2, 1, 2, 2, 1, 1, 1])  # Manual layout for alignment
+    for h in headers:
+        st.write(f"**{h}**", unsafe_allow_html=True)
 
+    # Row rendering
+    for inc in paginated:
+        col1, col2, col3, col4, col5, col6, col7, col8 = st.columns([2, 2, 1, 2, 2, 1, 1, 1])
 
-    # ---------- AgGrid Render ----------
-    AgGrid(
-        df,
-        gridOptions=gb.build(),
-        height=400,
-        update_mode=GridUpdateMode.NO_UPDATE,
-        allow_unsafe_jscode=True
-    )
+        incident_id = inc.get("incident_id", "N/A")
+        timestamp = inc.get("chat_data", [{}])[-1].get("timestamp", "N/A")
 
-    # JS listener to write to a hidden input
-    st.markdown("""
-    <script>
-    window.addEventListener('cellClick', function(e) {
-        const payload = e.detail;
-        const input = window.parent.document.querySelector('iframe').contentWindow.document.querySelector('input[aria-label="cell_click"]');
-        if (input) {
-            input.value = payload;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-    });
-    </script>
-    """, unsafe_allow_html=True)
+        with col1:
+            st.write(incident_id)
+        with col2:
+            st.write(inc.get("issue", "N/A"))
+        with col3:
+            st.write(inc.get("priority", "N/A"))
+        with col4:
+            st.write(inc.get("created_by", "N/A"))
+        with col5:
+            st.write(timestamp)
 
+        # Actions
+        with col6:
+            if st.button("🔍", key=f"summary_{incident_id}"):
+                with st.dialog("🔍 Summary View"):
+                    st.error("Summary feature unavailable.")
 
-    # ---------- Hidden Input Trap ----------
-    clicked = st.text_input(label="cell_click", key="clicked_cell", label_visibility="collapsed")
+        with col7:
+            if st.button("📄", key=f"export_{incident_id}"):
+                from superstructures.ss7_intelprint.report_engine import generate_pdf_report
+                try:
+                    path = generate_pdf_report(incident_id)
+                    st.success(f"Report saved to `{path}`")
+                    if os.path.exists(path):
+                        with open(path, "rb") as f:
+                            st.download_button("⬇️ Download PDF", data=f, file_name=f"{incident_id}.pdf", mime="application/pdf")
+                except Exception as e:
+                    st.error(f"Error exporting: {e}")
 
-    # ---------- Dialog ----------
-    @st.experimental_dialog("📄 Incident Action")
-    def incident_dialog(incident_id, action):
-        st.write(f"**Incident ID:** `{incident_id}`")
-        st.write(f"**Action:** `{action}`")
-
-        if action == "summary":
-            # from ss5_summonengine.chat_summarizer import summarize_chat_thread
-            st.error("🔍 Summary feature unavailable.")
-        elif action == "export":
-            from superstructures.ss7_intelprint.report_engine import generate_pdf_report
-            try:
-                path = generate_pdf_report(incident_id)
-                st.success(f"✅ Report generated at: `{path}`")
-                if os.path.exists(path):
-                    with open(path, "rb") as f:
-                        st.download_button("⬇️ Download PDF", data=f, file_name=f"{incident_id}.pdf", mime="application/pdf")
-            except Exception as e:
-                st.error(f"❌ Export error: {e}")
-        elif action == "job":
-            # from superstructures.ss6_actionrelay.job_manager import create_job
-            st.error("➕ Job creation feature unavailable.")
-        else:
-            st.warning("⚠️ Unknown action.")
-
-    # ---------- Trigger Dialog ----------
-    # Show dialog
-    if "::" in st.session_state.get("clicked_cell", ""):
-        inc_id, action = st.session_state["clicked_cell"].split("::")
-        incident_dialog(inc_id, action)
-        st.session_state["clicked_cell"] = ""
-
-
+        with col8:
+            if st.button("➕", key=f"job_{incident_id}"):
+                with st.dialog("➕ Create Job"):
+                    st.error("Job creation feature unavailable.")
 
 
 
