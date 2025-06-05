@@ -122,30 +122,36 @@ def run_landlord_dashboard():
 
     # -- Role-Specific Panel
     st.subheader("📇 Details")
-    from utils.db import _load_json  # if not already imported
+    from utils.db import _load_json
+    st.expander("### 🏗️ Jobs Overview (Table View)")
+    try:
+        incidents = _load_json("logs/incidents.json")
+        jobs = _load_json("logs/jobs.json")
 
-    st.markdown("### 🏗️ Jobs")
-
-    # Load jobs into session_state if not already present
-    if "jobs" not in st.session_state or not st.session_state["jobs"]:
-        st.session_state["jobs"] = _load_json("logs/jobs.json")
-
-    jobs = st.session_state["jobs"]
-
-    if not jobs:
-        st.info("No jobs available.")
-    else:
+        # Merge jobs with their linked incident details
+        merged = []
         for job in jobs:
-            with st.expander(f"🔧 Job: {job['description']} — {job['status'].capitalize()}"):
-                st.write(f"**Job ID:** `{job['job_id']}`")
-                st.write(f"**Incident ID:** `{job['incident_id']}`")
-                st.write(f"**Type:** {job.get('job_type', '—')}")
-                st.write(f"**Priority:** {job.get('priority', '—')}")
-                st.write(f"**Price:** ${job.get('price', '—')}")
-                st.write(f"**Assigned To:** {job.get('assigned_contractor_id', '—')}")
-                st.write(f"**Accepted:** {job.get('accepted', '—')}")
-                st.write(f"**Created By:** {job.get('created_by', '—')}")
-                st.write(f"**Timestamp:** {job.get('timestamp', '—')}")
+            match = next((inc for inc in incidents if inc["incident_id"] == job["incident_id"]), {})
+            merged.append({
+                "Job ID": job.get("job_id"),
+                "Incident": match.get("issue", "N/A"),
+                "Priority": job.get("priority", "N/A"),
+                "Type": job.get("job_type", "N/A"),
+                "Price": job.get("price"),
+                "Assigned To": job.get("assigned_contractor_id", "—"),
+                "Accepted": "Yes" if job.get("accepted") else "No",
+                "Status": job.get("status"),
+                "Created By": job.get("created_by", "N/A"),
+                "Timestamp": job.get("timestamp", "—")
+            })
+
+        import pandas as pd
+        df = pd.DataFrame(merged)
+        st.dataframe(df, use_container_width=True)
+
+    except Exception as e:
+        st.error(f"Failed to load or display jobs: {e}")
+
 
 
     # -- Contractor Trust Scores
@@ -164,7 +170,7 @@ def run_landlord_dashboard():
     for incident in incidents:
         from superstructures.ss7_intelprint.report_engine import generate_pdf_report
 
-        if st.button("📝 Export Report", key=f"report_{incident['id']}"):
+        if st.button("📝 Export Report", key=f"report_{incident['incident_id']}"):
             try:
                 path = generate_pdf_report(incident["id"])
                 st.success(f"PDF report saved: {path}")
