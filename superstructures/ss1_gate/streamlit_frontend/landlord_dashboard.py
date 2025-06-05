@@ -14,7 +14,6 @@ from urllib.parse import quote
 from streamlit.components.v1 import html
 # List all Jobs Overview (Table View
 from utils.dev_tools import list_json_objects, load_json_from_s3
-import pandas as pd
 
 # -- Core Modules --
 from superstructures.ss1_gate.streamlit_frontend.ss1_gate_app import run_login
@@ -123,7 +122,7 @@ def run_landlord_dashboard():
     # -- Chat Core
     run_chat_core()
 
-
+    import pandas as pd
     # Fetch jobs + incidents from S3
     job_keys = list_json_objects("jobs/")
     incident_keys = list_json_objects("incidents/")
