@@ -210,7 +210,7 @@ def run_landlord_dashboard():
 
     # ---------- Config ----------
     PER_PAGE = 10
-    
+
     # ---------- Pagination ----------
     page = st.number_input("Incident Page", min_value=1, max_value=max(1, math.ceil(len(incidents)/PER_PAGE)), value=1)
     start = (page - 1) * PER_PAGE
@@ -239,12 +239,14 @@ def run_landlord_dashboard():
     gb.configure_default_column(editable=False, groupable=False)
 
     for col in ["Summary", "Export", "Job"]:
-        gb.configure_column(col, 
+        gb.configure_column(action,
             cellRenderer=JsCode(f"""
                 function(params) {{
-                    return `<a href='#' style="text-decoration:none;" onClick="window.dispatchEvent(new CustomEvent('cellClick', {{ detail: JSON.stringify({{ id: params.data['Incident ID'], action: '{col.lower()}' }}) }}))">${{params.value}}</a>`;
+                    const id = params.data["Incident ID"];
+                    return `<span style='cursor:pointer;color:#1f77b4;text-decoration:underline;' onClick="streamlit.send({{type: 'streamlit:customEvent', detail: {{action: '{action.lower()}', id: id }} }})">${{params.value}}</span>`;
                 }}
-            """))
+            """)
+        )
 
     # ---------- AgGrid Render ----------
     AgGrid(
@@ -254,6 +256,14 @@ def run_landlord_dashboard():
         update_mode=GridUpdateMode.NO_UPDATE,
         allow_unsafe_jscode=True
     )
+    
+    clicked_payload = st.experimental_get_query_params().get("aggrid_click")
+    if clicked_payload:
+        try:
+            detail = eval(clicked_payload[0])  # OR use json.loads if JSON encoded
+            incident_dialog(detail["id"], detail["action"])
+        except Exception as e:
+            st.warning(f"Failed to parse click: {e}")
 
     # ---------- JS Listener to Trigger st.text_input (proxy method) ----------
     st.markdown("""
