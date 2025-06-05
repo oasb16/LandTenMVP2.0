@@ -99,6 +99,7 @@ def run_tenant_dashboard():
     persona = st.session_state.get("persona", "tenant").capitalize()
     st.success(f"Welcome, {st.session_state.get('user_email', 'Guest')}! You are logged in as a **{persona}**.")
 
+
     if persona == "Tenant":
         # -- Sidebar Dashboard
         with st.sidebar:
