@@ -94,6 +94,11 @@ def run_tenant_dashboard():
         sorted_threads = sorted(unique.values(), key=lambda x: x.get('timestamp', ''), reverse=True)
         return ["Select a Thread"] + [t['thread_id'] for t in sorted_threads]
 
+
+    # -- Layout: Title + Chat
+    persona = st.session_state.get("persona", "tenant").capitalize()
+
+
     if persona == "Tenant":
         # -- Sidebar Dashboard
         with st.sidebar:
@@ -136,8 +141,6 @@ def run_tenant_dashboard():
             from utils.dev_tools import dev_seed_expander
             dev_seed_expander()
 
-        # -- Layout: Title + Chat
-        persona = st.session_state.get("persona", "tenant").capitalize()
         st.title(f"🛡️ {persona} Dashboard")
 
         if st.session_state.get("selected_thread"):
