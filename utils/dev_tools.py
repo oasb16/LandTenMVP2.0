@@ -132,6 +132,24 @@ def upload_job_to_s3(job_id, data):
     except ClientError as e:
         st.error(f"🚫 S3 Job Upload Error: {e.response['Error']['Message']}")
 
+
+def list_json_objects(prefix: str):
+    """List all JSON file keys under a prefix like 'jobs/' or 'incidents/'."""
+    try:
+        response = s3_client.list_objects_v2(Bucket=st.secrets["S3_BUCKET"], Prefix=prefix)
+        return [obj["Key"] for obj in response.get("Contents", []) if obj["Key"].endswith(".json")]
+    except ClientError as e:
+        st.error(f"S3 List Error: {e.response['Error']['Message']}")
+        return []
+
+def load_json_from_s3(key: str):
+    try:
+        obj = s3_client.get_object(Bucket=st.secrets["S3_BUCKET"], Key=key)
+        return json.loads(obj["Body"].read().decode("utf-8"))
+    except ClientError as e:
+        st.error(f"Failed to load {key}: {e.response['Error']['Message']}")
+        return {}
+
 def delete_all_from_s3(prefix: str):
     try:
         response = s3_client.list_objects_v2(Bucket=st.secrets["S3_BUCKET"], Prefix=prefix)

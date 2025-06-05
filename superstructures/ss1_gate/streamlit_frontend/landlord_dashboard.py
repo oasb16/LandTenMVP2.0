@@ -120,37 +120,42 @@ def run_landlord_dashboard():
     # -- Chat Core
     run_chat_core()
 
-    # -- Role-Specific Panel
+    # List all Jobs Overview (Table View
+    from utils.dev_tools import list_json_objects, load_json_from_s3
+    import pandas as pd
+
     st.subheader("📇 Details")
-    from utils.db import _load_json
-    st.expander("### 🏗️ Jobs Overview (Table View)")
-    try:
-        incidents = _load_json("logs/incidents.json")
-        jobs = _load_json("logs/jobs.json")
+    with st.expander("🏗️ Jobs Overview (Table View)", expanded=False):
 
-        # Merge jobs with their linked incident details
-        merged = []
-        for job in jobs:
-            match = next((inc for inc in incidents if inc["incident_id"] == job["incident_id"]), {})
-            merged.append({
-                "Job ID": job.get("job_id"),
-                "Incident": match.get("issue", "N/A"),
-                "Priority": job.get("priority", "N/A"),
-                "Type": job.get("job_type", "N/A"),
-                "Price": job.get("price"),
-                "Assigned To": job.get("assigned_contractor_id", "—"),
-                "Accepted": "Yes" if job.get("accepted") else "No",
-                "Status": job.get("status"),
-                "Created By": job.get("created_by", "N/A"),
-                "Timestamp": job.get("timestamp", "—")
-            })
+        try:
+            job_keys = list_json_objects("jobs/")
+            incident_keys = list_json_objects("incidents/")
 
-        import pandas as pd
-        df = pd.DataFrame(merged)
-        st.dataframe(df, use_container_width=True)
+            jobs = [load_json_from_s3(k) for k in job_keys]
+            incidents = [load_json_from_s3(k) for k in incident_keys]
 
-    except Exception as e:
-        st.error(f"Failed to load or display jobs: {e}")
+            # Merge jobs with linked incidents
+            merged = []
+            for job in jobs:
+                match = next((inc for inc in incidents if inc.get("incident_id") == job.get("incident_id")), {})
+                merged.append({
+                    "Job ID": job.get("job_id"),
+                    "Incident": match.get("issue", "N/A"),
+                    "Priority": job.get("priority", "N/A"),
+                    "Type": job.get("job_type", "N/A"),
+                    "Price": job.get("price"),
+                    "Assigned To": job.get("assigned_contractor_id", "—"),
+                    "Accepted": "Yes" if job.get("accepted") else "No",
+                    "Status": job.get("status"),
+                    "Created By": job.get("created_by", "N/A"),
+                    "Timestamp": job.get("timestamp", "—")
+                })
+
+            df = pd.DataFrame(merged)
+            st.dataframe(df, use_container_width=True)
+
+        except Exception as e:
+            st.error(f"Failed to load or display jobs from S3: {e}")
 
 
 
