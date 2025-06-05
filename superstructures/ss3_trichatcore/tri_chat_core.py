@@ -144,16 +144,16 @@ def run_chat_core():
 
     with st.sidebar:
         st.expander("### 🧭 Media Controls", expanded=False)
-        if st.button("📁 Toggle Upload"):
-            st.session_state.show_upload = not st.session_state.show_upload
-            st.session_state.last_action = "toggle_upload"
-        if st.button("📷 Toggle Capture"):
-            st.session_state.show_capture = not st.session_state.show_capture
-            st.session_state.last_action = "toggle_capture"
-        if st.button("🔄 Close All Panels"):
-            st.session_state.show_upload = False
-            st.session_state.show_capture = False
-            st.session_state.last_action = "close_panels"
+            if st.button("📁 Toggle Upload"):
+                st.session_state.show_upload = not st.session_state.show_upload
+                st.session_state.last_action = "toggle_upload"
+            if st.button("📷 Toggle Capture"):
+                st.session_state.show_capture = not st.session_state.show_capture
+                st.session_state.last_action = "toggle_capture"
+            if st.button("🔄 Close All Panels"):
+                st.session_state.show_upload = False
+                st.session_state.show_capture = False
+                st.session_state.last_action = "close_panels"
 
     if st.session_state.show_upload:
         with st.expander("📎 Upload Media", expanded=True):
