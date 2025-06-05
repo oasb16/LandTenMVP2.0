@@ -201,7 +201,7 @@ def run_landlord_dashboard():
 
         if st.button("📝 Export Report", key=f"report_{incident['incident_id']}"):
             try:
-                path = generate_pdf_report(incident["id"])
+                path = generate_pdf_report(incident["incident_id"])
                 st.success(f"PDF report saved: {path}")
                 # Optional:
                 with open(path, "rb") as f:
