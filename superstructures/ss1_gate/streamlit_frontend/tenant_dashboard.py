@@ -217,7 +217,7 @@ def run_tenant_dashboard():
 
     elif persona == "Contractor":
         try:
-            from contractor_dashboard import run_contractor_dashboard
+            from superstructures.ss1_gate.streamlit_frontend.contractor_dashboard import run_contractor_dashboard
             run_contractor_dashboard()
         except ImportError as e:
             st.error("Contractor dashboard module not found. Please ensure it is installed correctly.")
@@ -226,7 +226,7 @@ def run_tenant_dashboard():
 
     elif persona == "Landlord":
         try:
-            from landlord_dashboard import run_landlord_dashboard
+            from superstructures.ss1_gate.streamlit_frontend.landlord_dashboard import run_landlord_dashboard
             run_landlord_dashboard()
         except ImportError as e:
             st.error("Landlord dashboard module not found. Please ensure it is installed correctly.")
