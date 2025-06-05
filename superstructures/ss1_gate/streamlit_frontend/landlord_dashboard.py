@@ -240,16 +240,17 @@ def run_landlord_dashboard():
                         #     st.markdown(f"**📘 Case Summary:**\n\n{summary}")
 
                 with col2:
-                    if st.button("🛠️ Create Job", key=f"create_job_{incident_id}_{idx}"):
-                        try:
-                            create_job({
-                                "incident_id": incident_id,
-                                "description": incident["issue"],
-                                "priority": incident["priority"]
-                            })
-                            st.success("✅ Job created successfully.")
-                        except Exception as e:
-                            st.error(f"❌ Error creating job: {e}")
+                    if st.button("🛠️ Create Job (Unavailable)", key=f"create_job_{incident_id}_{idx}"):
+                        st.error("⚠️ Job creation feature is currently unavailable.")
+                        # try:
+                        #     create_job({
+                        #         "incident_id": incident_id,
+                        #         "description": incident["issue"],
+                        #         "priority": incident["priority"]
+                        #     })
+                        #     st.success("✅ Job created successfully.")
+                        # except Exception as e:
+                        #     st.error(f"❌ Error creating job: {e}")
 
                 with col3:
                     report_path = f"logs/reports/incident_{incident_id}.pdf"
