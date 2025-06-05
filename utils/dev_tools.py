@@ -229,25 +229,26 @@ def dev_seed_expander():
 
         st.markdown("## ☁️ S3 Sync for Test Data")
 
+
+        #Upload incidents and jobs to S3
         if st.button("☁️ Upload All Seeded Incidents to S3"):
-            if "incidents" not in st.session_state:
-                st.error("No incidents found in session state. Please seed incidents first.")
-                return
-            else:
-                st.success(f"Uploading {len(st.session_state['incidents'])} incidents to S3...")
-            # Ensure incidents are loaded
+            # Ensure log exists
+            _ensure_log(INCIDENTS_LOG)
+
+            # Load from disk into session state BEFORE checking anything
+            st.session_state["incidents"] = _load_json(INCIDENTS_LOG)
+
+            # Check after loading
             if not st.session_state["incidents"]:
                 st.error("No incidents to upload. Please seed incidents first.")
-                return
-            # Upload each incident to S3
-            if not os.path.exists(INCIDENTS_LOG):
-                st.error("INCIDENTS_LOG file not found. Please seed incidents first.")
-                return
-            _ensure_log(INCIDENTS_LOG)
-            st.session_state["incidents"] = _load_json(INCIDENTS_LOG)
-            for inc in st.session_state.get("incidents", []):
-                upload_incident_to_s3(inc["incident_id"], inc)
+            else:
+                st.success(f"Uploading {len(st.session_state['incidents'])} incidents to S3...")
+                for inc in st.session_state["incidents"]:
+                    upload_incident_to_s3(inc["incident_id"], inc)
 
+
+
+        # Upload all jobs to S3
         if st.button("☁️ Upload All Seeded Jobs to S3"):
             for job in st.session_state.get("jobs", []):
                 upload_job_to_s3(job["job_id"], job)
