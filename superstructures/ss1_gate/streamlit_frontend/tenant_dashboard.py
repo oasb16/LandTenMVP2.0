@@ -216,10 +216,10 @@ def run_tenant_dashboard():
                                 st.warning(str(ve))
 
     elif persona == "contractor_dashboard":
-        from superstructures.ss1_gate.streamlit_frontend.contractor_dashboard import run_contractor_dashboard
+        from contractor_dashboard import run_contractor_dashboard
         run_contractor_dashboard()
     elif persona == "landlord_dashboard":
-        from superstructures.ss1_gate.streamlit_frontend.landlord_dashboard import run_landlord_dashboard
+        from landlord_dashboard import run_landlord_dashboard
         run_landlord_dashboard()
 
     # -- Responsive Design
