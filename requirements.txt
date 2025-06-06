@@ -21,3 +21,4 @@ websockets
 fpdf
 ace_tools
 streamlit-aggrid
+pillow
