@@ -6,13 +6,17 @@ import os
 import io
 from datetime import datetime
 from PIL import Image
-from dotenv import load_dotenv
 
-load_dotenv()
+# ------------------------
+# 🔐 Safe Environment Config
+# ------------------------
+AWS_BUCKET = st.secrets.get("AWS_S3_BUCKET", "LandTena")
+AWS_REGION = st.secrets.get("AWS_REGION", "us-east-1")
+S3_PREFIX = "media/"  # Optional: adjust or expose to user
 
-AWS_BUCKET = os.getenv("AWS_S3_BUCKET_NAME", "LandTena")
-AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
-
+# ------------------------
+# ⬆️ Upload Utility
+# ------------------------
 def upload_to_s3_bytes(byte_data, filename, content_type):
     try:
         s3 = boto3.client("s3", region_name=AWS_REGION)
@@ -22,48 +26,63 @@ def upload_to_s3_bytes(byte_data, filename, content_type):
             Body=byte_data,
             ContentType=content_type
         )
-        st.success(f"✅ Uploaded: `{filename}` to S3 bucket: `{AWS_BUCKET}`")
+        st.success(f"✅ Uploaded: `{filename}`")
     except Exception as e:
-        st.error(f"❌ Upload Failed: {e}")
+        st.error(f"❌ S3 Upload Failed: {e}")
 
+# ------------------------
+# 🎥 Video Frame Handler
+# ------------------------
 def video_frame_callback(frame):
     img = frame.to_image()
     buffer = io.BytesIO()
     img.save(buffer, format="JPEG")
     buffer.seek(0)
-    timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%S%f")
-    filename = f"media/video_snapshot_{timestamp}.jpg"
+
+    ts = datetime.utcnow().strftime("%Y%m%dT%H%M%S%f")
+    filename = f"{S3_PREFIX}video_snapshot_{ts}.jpg"
     upload_to_s3_bytes(buffer.read(), filename, "image/jpeg")
     return frame
 
+# ------------------------
+# 🎤 Audio Frame Handler
+# ------------------------
 def audio_frame_callback(frame):
     audio_bytes = frame.to_ndarray().tobytes()
-    timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%S%f")
-    filename = f"media/audio_chunk_{timestamp}.wav"
+
+    ts = datetime.utcnow().strftime("%Y%m%dT%H%M%S%f")
+    filename = f"{S3_PREFIX}audio_chunk_{ts}.wav"
     upload_to_s3_bytes(audio_bytes, filename, "audio/wav")
     return frame
 
+# ------------------------
+# 🚀 Main Stream Interface
+# ------------------------
 def media_stream():
-    st.subheader("🛰️ Media Stream (Debug + Logging Enabled)")
-    st.info(f"🪣 S3 Bucket: `{AWS_BUCKET}`")
+    st.subheader("🛰️ Live Media Debug Stream")
+    st.caption(f"S3 Bucket: `{AWS_BUCKET}`  |  Region: `{AWS_REGION}`")
 
-    mode = st.radio("Select Media Type", ["Video", "Audio"])
+    media_mode = st.radio("Select Stream Type", ["📷 Video", "🎙️ Audio"])
 
-    if mode == "Video":
-        st.warning("📸 Capturing frames — check logs + S3 for activity")
+    if media_mode == "📷 Video":
+        snapshot_toggle = st.checkbox("📸 Capture Video Snapshots to S3", value=True)
+        st.warning("Camera access required. Allow browser permissions.")
+
         webrtc_streamer(
-            key="video_stream",
+            key="video_debug_stream",
             mode=WebRtcMode.SENDRECV,
-            video_frame_callback=video_frame_callback,
+            video_frame_callback=video_frame_callback if snapshot_toggle else None,
             media_stream_constraints={"video": True, "audio": False},
-            async_processing=True,
+            async_processing=True
         )
-    elif mode == "Audio":
-        st.warning("🎤 Capturing audio — check logs + S3 for activity")
+
+    elif media_mode == "🎙️ Audio":
+        st.warning("Microphone access required. Allow browser permissions.")
+
         webrtc_streamer(
-            key="audio_stream",
+            key="audio_debug_stream",
             mode=WebRtcMode.SENDRECV,
             audio_frame_callback=audio_frame_callback,
             media_stream_constraints={"video": False, "audio": True},
-            async_processing=True,
+            async_processing=True
         )
