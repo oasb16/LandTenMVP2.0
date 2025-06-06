@@ -124,7 +124,6 @@ def run_tenant_dashboard():
                     )
                     st.session_state['chat_log'] = list({t['id']: t for t in chat_log}.values())
 
-
             with st.expander("🛠️ Thread Tools", expanded=False):
                 if st.button("🧹 Delete All Threads"):
                     delete_all_threads_from_dynamodb()
