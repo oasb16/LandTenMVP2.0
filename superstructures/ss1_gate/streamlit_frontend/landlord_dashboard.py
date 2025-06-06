@@ -87,7 +87,7 @@ def run_landlord_dashboard():
 
     # -- Sidebar
     with st.sidebar:
-        st.title(f"🏠 **{st.session_state.get('email', 'Unknown')}**")
+        st.title(f"🏠 Welcome **{st.session_state.get('email', 'Unknown')}**")
         if st.button("Logout"):
             try:
                 st.session_state.clear()

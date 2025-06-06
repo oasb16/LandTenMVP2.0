@@ -39,6 +39,7 @@ def media_stream():
             timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%S%f")
             filename = f"media/photo_{timestamp}.jpg"
             upload_to_s3_bytes(img_bytes, filename, "image/jpeg")
+            st.success(f"✅ Uploaded: `{filename}` to bucket: `{AWS_BUCKET}`")
 
     elif mode == "Record Audio":
         audio = st.audio_input("🎤 Record your voice")
@@ -47,6 +48,7 @@ def media_stream():
             timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%S%f")
             filename = f"media/audio_{timestamp}.wav"
             upload_to_s3_bytes(audio_bytes, filename, "audio/wav")
+            st.success(f"✅ Uploaded: `{filename}` to bucket: `{AWS_BUCKET}`")
 
     elif mode == "Upload Video":
         video = st.file_uploader("🎞️ Upload a video file", type=["mp4", "mov", "avi"])
@@ -56,3 +58,4 @@ def media_stream():
             timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%S%f")
             filename = f"media/video_{timestamp}.mp4"
             upload_to_s3_bytes(video_bytes, filename, "video/mp4")
+            st.success(f"✅ Uploaded: `{filename}` to bucket: `{AWS_BUCKET}`")
