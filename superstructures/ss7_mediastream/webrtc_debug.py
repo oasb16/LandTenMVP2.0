@@ -1,22 +1,14 @@
 import streamlit as st
-from streamlit_webrtc import webrtc_streamer, WebRtcMode
-import av
+import os, io
 import boto3
-import os
-import io
 from datetime import datetime
-from PIL import Image
+from dotenv import load_dotenv
 
-# ------------------------
-# 🔐 Safe Environment Config
-# ------------------------
-AWS_BUCKET = st.secrets.get("AWS_S3_BUCKET", "LandTena")
-AWS_REGION = st.secrets.get("AWS_REGION", "us-east-1")
-S3_PREFIX = "media/"  # Optional: adjust or expose to user
+load_dotenv()
 
-# ------------------------
-# ⬆️ Upload Utility
-# ------------------------
+AWS_BUCKET = os.getenv("AWS_S3_BUCKET_NAME", "LandTena")
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+
 def upload_to_s3_bytes(byte_data, filename, content_type):
     try:
         s3 = boto3.client("s3", region_name=AWS_REGION)
@@ -26,63 +18,57 @@ def upload_to_s3_bytes(byte_data, filename, content_type):
             Body=byte_data,
             ContentType=content_type
         )
-        st.success(f"✅ Uploaded: `{filename}`")
+        st.success(f"✅ Uploaded `{filename}` to S3 bucket `{AWS_BUCKET}`")
     except Exception as e:
-        st.error(f"❌ S3 Upload Failed: {e}")
+        st.error(f"❌ Upload Failed: {e}")
 
-# ------------------------
-# 🎥 Video Frame Handler
-# ------------------------
-def video_frame_callback(frame):
-    img = frame.to_image()
-    buffer = io.BytesIO()
-    img.save(buffer, format="JPEG")
-    buffer.seek(0)
+st.subheader("🎥 Record or Upload Media")
+st.info("Record video/audio in-browser or upload manually.")
 
-    ts = datetime.utcnow().strftime("%Y%m%dT%H%M%S%f")
-    filename = f"{S3_PREFIX}video_snapshot_{ts}.jpg"
-    upload_to_s3_bytes(buffer.read(), filename, "image/jpeg")
-    return frame
+mode = st.radio("Choose Input Mode:", ["Record Video", "Record Audio", "Upload File"])
 
-# ------------------------
-# 🎤 Audio Frame Handler
-# ------------------------
-def audio_frame_callback(frame):
-    audio_bytes = frame.to_ndarray().tobytes()
+# -- Load RecordRTC JavaScript
+st.markdown("""
+<script src="https://cdn.webrtc-experiment.com/RecordRTC.js"></script>
+""", unsafe_allow_html=True)
 
-    ts = datetime.utcnow().strftime("%Y%m%dT%H%M%S%f")
-    filename = f"{S3_PREFIX}audio_chunk_{ts}.wav"
-    upload_to_s3_bytes(audio_bytes, filename, "audio/wav")
-    return frame
+# -- Recorder UI (via HTML and JS)
+if mode in ["Record Video", "Record Audio"]:
+    mime = "video/webm" if mode == "Record Video" else "audio/wav"
+    label = "video" if mode == "Record Video" else "audio"
+    st.markdown(f"""
+        <video id="preview" width="320" height="240" autoplay muted playsinline></video>
+        <br/>
+        <button onclick="startRecording()">🎬 Start</button>
+        <button onclick="stopRecording()">🛑 Stop</button>
+        <a id="downloadLink" style="display:none;">⬇️ Download</a>
+        <script>
+        let recorder, stream;
+        async function startRecording() {{
+            stream = await navigator.mediaDevices.getUserMedia({{{label}: true}});
+            document.getElementById('preview').srcObject = stream;
+            recorder = RecordRTC(stream, {{ type: '{label}' }});
+            recorder.startRecording();
+        }}
+        async function stopRecording() {{
+            await recorder.stopRecording(async function() {{
+                const blob = recorder.getBlob();
+                const url = URL.createObjectURL(blob);
+                document.getElementById('downloadLink').href = url;
+                document.getElementById('downloadLink').download = "recorded.{mime.split('/')[1]}";
+                document.getElementById('downloadLink').textContent = "⬇️ Download Recording";
+                document.getElementById('downloadLink').style.display = "inline";
+            }});
+            stream.getTracks().forEach(track => track.stop());
+        }}
+        </script>
+    """, unsafe_allow_html=True)
 
-# ------------------------
-# 🚀 Main Stream Interface
-# ------------------------
-def media_stream():
-    st.subheader("🛰️ Live Media Debug Stream")
-    st.caption(f"S3 Bucket: `{AWS_BUCKET}`  |  Region: `{AWS_REGION}`")
+    st.markdown("---")
+    st.info("After recording, use the download link below and upload manually below.")
 
-    media_mode = st.radio("Select Stream Type", ["📷 Video", "🎙️ Audio"])
-
-    if media_mode == "📷 Video":
-        snapshot_toggle = st.checkbox("📸 Capture Video Snapshots to S3", value=True)
-        st.warning("Camera access required. Allow browser permissions.")
-
-        webrtc_streamer(
-            key="video_debug_stream",
-            mode=WebRtcMode.SENDRECV,
-            video_frame_callback=video_frame_callback if snapshot_toggle else None,
-            media_stream_constraints={"video": True, "audio": False},
-            async_processing=True
-        )
-
-    elif media_mode == "🎙️ Audio":
-        st.warning("Microphone access required. Allow browser permissions.")
-
-        webrtc_streamer(
-            key="audio_debug_stream",
-            mode=WebRtcMode.SENDRECV,
-            audio_frame_callback=audio_frame_callback,
-            media_stream_constraints={"video": False, "audio": True},
-            async_processing=True
-        )
+# -- Upload Zone
+uploaded = st.file_uploader("Upload recording (video/audio)", type=["webm", "mp4", "wav", "m4a"])
+if uploaded:
+    filename = f"media/{uploaded.name.split('.')[0]}_{datetime.utcnow().strftime('%Y%m%dT%H%M%S')}.{uploaded.name.split('.')[-1]}"
+    upload_to_s3_bytes(uploaded.getvalue(), filename, uploaded.type)
