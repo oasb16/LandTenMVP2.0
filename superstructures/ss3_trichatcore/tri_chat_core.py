@@ -85,7 +85,9 @@ def media_control_fragment():
     col1, col2, col3 = st.columns(3)
     with col1:
         if st.button("📁 Toggle Upload"):
+            st.success("📁 Upload panel toggled" if st.session_state.show_upload else "📁 Upload panel closed")
             st.session_state.show_upload = not st.session_state.show_upload
+            st.success("📁 Upload panel toggled" if st.session_state.show_upload else "📁 Upload panel closed")
     with col2:
         if st.button("📷 Toggle Capture"):
             st.session_state.show_capture = not st.session_state.show_capture
