@@ -157,6 +157,7 @@ def run_tenant_dashboard():
         # -- Chat Module
         run_chat_core()
 
+
         def show_incidents(incidents):
             if not incidents:
                 st.info("No incidents reported yet.")
