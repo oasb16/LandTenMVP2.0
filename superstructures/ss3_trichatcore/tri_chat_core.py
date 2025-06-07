@@ -181,8 +181,10 @@ def run_chat_core():
 
     with st.expander("### 🧭 Media Controls", expanded=False):
         if st.button("📁 Toggle Upload"):
+            st.success("Upload mode toggled. Use the file uploader to add media.")
             st.session_state.show_upload = not st.session_state.show_upload
             st.session_state.last_action = "toggle_upload"
+            st.success("Upload mode toggled. Use the file uploader to add media.")            
         if st.button("📷 Toggle Capture"):
             st.session_state.show_capture = not st.session_state.show_capture
             st.session_state.last_action = "toggle_capture"
