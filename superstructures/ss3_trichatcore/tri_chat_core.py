@@ -172,6 +172,8 @@ def run_chat_core():
                 st.session_state.show_capture = False  # Ensure capture panel is closed
                 st.session_state.last_action = "media_capture"
 
+    render_chat_log(st.session_state.chat_log)
+
     with st.form("chat_form", clear_on_submit=True):
         st.markdown("💬 To chat with Agent, say @agent")
         user_input = st.text_input("Type a message...")
@@ -248,8 +250,6 @@ def run_chat_core():
         st.session_state.chat_log.append(proposal)
         append_chat_log(thread_id, proposal)
         upload_thread_to_s3(thread_id, st.session_state.chat_log)
-
-    render_chat_log(st.session_state.chat_log)
 
     # Prune empty threads at the end of the session
     prune_empty_threads()
