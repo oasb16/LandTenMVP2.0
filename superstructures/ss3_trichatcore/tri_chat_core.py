@@ -181,13 +181,15 @@ def run_chat_core():
 
     with st.expander("### 🧭 Media Controls", expanded=False):
         if st.button("📁 Toggle Upload"):
+            st.success(f"{st.session_state.show_upload and 'Upload' or 'XXX Upload panel closed'} mode toggled. Use the upload interface to add media.")
             st.session_state.show_upload = not st.session_state.show_upload
             st.session_state.last_action = "toggle_upload"
-            st.success(f"{st.session_state.show_upload and 'Upload' or 'Upload panel closed'} mode toggled. Use the upload interface to add media.")
+            st.success(f"{st.session_state.show_upload and 'Upload' or 'XXX Upload panel closed'} mode toggled. Use the upload interface to add media.")
         if st.button("📷 Toggle Capture"):
+            st.success(f"{st.session_state.show_capture and 'Capture' or 'XXX Capture panel closed'} mode toggled. Use the capture interface to record media.")
             st.session_state.show_capture = not st.session_state.show_capture
             st.session_state.last_action = "toggle_capture"
-            st.success(f"{st.session_state.show_capture and 'Capture' or 'Capture panel closed'} mode toggled. Use the capture interface to record media.")
+            st.success(f"{st.session_state.show_capture and 'Capture' or 'XXX Capture panel closed'} mode toggled. Use the capture interface to record media.")
         if st.button("🔄 Close All Panels"):
             st.session_state.show_upload = False
             st.session_state.show_capture = False
