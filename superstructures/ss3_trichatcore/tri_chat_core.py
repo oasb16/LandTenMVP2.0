@@ -181,7 +181,7 @@ def run_chat_core():
 
     with st.expander("### 🧭 Media Controls", expanded=False):
         if st.button("📁 Toggle Upload"):
-            st.success(f"{st.session_state.show_upload and 'Upload' or 'XXX Upload panel closed'} mode toggled. Use the upload interface to add media.")
+            st.success(f"{st.session_state.show_upload}")
             st.session_state.show_upload = not st.session_state.show_upload
             st.session_state.last_action = "toggle_upload"
             st.success(f"{st.session_state.show_upload and 'Upload' or 'XXX Upload panel closed'} mode toggled. Use the upload interface to add media.")
