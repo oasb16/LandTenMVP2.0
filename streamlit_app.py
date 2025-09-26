@@ -83,7 +83,7 @@ if not st.session_state["logged_in"]:
 if "oauth_code" in st.session_state and "user_profile" not in st.session_state:
     code = st.session_state["oauth_code"]
     if st.session_state.get("last_code") == code:
-        st.warning("⚠️ Duplicate login attempt. Refresh if stuck.")
+        st.warning("⚠️ Duplicate login attempt. Do not Refresh, go to https://landtenmvp20.streamlit.app .")
         try_restore_session()
     st.session_state["last_code"] = code
 
