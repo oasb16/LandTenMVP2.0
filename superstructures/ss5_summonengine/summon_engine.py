@@ -50,8 +50,8 @@ def save_message_to_dynamodb(thread_id, message):
         logging.error(f"DynamoDB Error in save_message_to_dynamodb: {e.response['Error']['Message']}")
         st.error(f"DynamoDB Error in save_message_to_dynamodb: {e.response['Error']['Message']}")
         return False
-    st.success(f"Saved message to DynamoDB for thread_id: {thread_id}, message: {message}")
     st.rerun()
+    st.success(f"Saved message to DynamoDB for thread_id: {thread_id}, message: {message}")
     return True
 
 def append_chat_log(thread_id, message):
