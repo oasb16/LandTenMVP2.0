@@ -98,6 +98,7 @@ def run_tenant_dashboard():
     # -- Layout: Title + Chat
     persona = st.session_state.get("persona", "tenant").capitalize()
     st.success(f"Welcome, {st.session_state.get('user_email', 'Guest')}! You are logged in as a **{persona}**.")
+    log_debug("success", f"Welcome, {st.session_state.get('user_email', 'Guest')}! You are logged in as a **{persona}**.")
 
 
     if persona == "Tenant":
@@ -107,10 +108,11 @@ def run_tenant_dashboard():
                 try:
                     st.session_state.clear()
                     logout_url = f"{COGNITO_DOMAIN}/logout?client_id={CLIENT_ID}&logout_uri={REDIRECT_URI}"
+                    log_debug("success", "Logged out successfully.")
                     st.markdown(f"[🔓 Logged out — click to re-login]({logout_url})")
                     st.stop()
                 except Exception as e:
-                    st.error(f"Logout error: {str(e)}")
+                    log_debug("error", f"Logout error: {str(e)}")
 
             thread_options = fetch_and_display_threads()
             selected = st.selectbox("💬 Select a Thread", options=thread_options)
@@ -128,19 +130,31 @@ def run_tenant_dashboard():
                 if st.button("🧹 Delete All Threads"):
                     delete_all_threads_from_dynamodb()
                     st.session_state['selected_thread'] = None
-                    st.success("Threads cleared.")
+                    log_debug("success", "Threads cleared.")
                     st.rerun()
 
                 if st.button("❎ Delete Empty Threads"):
                     prune_empty_threads()
+                    log_debug("success", "Empty threads pruned.")
 
                 if st.button("🎯 Generate Dummy Threads"):
                     threads = generate_dummy_threads()
-                    st.success(f"Dummy threads: {', '.join(threads)}")
+                    log_debug("success", f"Dummy threads: {', '.join(threads)}")
                     st.rerun()
 
             from utils.dev_tools import dev_seed_expander
             dev_seed_expander()
+        # === Debug Log Expander
+        with st.expander("Debug & Error Logs", expanded=False):
+            for level, msg in st.session_state.get("debug_logs", []):
+                if level == "success":
+                    st.success(msg)
+                elif level == "error":
+                    st.error(msg)
+                elif level == "warning":
+                    st.warning(msg)
+                else:
+                    st.info(msg)
 
         st.title(f"🛡️ {persona} Dashboard")
 
@@ -246,3 +260,10 @@ def run_tenant_dashboard():
     # -- Start Real-time Server/Client
     start_websocket_server()
     start_websocket_client()
+
+# === Debug Log Collector
+if "debug_logs" not in st.session_state:
+    st.session_state["debug_logs"] = []
+
+def log_debug(level, msg):
+    st.session_state["debug_logs"].append((level, msg))

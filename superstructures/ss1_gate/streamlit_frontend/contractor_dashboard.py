@@ -96,6 +96,13 @@ def run_contractor_dashboard():
         sorted_threads = sorted(unique.values(), key=lambda x: x.get('timestamp', ''), reverse=True)
         return ["Select a Thread"] + [t['thread_id'] for t in sorted_threads]
 
+    # -- Debug Log Collector
+    if "debug_logs" not in st.session_state:
+        st.session_state["debug_logs"] = []
+
+    def log_debug(level, msg):
+        st.session_state["debug_logs"].append((level, msg))
+
     # -- Sidebar
     with st.sidebar:
         st.title(f"🔧 **{st.session_state.get('email', 'Unknown')}**")
@@ -103,10 +110,11 @@ def run_contractor_dashboard():
             try:
                 st.session_state.clear()
                 logout_url = f"{COGNITO_DOMAIN}/logout?client_id={CLIENT_ID}&logout_uri={REDIRECT_URI}"
+                log_debug("success", "Logged out successfully.")
                 st.markdown(f"[🔓 Logged out — click to re-login]({logout_url})")
                 st.stop()
             except Exception as e:
-                st.error(f"Logout error: {str(e)}")
+                log_debug("error", f"Logout error: {str(e)}")
 
         thread_options = fetch_and_display_threads()
         selected = st.selectbox("💬 Select a Thread", options=thread_options)
@@ -124,20 +132,33 @@ def run_contractor_dashboard():
             if st.button("🧹 Delete All Threads"):
                 delete_all_threads_from_dynamodb()
                 st.session_state['selected_thread'] = None
-                st.success("Threads cleared.")
+                log_debug("success", "Threads cleared.")
                 st.rerun()
 
             if st.button("❎ Delete Empty Threads"):
                 prune_empty_threads()
+                log_debug("success", "Empty threads pruned.")
 
             if st.button("🎯 Generate Dummy Threads"):
                 threads = generate_dummy_threads()
-                st.success(f"Dummy threads: {', '.join(threads)}")
+                log_debug("success", f"Dummy threads: {', '.join(threads)}")
                 st.rerun()
 
         from utils.dev_tools import dev_seed_expander
         dev_seed_expander()
-        
+
+        # === Debug Log Expander
+        with st.expander("Debug & Error Logs", expanded=False):
+            for level, msg in st.session_state.get("debug_logs", []):
+                if level == "success":
+                    st.success(msg)
+                elif level == "error":
+                    st.error(msg)
+                elif level == "warning":
+                    st.warning(msg)
+                else:
+                    st.info(msg)
+
     # -- Layout: Title + Chat
     persona = st.session_state.get("persona", "contractor").capitalize()
     st.title(f"🏗️ {persona} Dashboard")
@@ -166,7 +187,7 @@ def run_contractor_dashboard():
     jobs = get_jobs_by_contractor(contractor_id)
 
     if not jobs:
-        st.info("No jobs assigned yet.")
+        log_debug("info", "No jobs assigned yet.")
 
     for job in jobs:
         with st.expander(f"Job: {job['description']}"):
@@ -189,11 +210,10 @@ def run_contractor_dashboard():
                                 accept_job(job["job_id"], contractor_id)
                             else:
                                 reject_job(job["job_id"], contractor_id)
-                            st.success("Decision recorded.")
+                            log_debug("success", "Decision recorded.")
                             st.experimental_rerun()
                         except Exception as e:
-                            st.error(str(e))
-
+                            log_debug("error", str(e))
             elif job["status"] == "accepted":
                 with st.form(key=f"schedule_{job['job_id']}"):
                     date = st.date_input("Propose Date")
@@ -202,20 +222,17 @@ def run_contractor_dashboard():
                         from superstructures.ss6_actionrelay.job_manager import propose_schedule
                         try:
                             propose_schedule(job["job_id"], contractor_id, f"{date} {time}")
-                            st.success("Schedule proposed.")
+                            log_debug("success", "Schedule proposed.")
                             st.experimental_rerun()
                         except Exception as e:
-                            st.error(str(e))
-
+                            log_debug("error", str(e))
             elif job["status"] == "completed":
                 existing_feedback = get_feedback_by_job(job["job_id"])
                 already_submitted = any(
                     f["submitted_by"] == st.session_state["user_email"] and f["role"] == "contractor"
                     for f in existing_feedback
                 )
-
                 if not already_submitted:
-                    st.markdown("### 🧰 Rate this job experience")
                     with st.form(key=f"feedback_form_{job['job_id']}"):
                         rating = st.selectbox("Rating", [1, 2, 3, 4, 5])
                         notes = st.text_area("Notes or observations")
@@ -228,9 +245,9 @@ def run_contractor_dashboard():
                                     "rating": rating,
                                     "notes": notes
                                 })
-                                st.success("✅ Feedback submitted!")
+                                log_debug("success", "Feedback submitted!")
                             except ValueError as ve:
-                                st.warning(str(ve))
+                                log_debug("warning", str(ve))
 
     # -- Responsive Styling
     html("""

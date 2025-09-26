@@ -12,6 +12,13 @@ from websocket_server import log_error,log_success,log_popover
 
 st.set_page_config(page_title="LandTen 2.0 – TriChatLite", layout="wide")
 
+# === Debug Log Collector
+if "debug_logs" not in st.session_state:
+    st.session_state["debug_logs"] = []
+
+def log_debug(level, msg):
+    st.session_state["debug_logs"].append((level, msg))
+
 # === Secrets
 try:
     COGNITO_DOMAIN = st.secrets["COGNITO_DOMAIN"]
@@ -20,7 +27,7 @@ try:
     CLIENT_SECRET = st.secrets["COGNITO_CLIENT_SECRET"]
     TOKEN_ENDPOINT = f"{COGNITO_DOMAIN}/oauth2/token"
 except KeyError as e:
-    st.error(f"Missing required secret: {e.args[0]}")
+    log_debug("error", f"Missing required secret: {e.args[0]}")
     st.stop()
 
 from utils.session_persistence import try_restore_session, store_session
@@ -60,6 +67,7 @@ def handle_persona_routing():
     }
     page = page_map.get(st.session_state["persona"], None)
     st.success(f"Routing to {page} for persona {st.session_state['persona']}")
+    log_debug("success", f"Routing to {page} for persona {st.session_state['persona']}")
     if page:
         st.session_state["page"] = page
     else:
@@ -125,14 +133,14 @@ if "oauth_code" in st.session_state and "user_profile" not in st.session_state:
                     "login_source": "GoogleSSO",
                     "timestamp": datetime.utcnow().isoformat()
                 })
-                st.success("✅ Profile saved to DB")
-                st.success(f"Welcome, {user_info.get('cognito:username', 'User')}! You are logged in as {st.session_state['persona']}.")
-                st.success(f"Your email: {user_info.get('email', 'Unknown')}")
-                st.success(f"Your user ID: {user_info.get('userId', 'Unknown')}")
-                st.success(f"Your session expires at: {datetime.fromtimestamp(user_info['exp'])}")
-                st.success(f"Your persona: {st.session_state['persona']}")
+                log_debug("success", "Profile saved to DB")
+                log_debug("success", f"Welcome, {user_info.get('cognito:username', 'User')}! You are logged in as {st.session_state['persona']}.")
+                log_debug("success", f"Your email: {user_info.get('email', 'Unknown')}")
+                log_debug("success", f"Your user ID: {user_info.get('userId', 'Unknown')}")
+                log_debug("success", f"Your session expires at: {datetime.fromtimestamp(user_info['exp'])}")
+                log_debug("success", f"Your persona: {st.session_state['persona']}")
             except Exception as e:
-                st.error(f"DB write failed: {e}")
+                log_debug("error", f"DB write failed: {e}")
 
             import streamlit.components.v1 as components
             components.html(f"""
@@ -145,10 +153,9 @@ if "oauth_code" in st.session_state and "user_profile" not in st.session_state:
             # st.rerun()
         else:
             if res.status_code != 200:
-                with st.expander("Error details", expanded=False):
-                    st.error(f"OAuth token request failed: {res.status_code} {res.text}")
+                log_debug("error", f"OAuth token request failed: {res.status_code} {res.text}")
     except Exception as e:
-        st.error(f"Token exchange error: {e}")
+        log_debug("error", f"Token exchange error: {e}")
 
 # === Routing
 if "user_profile" in st.session_state:
@@ -174,3 +181,15 @@ elif page == "landlord_dashboard":
     run_landlord_dashboard()
 else:
     st.error("Invalid page. Please log in again.")
+
+# === Debug Log Expander
+with st.expander("Debug & Error Logs", expanded=False):
+    for level, msg in st.session_state.get("debug_logs", []):
+        if level == "success":
+            st.success(msg)
+        elif level == "error":
+            st.error(msg)
+        elif level == "warning":
+            st.warning(msg)
+        else:
+            st.info(msg)
