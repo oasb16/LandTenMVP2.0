@@ -50,13 +50,24 @@ with st.sidebar:
     params = st.query_params
     if "code" in params:
         st.session_state["oauth_code"] = params["code"]
-        st.popover(f"params[] : {params["code"]}")    
+        st.popover(f"params[] : {params['code']}")    
         st.session_state['persona'] = st.selectbox("Choose your role", ["tenant", "landlord", "contractor"])
         st.popover(f"Selected role: {st.session_state['persona']}")
         st.session_state["logged_in"] = True
         st.popover("Logged in successfully!")
         st.text(f"Agent state: {st.session_state['agent_state']}")
         st.text(f"Agent status: {states[st.session_state['agent_state']]}")
+    # === Debug Log Expander (moved to sidebar)
+    with st.expander("Debug & Error Logs", expanded=False):
+        for level, msg in st.session_state.get("debug_logs", []):
+            if level == "success":
+                st.success(msg)
+            elif level == "error":
+                st.error(msg)
+            elif level == "warning":
+                st.warning(msg)
+            else:
+                st.info(msg)
 
 # === Routing helper
 def handle_persona_routing():
@@ -181,15 +192,3 @@ elif page == "landlord_dashboard":
     run_landlord_dashboard()
 else:
     st.error("Invalid page. Please log in again.")
-
-# === Debug Log Expander
-with st.expander("Debug & Error Logs", expanded=False):
-    for level, msg in st.session_state.get("debug_logs", []):
-        if level == "success":
-            st.success(msg)
-        elif level == "error":
-            st.error(msg)
-        elif level == "warning":
-            st.warning(msg)
-        else:
-            st.info(msg)
