@@ -145,7 +145,7 @@ if "oauth_code" in st.session_state and "user_profile" not in st.session_state:
             # st.rerun()
         else:
             if res.status_code != 200:
-                with st.expander("Error details", expanded=True):
+                with st.expander("Error details", expanded=False):
                     st.error(f"OAuth token request failed: {res.status_code} {res.text}")
     except Exception as e:
         st.error(f"Token exchange error: {e}")
