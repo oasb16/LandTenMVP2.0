@@ -97,7 +97,6 @@ def run_tenant_dashboard():
 
     # -- Layout: Title + Chat
     persona = st.session_state.get("persona", "tenant").capitalize()
-    st.success(f"Welcome, {st.session_state.get('user_email', 'Guest')}! You are logged in as a **{persona}**.")
     log_debug("success", f"Welcome, {st.session_state.get('user_email', 'Guest')}! You are logged in as a **{persona}**.")
 
 
@@ -135,7 +134,7 @@ def run_tenant_dashboard():
 
                 if st.button("❎ Delete Empty Threads"):
                     prune_empty_threads()
-                    log_debug("success", "Empty threads pruned.")
+                    log_debug("success", "Empty threads have been deleted successfully.")
 
                 if st.button("🎯 Generate Dummy Threads"):
                     threads = generate_dummy_threads()
@@ -226,9 +225,9 @@ def run_tenant_dashboard():
                                     "rating": rating,
                                     "notes": notes
                                 })
-                                st.success("✅ Feedback submitted!")
+                                log_debug("success", "Feedback submitted!")
                             except ValueError as ve:
-                                st.warning(str(ve))
+                                log_debug("warning", str(ve))
 
     elif persona == "Contractor":
         try:

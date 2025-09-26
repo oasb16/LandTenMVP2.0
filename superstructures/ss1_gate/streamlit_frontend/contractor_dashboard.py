@@ -161,7 +161,7 @@ def run_contractor_dashboard():
 
     # -- Layout: Title + Chat
     persona = st.session_state.get("persona", "contractor").capitalize()
-    st.title(f"🏗️ {persona} Dashboard")
+    log_debug("success", f"Welcome, {st.session_state.get('user_email', 'Guest')}! You are logged in as a **{persona}**.")
 
     if st.session_state.get("selected_thread"):
         with st.expander("📜 Messages", expanded=False):

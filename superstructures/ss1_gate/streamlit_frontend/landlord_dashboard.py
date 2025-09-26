@@ -128,7 +128,7 @@ def run_landlord_dashboard():
 
     # -- Layout: Title + Chat
     persona = st.session_state.get("persona", "landlord").capitalize()
-    st.title(f"🧱 {persona} Dashboard")
+    log_debug("success", f"Welcome, {st.session_state.get('user_email', 'Guest')}! You are logged in as a **{persona}**.")
 
     if st.session_state.get("selected_thread"):
         with st.expander("📜 Messages", expanded=False):
@@ -205,9 +205,8 @@ def run_landlord_dashboard():
         except Exception as e:
             st.error(f"Failed to load or display jobs from S3: {e}")
         
-    st.success(f"📊 Total Jobs: {len(jobs)}")
-
-
+    if not jobs:
+        log_debug("info", "No jobs found.")
 
     # -- Contractor Trust Scores
     scores = compute_contractor_trust_scores()
@@ -218,9 +217,6 @@ def run_landlord_dashboard():
 
     st.success("🔗 All data fetched from S3 successfully.")
 
-
-
-
     PER_PAGE = 5
     max_value = max(1, math.ceil(len(incidents)/PER_PAGE))
     st.header(f"📋 Live Incident Listing : {len(incidents)}")
@@ -229,7 +225,7 @@ def run_landlord_dashboard():
     paginated = incidents[start:end]
 
     if not paginated:
-        st.warning("No incidents to display.")
+        log_debug("info", "No incidents to display.")
         st.stop()
 
     st.subheader("🧾 Incident Cases")
@@ -311,7 +307,7 @@ def run_landlord_dashboard():
                 st.markdown(f"**Comment:** {fb['comment']}")
                 st.caption(f"🕒 {fb['timestamp']}")
     else:
-        st.info("No feedback submitted yet.")
+        log_debug("info", "No feedback submitted yet.")
 
     if st.button("🔍 Analyze Feedback"):
         from feedback_reflector import analyze_feedback
