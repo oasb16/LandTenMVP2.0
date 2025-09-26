@@ -23,9 +23,9 @@ from superstructures.ss5_summonengine.summon_engine import (
     upload_thread_to_s3,
     save_message_to_dynamodb
 )
-from ss3_trichatcore.chat_renderer import render_chat_thread
+from superstructures.ss3_trichatcore.chat_renderer import render_chat_thread
 from utils.db import get_chat_thread
-from ss6_actionrelay.feedback_logger import submit_feedback
+from superstructures.ss6_actionrelay.feedback_logger import submit_feedback
 from utils.db import get_feedback_by_job
 
 # -- Config
